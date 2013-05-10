@@ -1,2 +1,0 @@
-Rims            KEYWORD1
-printStrLCD	    KEYWORD2

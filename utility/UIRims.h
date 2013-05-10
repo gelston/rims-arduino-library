@@ -8,8 +8,8 @@
 */
 
 
-#ifndef Rims_h
-#define Rims_h
+#ifndef UIRims_h
+#define UIRims_h
 
 #define KEYNONE 0
 #define KEYUP 1
@@ -21,11 +21,11 @@
 #include "Arduino.h"
 #include "LiquidCrystal.h"
 
-class Rims
+class UIRims
 {
 	
 public:
-	Rims(LiquidCrystal* lcd, byte col, byte row, byte pinLight,
+	UIRims(LiquidCrystal* lcd, byte col, byte row, byte pinLight,
 	     byte pinKeysAnalog);
 	void printStrLCD(String mess);
 	void start();

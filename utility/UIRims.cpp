@@ -1,19 +1,19 @@
 /*
-  Rims.cpp - Définition de Rims.h
+  UIRims.cpp - Définition de UIRims.h
 */
 
 #include "Arduino.h"
-#include "Rims.h"
+#include "UIRims.h"
 
 /*
 ============================================================
-TITLE : Rims (constructeur)
+TITLE : UIRims (constructeur)
 INPUT : int pin (entrée 0-3.3V)
 OUTPUT : void
-DESC : Constructeur d'un objet Rims
+DESC : Constructeur d'un objet UIRims
 ============================================================
 */
-Rims::Rims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
+UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 		   byte pinKeysAnalog)
 : _lcd(lcd), _pinKeysAnalog(pinKeysAnalog)
 {
@@ -34,7 +34,7 @@ OUTPUT : int (bouton appuyé)
 DESC : Récupère le bouton présentement appuyé
 ============================================================
 */
-byte Rims::_readKeys()
+byte UIRims::_readKeys()
 {
 	byte res;
 	int adcKeyVal = analogRead(0);  
@@ -55,7 +55,7 @@ OUTPUT : void
 DESC : Affiche mess sur le lcd
 ============================================================
 */
-void Rims::printStrLCD(String mess)
+void UIRims::printStrLCD(String mess)
 {
 	this->_lcd->blink();
 	this->_lcd->clear();
@@ -82,7 +82,7 @@ DESC : Affiche un entier de 2 digits à la position donnée
        sur le LCD aligné à la droite.
 ============================================================
 */
-void Rims::_printIntLCD(int val, byte col, byte row,
+void UIRims::_printIntLCD(int val, byte col, byte row,
 						byte curCol, byte curRow)
 {
 	this->_lcd->noBlink();
@@ -102,7 +102,7 @@ OUTPUT : void
 DESC : Routine principale
 ============================================================
 */
-void Rims::start()
+void UIRims::start()
 {
 	boolean tempSelected = false, waitNone = false;
 	byte setPoint = 20, digitPosition = 0;
