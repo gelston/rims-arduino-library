@@ -13,8 +13,8 @@ OUTPUT : void
 DESC : Constructeur d'un objet Rims
 ============================================================
 */
-Rims::Rims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
-		   byte pinKeysAnalog)
+Rims::Rims(UIRims uiRims)
+: _uiRims(uiRims)
 {
 
 }

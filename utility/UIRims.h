@@ -18,6 +18,8 @@
 #define KEYRIGHT 4
 #define KEYSELECT 5
 
+#define DEFAULTSP 20
+
 #include "Arduino.h"
 #include "LiquidCrystal.h"
 
@@ -27,15 +29,20 @@ class UIRims
 public:
 	UIRims(LiquidCrystal* lcd, byte col, byte row, byte pinLight,
 	     byte pinKeysAnalog);
-	void printStrLCD(String mess);
-	void start();
+	float getSetPoint();
 	
 	byte _readKeys();
-	void _printIntLCD(int val, byte col, 
-					  byte row,byte curCol, byte curRow);
-	
+	void _printStrLCD(String mess, byte col, byte row);
+	void _printFloatLCD(float val, byte col, byte row);
+	void _setCursorPosition(byte col, byte row);
+	float _celciusToFahrenheit(float celcius);
+	void _setTempSP(float tempCelcius);
+	void _setTempPV(float tempCelcius);
+	float _incDecSetPoint(float curSetPoint, boolean positive);
 
 	LiquidCrystal* _lcd;
+	byte _cursorCol;
+	byte _cursorRow;
 	byte _pinKeysAnalog;
 };
 

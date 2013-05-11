@@ -15,14 +15,22 @@ DESC : Constructeur d'un objet UIRims
 */
 UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 		   byte pinKeysAnalog)
-: _lcd(lcd), _pinKeysAnalog(pinKeysAnalog)
+: _lcd(lcd), _pinKeysAnalog(pinKeysAnalog), 
+  _cursorCol(0), _cursorRow(0)
 {
 	pinMode(pinLight,OUTPUT);
 	digitalWrite(pinLight,HIGH);
 	this->_lcd->begin(col,row);
-	this->printStrLCD(String("SP:20") + (char)223 + String("C\n") +
-	                  String("PV:20.0") + (char)223 + String("C"));
-	this->_lcd->setCursor(4,0);
+	this->_lcd->clear();
+	this->_printStrLCD(
+		String("SP:00.0")+(char)223+
+		String("C(000")+(char)223+String("F)"),0,0);
+	this->_printStrLCD(
+	    String("PV:20.0")+(char)223+
+	    String("C( 68")+(char)223+String("F)"),0,1);
+	this->_setTempSP(DEFAULTSP);
+	this->_setCursorPosition(4,0);
+	this->_lcd->blink();
 }
 
 
@@ -49,63 +57,146 @@ byte UIRims::_readKeys()
 
 /*
 ============================================================
-TITLE : printStrLCD
+TITLE : _printStrLCD
 INPUT : LiquidCrystal* lcd, String mess
 OUTPUT : void
 DESC : Affiche mess sur le lcd
 ============================================================
 */
-void UIRims::printStrLCD(String mess)
+void UIRims::_printStrLCD(String mess, byte col, byte row)
 {
-	this->_lcd->blink();
-	this->_lcd->clear();
-	int newLineIndex = mess.indexOf('\n');
-	if(newLineIndex != -1)
-	{
-		this->_lcd->print(mess.substring(0,newLineIndex));
-		this->_lcd->setCursor(0,1);
-		this->_lcd->print(mess.substring(newLineIndex+1));
-	}
-	else
-	{
-		this->_lcd->print(mess);
-	}
+	this->_lcd->setCursor(col,row);
+	this->_lcd->print(mess);
+	this->_lcd->setCursor(this->_cursorCol,this->_cursorRow);
 }
 
 
 /*
 ============================================================
-TITLE : _printIntLCD
+TITLE : _printFloatLCD
 INPUT : -
 OUTPUT : void
-DESC : Affiche un entier de 2 digits à la position donnée 
-       sur le LCD aligné à la droite.
+DESC : Affiche un float de 3 digits sur le lcd à la 
+       position donnée
 ============================================================
 */
-void UIRims::_printIntLCD(int val, byte col, byte row,
-						byte curCol, byte curRow)
+void UIRims::_printFloatLCD(float val, byte col, byte row)
 {
 	this->_lcd->noBlink();
-	byte valLen = String(val).length();
+	char myFloatStr[5];
+	dtostrf(val,4,1,myFloatStr);
 	this->_lcd->setCursor(col,row);
-	if(val<10) this->_lcd->print(String("0")+String(val));
-    else this->_lcd->print(val);
-	this->_lcd->setCursor(curCol,curRow);
+	this->_lcd->print(myFloatStr);
+	this->_lcd->setCursor(this->_cursorCol,this->_cursorRow);
 	this->_lcd->blink();
 }
 
 /*
 ============================================================
-TITLE : start
+TITLE : _setCursorPosition
+INPUT : -
+OUTPUT : void
+DESC : Affiche un float de 3 digits sur le lcd à la 
+       position donnée
+============================================================
+*/
+void UIRims::_setCursorPosition(byte col, byte row)
+{
+	this->_cursorCol = col;
+	this->_cursorRow = row;
+	this->_lcd->setCursor(col,row);
+}
+
+/*
+============================================================
+TITLE : _celciusToFahrenheit
+INPUT : float celcius
+OUTPUT : float fahrenheit
+DESC : Convert celcius temp to fahrenheit temp
+============================================================
+*/
+float UIRims::_celciusToFahrenheit(float celcius)
+{
+	return ((9/5)*celcius)+32;
+	//TODO
+	//TODO
+}
+
+/*
+============================================================
+TITLE : _setTempSP
+INPUT : float tempCelcius
+OUTPUT : void
+DESC : 
+============================================================
+*/
+void UIRims::_setTempSP(float tempCelcius)
+{
+	//TODO
+	//TODO
+	char myFloatStr[4];
+	sprintf(myFloatStr,"%d3",
+			this->_celciusToFahrenheit(tempCelcius));
+	this->_printFloatLCD(tempCelcius,3,0);
+	this->_printStrLCD(myFloatStr,10,0);
+}
+
+/*
+============================================================
+TITLE : _setTempPV
+INPUT : float tempCelcius
+OUTPUT : void
+DESC : 
+============================================================
+*/
+void UIRims::_setTempPV(float tempCelcius)
+{
+	//TODO
+	//TODO
+	this->_printFloatLCD(tempCelcius,3,1);
+	this->_printFloatLCD(this->_celciusToFahrenheit(tempCelcius),10,1);
+}
+
+
+/*
+============================================================
+TITLE : _incDecSetPoint
+INPUT : float curSP, boolean positive
+OUTPUT : float
+DESC : 
+============================================================
+*/
+float UIRims::_incDecSetPoint(float curSetPoint, boolean positive)
+{
+	float res,constrainedRes;
+	switch(this->_cursorCol)
+	{
+		case 3:
+			res = (positive) ? (curSetPoint + 10) : (curSetPoint - 10);
+			break;
+		case 4:
+			res = (positive) ? (curSetPoint + 1) : (curSetPoint - 1);
+			break;
+		case 6:
+			res = (positive) ? (curSetPoint + 0.1) : (curSetPoint - 0.1);
+			break;
+	}
+	constrainedRes = constrain(res,0.0,99.9);
+	return (constrainedRes != res) ? curSetPoint : res;
+}
+
+/*
+============================================================
+TITLE : initialize
 INPUT : -
 OUTPUT : void
 DESC : Routine principale
 ============================================================
 */
-void UIRims::start()
+float UIRims::getSetPoint()
 {
 	boolean tempSelected = false, waitNone = false;
-	byte setPoint = 20, digitPosition = 0;
+	float setPoint = DEFAULTSP;
 	while(not tempSelected)
 	{
 		Serial.println(this->_readKeys());
@@ -117,37 +208,53 @@ void UIRims::start()
 			case KEYUP :
 				if(not waitNone)
 				{
-					if((setPoint<99 and digitPosition==0) or 
-					   (setPoint<90 and digitPosition==1))
-					{
-						(digitPosition==0) ? (setPoint++) : (setPoint+=10);
-						this->_printIntLCD(setPoint,3,0,4-digitPosition,0);
-						waitNone = true;
-					}	
+					setPoint = this->_incDecSetPoint(setPoint,true);
+					this->_setTempSP(setPoint);
+					waitNone = true;
 				}
 				break;
 			case KEYDOWN :
 				if(not waitNone)
 				{
-					if((setPoint>0 and digitPosition==0) or 
-					   (setPoint>9 and digitPosition==1))
-					{
-						(digitPosition==0) ? (setPoint--) : (setPoint-=10);
-						this->_printIntLCD(setPoint,3,0,4-digitPosition,0);
-						waitNone = true;
-					}
+					setPoint = this->_incDecSetPoint(setPoint,false);
+					this->_setTempSP(setPoint);
+					waitNone = true;
 				}
 				break;
 			case KEYLEFT :
 				if(not waitNone)
-					digitPosition = 1;
-					this->_lcd->setCursor(3,0);
+					switch(this->_cursorCol)
+					{
+						case 3 :
+							break;
+						case 4 :
+							this->_setCursorPosition(3,0);
+							break;
+						case 6 :
+							this->_setCursorPosition(4,0);
+							break;
+						default :
+							this->_setCursorPosition(4,0);
+							break;
+					}
 					waitNone = true;
 				break;
 			case KEYRIGHT :
 				if(not waitNone)
-					digitPosition = 0;
-					this->_lcd->setCursor(4,0);
+					switch(this->_cursorCol)
+					{
+						case 3 :
+							this->_setCursorPosition(4,0);
+							break;
+						case 4 :
+							this->_setCursorPosition(6,0);
+							break;
+						case 6 :
+							break;
+						default :
+							this->_setCursorPosition(4,0);
+							break;
+					}
 					waitNone = true;
 				break;
 			case KEYSELECT :
@@ -156,4 +263,5 @@ void UIRims::start()
 				break;
 		}
 	}
+	return setPoint;
 }

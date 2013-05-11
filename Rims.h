@@ -3,7 +3,7 @@
   
   Librairie pour un système RIMS 
   (recirculation infusion mash system)
-  Gestion du LCD ainsi que du PID en température
+  Gestion du PID en température
   
   Francis Gagnon
 */
@@ -21,10 +21,12 @@ class Rims
 {
 	
 public:
-	Rims(LiquidCrystal* lcd, byte col, byte row, byte pinLight,
-	     byte pinKeysAnalog);
+	Rims(UIRims uiRims);
 
 	void start();
+	
+private:
+	UIRims _uiRims;
 };
 
 #endif

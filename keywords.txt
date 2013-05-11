@@ -6,14 +6,15 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-Rims			KEYWORD1
-UIRims			KEYWORD1
+Rims	KEYWORD1
+UIRims	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
 printStrLCD	    KEYWORD2
+getSetPoint	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
