@@ -29,6 +29,8 @@ class UIRims
 public:
 	UIRims(LiquidCrystal* lcd, byte col, byte row, byte pinLight,
 	     byte pinKeysAnalog);
+	void setTempSP(float tempCelcius);
+	void setTempPV(float tempCelcius);
 	float getSetPoint();
 	
 	byte _readKeys();
@@ -36,8 +38,6 @@ public:
 	void _printFloatLCD(float val, byte col, byte row);
 	void _setCursorPosition(byte col, byte row);
 	float _celciusToFahrenheit(float celcius);
-	void _setTempSP(float tempCelcius);
-	void _setTempPV(float tempCelcius);
 	float _incDecSetPoint(float curSetPoint, boolean positive);
 
 	LiquidCrystal* _lcd;

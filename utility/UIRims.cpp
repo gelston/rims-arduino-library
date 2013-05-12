@@ -28,7 +28,7 @@ UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 	this->_printStrLCD(
 	    String("PV:20.0")+(char)223+
 	    String("C( 68")+(char)223+String("F)"),0,1);
-	this->_setTempSP(DEFAULTSP);
+	this->setTempSP(DEFAULTSP);
 	this->_setCursorPosition(4,0);
 	this->_lcd->blink();
 }
@@ -117,39 +117,38 @@ DESC : Convert celcius temp to fahrenheit temp
 */
 float UIRims::_celciusToFahrenheit(float celcius)
 {
-	return ((9/5)*celcius)+32;
-	//TODO
-	//TODO
+	return ((9.0/5.0)*celcius)+32.0;
 }
 
 /*
 ============================================================
-TITLE : _setTempSP
+TITLE : setTempSP
 INPUT : float tempCelcius
 OUTPUT : void
 DESC : 
 ============================================================
 */
-void UIRims::_setTempSP(float tempCelcius)
+void UIRims::setTempSP(float tempCelcius)
 {
 	//TODO
 	//TODO
-	char myFloatStr[4];
-	sprintf(myFloatStr,"%d3",
-			this->_celciusToFahrenheit(tempCelcius));
+	Serial.println(this->_celciusToFahrenheit(tempCelcius));
+	char myFloatStr[6];
+	dtostrf(this->_celciusToFahrenheit(tempCelcius),
+			3,0,myFloatStr);
 	this->_printFloatLCD(tempCelcius,3,0);
 	this->_printStrLCD(myFloatStr,10,0);
 }
 
 /*
 ============================================================
-TITLE : _setTempPV
+TITLE : setTempPV
 INPUT : float tempCelcius
 OUTPUT : void
 DESC : 
 ============================================================
 */
-void UIRims::_setTempPV(float tempCelcius)
+void UIRims::setTempPV(float tempCelcius)
 {
 	//TODO
 	//TODO
@@ -199,7 +198,6 @@ float UIRims::getSetPoint()
 	float setPoint = DEFAULTSP;
 	while(not tempSelected)
 	{
-		Serial.println(this->_readKeys());
 		switch(this->_readKeys())
 		{
 			case KEYNONE :
@@ -209,7 +207,7 @@ float UIRims::getSetPoint()
 				if(not waitNone)
 				{
 					setPoint = this->_incDecSetPoint(setPoint,true);
-					this->_setTempSP(setPoint);
+					this->setTempSP(setPoint);
 					waitNone = true;
 				}
 				break;
@@ -217,7 +215,7 @@ float UIRims::getSetPoint()
 				if(not waitNone)
 				{
 					setPoint = this->_incDecSetPoint(setPoint,false);
-					this->_setTempSP(setPoint);
+					this->setTempSP(setPoint);
 					waitNone = true;
 				}
 				break;
