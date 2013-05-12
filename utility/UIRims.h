@@ -18,7 +18,8 @@
 #define KEYRIGHT 4
 #define KEYSELECT 5
 
-#define DEFAULTSP 20
+#define DEFAULTSP 68 // celcius
+#define DEFAULTTIME 5400 // seconds
 
 #include "Arduino.h"
 #include "LiquidCrystal.h"
@@ -31,11 +32,14 @@ public:
 	     byte pinKeysAnalog);
 	void setTempSP(float tempCelcius);
 	void setTempPV(float tempCelcius);
-	float getSetPoint();
-	
+	void setTime(int timeSec);
+	float askSetPoint(); // celcius
+	int askTime(); // seconds
+
 	byte _readKeys();
 	void _printStrLCD(String mess, byte col, byte row);
-	void _printFloatLCD(float val, byte col, byte row);
+	void _printFloatLCD(float val, int width, int prec,
+						byte col, byte row);
 	void _setCursorPosition(byte col, byte row);
 	float _celciusToFahrenheit(float celcius);
 	float _incDecSetPoint(float curSetPoint, boolean positive);
@@ -44,6 +48,7 @@ public:
 	byte _cursorCol;
 	byte _cursorRow;
 	byte _pinKeysAnalog;
+	boolean _waitNone;
 };
 
 #endif

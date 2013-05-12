@@ -14,7 +14,8 @@ UIRims	KEYWORD1
 #######################################
 
 printStrLCD	    KEYWORD2
-getSetPoint	KEYWORD2
+askSetPoint	KEYWORD2
+askTime	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
