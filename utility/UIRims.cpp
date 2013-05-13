@@ -15,8 +15,8 @@ DESC : Constructeur d'un objet UIRims
 */
 UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 		   byte pinKeysAnalog)
-: _lcd(lcd), _pinKeysAnalog(pinKeysAnalog), 
-  _cursorCol(0), _cursorRow(0), _waitNone(true)
+: _lcd(lcd), _pinKeysAnalog(pinKeysAnalog),
+  _cursorCol(0), _cursorRow(0), _waitNone(false)
 {
 	pinMode(pinLight,OUTPUT);
 	digitalWrite(pinLight,HIGH);
@@ -24,16 +24,49 @@ UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 	this->_lcd->clear();
 }
 
+/*
+============================================================
+TITLE : showTempScreen
+INPUT : 
+OUTPUT : void
+DESC : 
+============================================================
+*/
+void UIRims::showTempScreen()
+{
+	this->_lcd->clear();
+	this->_printStrLCD(
+		String("SP:00.0") + (char)223 +
+		String("C(000") + (char)223 + String("F)"),0,0);
+	this->_printStrLCD(
+	    String("PV:00.0") + (char)223 +
+	    String("C(000") + (char)223 + String("F)"),0,1);
+}
 
 /*
 ============================================================
-TITLE : _readKeys
-INPUT : none
-OUTPUT : int (bouton appuyé)
-DESC : Récupère le bouton présentement appuyé
+TITLE : showTimeFlowScreen
+INPUT : 
+OUTPUT : void
+DESC : 
 ============================================================
 */
-byte UIRims::_readKeys()
+void UIRims::showTimeFlowScreen()
+{
+	this->_lcd->clear();
+	this->_printStrLCD("time:00:00:00",0,0);
+	this->_printStrLCD("flow:00.0 l/min",0,1);
+}
+
+/*
+============================================================
+TITLE : _readKeysADC
+INPUT : none
+OUTPUT : byte (bouton appuyé)
+DESC : Récupère le bouton présentement appuyé sans debounce
+============================================================
+*/
+byte UIRims::_readKeysADC()
 {
 	byte res;
 	int adcKeyVal = analogRead(0);  
@@ -47,6 +80,48 @@ byte UIRims::_readKeys()
 	return res;
 }
 
+/*
+============================================================
+TITLE : readKeys
+INPUT : none
+OUTPUT : byte (bouton appuyé)
+DESC : Récupère le bouton présentement appuyé avec debounce
+============================================================
+*/
+byte UIRims::readKeys()
+{
+	boolean keyConfirmed = false, keyDetected = false;
+	byte lastKey = this->_readKeysADC(), currentKey;
+	unsigned long refTime = millis(), currentTime;
+	while(not keyConfirmed)
+	{
+		currentTime = millis();
+		currentKey = this->_readKeysADC();
+		if(keyDetected)
+		{
+			if(currentTime - refTime >= 10)
+			{
+				if(currentKey == lastKey)
+				{
+					keyConfirmed = true;
+				}
+				else
+				{
+					keyDetected = false;
+					refTime = currentTime;
+					lastKey = currentKey;
+				}
+			}
+		}
+		if(currentKey != lastKey)
+		{
+			keyDetected = true;
+			refTime = currentTime;
+			lastKey = currentKey;
+		}
+	}
+	return currentKey;
+}
 /*
 ============================================================
 TITLE : _printStrLCD
@@ -69,20 +144,17 @@ TITLE : _printFloatLCD
 INPUT : float val, int width, int prec,
 		byte col, byte row
 OUTPUT : void
-DESC : Affiche un float de 3 digits sur le lcd à la 
-       position donnée
+DESC : 
 ============================================================
 */
 void UIRims::_printFloatLCD(float val, int width, int prec,
 							byte col, byte row)
 {
-	this->_lcd->noBlink();
-	char myFloatStr[5];
+	char myFloatStr[17];
 	dtostrf(val,width,prec,myFloatStr);
 	this->_lcd->setCursor(col,row);
 	this->_lcd->print(myFloatStr);
 	this->_lcd->setCursor(this->_cursorCol,this->_cursorRow);
-	this->_lcd->blink();
 }
 
 /*
@@ -160,65 +232,100 @@ DESC :
 */
 void UIRims::setTime(int timeSec)
 {
-	int minutes = timeSec/60;
-	int seconds = timeSec%60;
-	this->_printFloatLCD(minutes,3,0,5,0);
+	int hours   = timeSec / 3600;
+	int minutes = (timeSec % 3600)/60;
+	int seconds = (timeSec % 3600)%60;
+	this->_printFloatLCD(hours,2,0,5,0);
+	this->_printFloatLCD(minutes,2,0,8,0);
 	this->_printFloatLCD(seconds,2,0,11,0);
 }
 
 
 /*
 ============================================================
-TITLE : _incDecSetPoint
-INPUT : float curSP, boolean positive
+TITLE : _incDecValue
+INPUT : float value, int digitPosition, 
+		boolean increase,
+		float lowerBound,float upperBound
 OUTPUT : float
 DESC : 
 ============================================================
 */
-float UIRims::_incDecSetPoint(float curSetPoint, boolean positive)
+float UIRims::_incDecValue(float value, int digitPosition, 
+					       boolean increase,
+						   float lowerBound,float upperBound)
 {
 	float res,constrainedRes;
-	switch(this->_cursorCol)
+	if(increase)
 	{
-		case 3:
-			res = (positive) ? (curSetPoint + 10) : (curSetPoint - 10);
-			break;
-		case 4:
-			res = (positive) ? (curSetPoint + 1) : (curSetPoint - 1);
-			break;
-		case 6:
-			res = (positive) ? (curSetPoint + 0.1) : (curSetPoint - 0.1);
-			break;
+		res = value + pow(10,digitPosition);
 	}
-	constrainedRes = constrain(res,0.0,99.9);
-	return (constrainedRes != res) ? curSetPoint : res;
+	else
+	{
+		res = value - pow(10,digitPosition);
+	}
+	Serial.println(res);
+	constrainedRes = constrain(res,lowerBound,upperBound);
+	return (constrainedRes != res) ? value : res;
 }
 
 /*
 ============================================================
-TITLE : askSetPoint
+TITLE : _applyValueModifs
+INPUT : byte col, byte row, boolean time
+OUTPUT : float
+DESC : 
+============================================================
+*/
+float UIRims::_applyValueModifs(float value,byte dotPosition, boolean increase,
+								float lowerBound, float upperBound,
+								boolean timeFormat)
+{
+	int digitPosition;
+	if(not timeFormat)
+	{
+		if(this->_cursorCol<dotPosition)
+		{
+			digitPosition = (dotPosition - this->_cursorCol) - 1;
+		}
+		else
+		{
+			digitPosition = (dotPosition - this->_cursorCol);
+		}
+		value = this->_incDecValue(value,digitPosition,increase,
+								   lowerBound,upperBound);
+		this->setTempSP(value);
+	}
+	else
+	{
+		this->setTime(value);
+	}
+	return value;
+}
+
+
+/*
+============================================================
+TITLE : _askValue
 INPUT : -
-OUTPUT : float setPoint
+OUTPUT : float value
 DESC : Demande le setPoint à l'utilisateur.
 ============================================================
 */
-float UIRims::askSetPoint()
+float UIRims::_askValue(byte begin, byte end, 
+						byte dotPosition, byte row,
+						float defaultVal,
+						float lowerBound, float upperBound,
+						boolean timeFormat)
 {
-	this->_lcd->clear();
-	this->_printStrLCD(
-		String("SP:00.0") + (char)223 +
-		String("C(000") + (char)223 + String("F)"),0,0);
-	this->_printStrLCD(
-	    String("PV:20.0") + (char)223 +
-	    String("C( 68") + (char)223 + String("F)"),0,1);
-	this->setTempSP(DEFAULTSP);
-	this->_setCursorPosition(4,0);
+	boolean valSelected = false;
+	float value = defaultVal;
+	timeFormat ? this->setTime(defaultVal):this->setTempSP(defaultVal);
+	this->_setCursorPosition(dotPosition-1,row);
 	this->_lcd->blink();
-	boolean tempSelected = false;
-	float setPoint = DEFAULTSP;
-	while(not tempSelected)
+	while(not valSelected)
 	{
-		switch(this->_readKeys())
+		switch(this->readKeys())
 		{
 			case KEYNONE :
 				if(this->_waitNone) this->_waitNone=false;
@@ -226,59 +333,57 @@ float UIRims::askSetPoint()
 			case KEYUP :
 				if(not this->_waitNone)
 				{
-					setPoint = this->_incDecSetPoint(setPoint,true);
-					this->setTempSP(setPoint);
+					value = this->_applyValueModifs(value,dotPosition,true,
+										lowerBound,upperBound,timeFormat);
 					this->_waitNone = true;
 				}
 				break;
 			case KEYDOWN :
 				if(not this->_waitNone)
 				{
-					setPoint = this->_incDecSetPoint(setPoint,false);
-					this->setTempSP(setPoint);
+					value = this->_applyValueModifs(value,dotPosition,false,
+										lowerBound,upperBound,timeFormat);
 					this->_waitNone = true;
 				}
 				break;
 			case KEYLEFT :
 				if(not this->_waitNone)
-					switch(this->_cursorCol)
+					if(this->_cursorCol > begin)
 					{
-						case 3 :
-							break;
-						case 4 :
-							this->_setCursorPosition(3,0);
-							break;
-						case 6 :
-							this->_setCursorPosition(4,0);
-							break;
-						default :
-							this->_setCursorPosition(4,0);
-							break;
+						if (this->_cursorCol == dotPosition + 1)
+						{
+							this->_setCursorPosition(this->_cursorCol-2,
+													 row);
+						}
+						else
+						{
+							this->_setCursorPosition(this->_cursorCol-1,
+													 row);
+						}
 					}
 					this->_waitNone = true;
 				break;
 			case KEYRIGHT :
 				if(not this->_waitNone)
-					switch(this->_cursorCol)
+					if(this->_cursorCol < end)
 					{
-						case 3 :
-							this->_setCursorPosition(4,0);
-							break;
-						case 4 :
-							this->_setCursorPosition(6,0);
-							break;
-						case 6 :
-							break;
-						default :
-							this->_setCursorPosition(4,0);
-							break;
+						if (this->_cursorCol == dotPosition-1)
+						{
+							this->_setCursorPosition(this->_cursorCol+2,
+													 row);
+						}
+						else
+						{
+							this->_setCursorPosition(this->_cursorCol+1,
+													 row);
+						}
 					}
 					this->_waitNone = true;
 				break;
 			case KEYSELECT :
 				if(not this->_waitNone)
 				{
-					tempSelected = true;
+					valSelected = true;
 					this->_lcd->noBlink();
 					this->_setCursorPosition(0,0);
 					this->_waitNone = true;
@@ -286,7 +391,23 @@ float UIRims::askSetPoint()
 				break;
 		}
 	}
-	return setPoint;
+	return value;
+}
+
+/*setPoint
+============================================================
+TITLE : askSetPoint
+INPUT : -
+OUTPUT : float setPoint
+DESC : Demande le setPoint à l'utilisateur.setPoint
+============================================================
+*/
+float UIRims::askSetPoint()
+{
+	float res;
+	this->showTempScreen();
+	res = this->_askValue(3,6,5,0,DEFAULTSP,0.0,99.9,false);
+	return res;
 }
 
 /*
@@ -299,90 +420,8 @@ DESC : Demande le temps du pallier à l'utilisateur
 */
 int UIRims::askTime()
 {
-	this->_lcd->clear();
-	this->_printStrLCD("time:000min00sec",0,0);
-	this->setTime(DEFAULTTIME);
-	this->_setCursorPosition(6,0);
-	this->_lcd->blink();
-	boolean timeSelected = false;
-	int timeSec = DEFAULTTIME;
-	while(not timeSelected)
-	{
-		switch(this->_readKeys())
-		{
-			case KEYNONE :
-					if(this->_waitNone) this->_waitNone=false;
-					break;
-				case KEYUP :
-					if(not this->_waitNone)
-					{
-						this->_waitNone = true;
-					}
-					break;
-				case KEYDOWN :
-					if(not this->_waitNone)
-					{
-						this->_waitNone = true;
-					}
-					break;
-				case KEYLEFT :
-					if(not this->_waitNone)
-						switch(this->_cursorCol)
-						{
-							case 5 :
-								break;
-							case 6 :
-								this->_setCursorPosition(5,0);
-								break;
-							case 7 :
-								this->_setCursorPosition(6,0);
-								break;
-							case 11 :
-								this->_setCursorPosition(7,0);
-								break;
-							case 12 :
-								this->_setCursorPosition(11,0);
-								break;
-							default :
-								this->_setCursorPosition(6,0);
-								break;
-						}
-						this->_waitNone = true;
-					break;
-				case KEYRIGHT :
-					if(not this->_waitNone)
-						switch(this->_cursorCol)
-						{
-							case 5 :
-								this->_setCursorPosition(6,0);
-								break;
-							case 6 :
-								this->_setCursorPosition(7,0);
-								break;
-							case 7 :
-								this->_setCursorPosition(11,0);
-								break;
-							case 11 :
-								this->_setCursorPosition(12,0);
-								break;
-							case 12 :
-								break;
-							default :
-								this->_setCursorPosition(6,0);
-								break;
-						}
-						this->_waitNone = true;
-					break;
-				case KEYSELECT :
-					if(not this->_waitNone)
-					{
-						timeSelected = true;
-						this->_lcd->noBlink();
-						this->_setCursorPosition(0,0);
-						this->_waitNone = true;
-					}
-					break;
-		}
-	}
-	return 0.0;
+	int res;
+	this->showTimeFlowScreen();
+	res = this->_askValue(5,12,7,0,DEFAULTTIME,0,362439,true);
+	return res;
 }
