@@ -151,9 +151,10 @@ void UIRims::_printFloatLCD(float val, int width, int prec,
 							byte col, byte row)
 {
 	char myFloatStr[17];
-	dtostrf(val,width,prec,myFloatStr);
+	String res(dtostrf(val,width,prec,myFloatStr));
+	res.replace(String(' '),String('0'));
 	this->_lcd->setCursor(col,row);
-	this->_lcd->print(myFloatStr);
+	this->_lcd->print(res);
 	this->_lcd->setCursor(this->_cursorCol,this->_cursorRow);
 }
 
@@ -196,12 +197,9 @@ DESC :
 */
 void UIRims::setTempSP(float tempCelcius)
 {
-	//Serial.println(this->_celciusToFahrenheit(tempCelcius));
-	char myFloatStr[4];
-	dtostrf(this->_celciusToFahrenheit(tempCelcius),
-			3,0,myFloatStr);
+	float tempFahren = this->_celciusToFahrenheit(tempCelcius);
 	this->_printFloatLCD(tempCelcius,4,1,3,0);
-	this->_printStrLCD(myFloatStr,10,0);
+	this->_printFloatLCD(tempFahren,3,0,10,0);
 }
 
 /*
@@ -214,11 +212,9 @@ DESC :
 */
 void UIRims::setTempPV(float tempCelcius)
 {
-	char myFloatStr[4];
-	dtostrf(this->_celciusToFahrenheit(tempCelcius),
-			3,0,myFloatStr);
+	float tempFahren = this->_celciusToFahrenheit(tempCelcius);
 	this->_printFloatLCD(tempCelcius,4,1,3,1);
-	this->_printStrLCD(myFloatStr,10,1);
+	this->_printFloatLCD(tempFahren,3,0,10,1);
 }
 
 
