@@ -34,12 +34,13 @@ public:
 	void showTimeFlowScreen();
 	void setTempSP(float tempCelcius);
 	void setTempPV(float tempCelcius);
-	void setTime(int timeSec);
+	void setTime(unsigned int timeSec);
+	void setFlow(int flow); //liter/min
 	
 	byte readKeys();
 	
-	float askSetPoint(); // Celsius
-	int askTime(); // seconds
+	float askSetPoint(float defaultVal); // Celsius
+	int askTime(float defaultVal); // seconds
 protected:
 	byte _readKeysADC();
 	void _printStrLCD(String mess, byte col, byte row);
@@ -47,13 +48,12 @@ protected:
 						byte col, byte row);
 	void _setCursorPosition(byte col, byte row);
 	float _celciusToFahrenheit(float celcius);
-	float _incDecValue(float value, int digitPosition, 
+	void _moveCursorLR(byte begin, byte end, byte dotPosition,
+					   byte row,boolean left);
+	float _incDecValue(float value,byte dotPosition, 
 					   boolean increase,
-					   float lowerBound,float upperBound);
-	float _applyValueModifs(float value,byte dotPosition, 
-							boolean increase,
-							float lowerBound, float upperBound,
-							boolean timeFormat);
+					   float lowerBound, float upperBound,
+					   boolean timeFormat);
 	float _askValue(byte begin, byte end, 
 					byte dotPosition, byte row,
 					float defaultVal,

@@ -54,8 +54,8 @@ DESC :
 void UIRims::showTimeFlowScreen()
 {
 	this->_lcd->clear();
-	this->_printStrLCD("time:00:00:00",0,0);
-	this->_printStrLCD("flow:00.0 l/min",0,1);
+	this->_printStrLCD("time:000m00s",0,0);
+	this->_printStrLCD("flow:00.0l/min",0,1);
 }
 
 /*
@@ -76,7 +76,6 @@ byte UIRims::_readKeysADC()
 	else if (adcKeyVal < 380) res = KEYDOWN;
 	else if (adcKeyVal < 555) res = KEYLEFT;
 	else if (adcKeyVal < 790) res = KEYSELECT;
-	//Serial.println(res);
 	return res;
 }
 
@@ -152,7 +151,7 @@ void UIRims::_printFloatLCD(float val, int width, int prec,
 {
 	char myFloatStr[17];
 	String res(dtostrf(val,width,prec,myFloatStr));
-	res.replace(String(' '),String('0'));
+	res.replace(' ','0');
 	this->_lcd->setCursor(col,row);
 	this->_lcd->print(res);
 	this->_lcd->setCursor(this->_cursorCol,this->_cursorRow);
@@ -226,79 +225,92 @@ OUTPUT : void
 DESC : 
 ============================================================
 */
-void UIRims::setTime(int timeSec)
+void UIRims::setTime(unsigned int timeSec)
 {
-	int hours   = timeSec / 3600;
-	int minutes = (timeSec % 3600)/60;
-	int seconds = (timeSec % 3600)%60;
-	this->_printFloatLCD(hours,2,0,5,0);
-	this->_printFloatLCD(minutes,2,0,8,0);
-	this->_printFloatLCD(seconds,2,0,11,0);
+	int minutes = timeSec / 60;
+	int seconds = timeSec % 60;
+	Serial.println(timeSec);
+	Serial.println(minutes);
+	Serial.println(seconds);
+	this->_printFloatLCD(minutes,3,0,5,0);
+	this->_printFloatLCD(seconds,2,0,9,0);
 }
-
 
 /*
 ============================================================
-TITLE : _incDecValue
-INPUT : float value, int digitPosition, 
-		boolean increase,
-		float lowerBound,float upperBound
-OUTPUT : float
+TITLE : setFlow
+INPUT : float flow (liter/min)
+OUTPUT : void
 DESC : 
 ============================================================
 */
-float UIRims::_incDecValue(float value, int digitPosition, 
-					       boolean increase,
-						   float lowerBound,float upperBound)
+void UIRims::setFlow(int flow)
 {
-	float res,constrainedRes;
-	if(increase)
-	{
-		res = value + pow(10,digitPosition);
-	}
-	else
-	{
-		res = value - pow(10,digitPosition);
-	}
-	Serial.println(res);
-	constrainedRes = constrain(res,lowerBound,upperBound);
-	return (constrainedRes != res) ? value : res;
+	this->_printFloatLCD(flow,3,1,5,1);
 }
-
 /*
 ============================================================
-TITLE : _applyValueModifs
+TITLE : _incDecValue
 INPUT : byte col, byte row, boolean time
 OUTPUT : float
 DESC : 
 ============================================================
 */
-float UIRims::_applyValueModifs(float value,byte dotPosition, boolean increase,
-								float lowerBound, float upperBound,
-								boolean timeFormat)
+float UIRims::_incDecValue(float value,byte dotPosition, boolean increase,
+						   float lowerBound, float upperBound,
+						   boolean timeFormat)
 {
-	int digitPosition;
-	if(not timeFormat)
+	float res,constrainedRes;
+	int digitPosition, way = (increase) ? (+1) : (-1);
+	if(this->_cursorCol<dotPosition)
 	{
-		if(this->_cursorCol<dotPosition)
-		{
-			digitPosition = (dotPosition - this->_cursorCol) - 1;
-		}
-		else
-		{
-			digitPosition = (dotPosition - this->_cursorCol);
-		}
-		value = this->_incDecValue(value,digitPosition,increase,
-								   lowerBound,upperBound);
-		this->setTempSP(value);
+		digitPosition = (dotPosition - this->_cursorCol) - 1;
 	}
 	else
 	{
-		this->setTime(value);
+		digitPosition = (dotPosition - this->_cursorCol);
 	}
-	return value;
+	if(not timeFormat)
+	{
+		res = value + (way*pow(10,digitPosition));
+	}
+	else
+	{
+		if(digitPosition<0)
+		{
+			res = value + (way*pow(10,digitPosition + 2));
+		}
+		else
+		{
+			res = value + (way*60*pow(10,digitPosition));
+		}
+	}
+	constrainedRes = (constrain(res,lowerBound,upperBound)!= res) ? \
+	                 (value) : (res);
+	if(not timeFormat) this->setTempSP(constrainedRes);
+	else this->setTime(constrainedRes);
+	return constrainedRes;
 }
 
+void UIRims::_moveCursorLR(byte begin, byte end, byte dotPosition,
+						   byte row,boolean left)
+{
+	int way = (left) ? (-1) : (+1);
+	if((this->_cursorCol > begin and left) or \
+	   (this->_cursorCol < end and not left))
+	{
+		if (this->_cursorCol == dotPosition - (1*way))
+		{
+			this->_setCursorPosition(
+				this->_cursorCol + (2*way) , row);
+		}
+		else
+		{
+			this->_setCursorPosition(
+				this->_cursorCol + (1*way) , row);
+		}
+	}
+}
 
 /*
 ============================================================
@@ -329,7 +341,7 @@ float UIRims::_askValue(byte begin, byte end,
 			case KEYUP :
 				if(not this->_waitNone)
 				{
-					value = this->_applyValueModifs(value,dotPosition,true,
+					value = this->_incDecValue(value,dotPosition,true,
 										lowerBound,upperBound,timeFormat);
 					this->_waitNone = true;
 				}
@@ -337,43 +349,21 @@ float UIRims::_askValue(byte begin, byte end,
 			case KEYDOWN :
 				if(not this->_waitNone)
 				{
-					value = this->_applyValueModifs(value,dotPosition,false,
+					value = this->_incDecValue(value,dotPosition,false,
 										lowerBound,upperBound,timeFormat);
 					this->_waitNone = true;
 				}
 				break;
 			case KEYLEFT :
 				if(not this->_waitNone)
-					if(this->_cursorCol > begin)
-					{
-						if (this->_cursorCol == dotPosition + 1)
-						{
-							this->_setCursorPosition(this->_cursorCol-2,
-													 row);
-						}
-						else
-						{
-							this->_setCursorPosition(this->_cursorCol-1,
-													 row);
-						}
-					}
+					this->_moveCursorLR(begin,end,dotPosition,
+										row,true);
 					this->_waitNone = true;
 				break;
 			case KEYRIGHT :
 				if(not this->_waitNone)
-					if(this->_cursorCol < end)
-					{
-						if (this->_cursorCol == dotPosition-1)
-						{
-							this->_setCursorPosition(this->_cursorCol+2,
-													 row);
-						}
-						else
-						{
-							this->_setCursorPosition(this->_cursorCol+1,
-													 row);
-						}
-					}
+					this->_moveCursorLR(begin,end,dotPosition,
+										row,false);
 					this->_waitNone = true;
 				break;
 			case KEYSELECT :
@@ -398,11 +388,11 @@ OUTPUT : float setPoint
 DESC : Demande le setPoint à l'utilisateur.setPoint
 ============================================================
 */
-float UIRims::askSetPoint()
+float UIRims::askSetPoint(float defaultVal)
 {
 	float res;
 	this->showTempScreen();
-	res = this->_askValue(3,6,5,0,DEFAULTSP,0.0,99.9,false);
+	res = this->_askValue(3,6,5,0,defaultVal,0.0,99.9,false);
 	return res;
 }
 
@@ -414,10 +404,10 @@ OUTPUT : float time (seconds)
 DESC : Demande le temps du pallier à l'utilisateur
 ============================================================
 */
-int UIRims::askTime()
+int UIRims::askTime(float defaultVal)
 {
 	int res;
 	this->showTimeFlowScreen();
-	res = this->_askValue(5,12,7,0,DEFAULTTIME,0,362439,true);
+	res = this->_askValue(5,10,8,0,defaultVal,0,59999,true);
 	return res;
 }
