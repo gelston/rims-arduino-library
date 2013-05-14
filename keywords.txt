@@ -13,11 +13,27 @@ UIRims	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
-printStrLCD	    KEYWORD2
+showTempScreen	KEYWORD2
+showTimeFlowScreen	KEYWORD2
+showEnd	KEYWORD2
+
+setTempSP	KEYWORD2
+setTempPV	KEYWORD2
+setTime	KEYWORD2
+setFlow	KEYWORD2
+waitForKeyChange	KEYWORD2
+	
 askSetPoint	KEYWORD2
 askTime	KEYWORD2
+	
 
 #######################################
 # Constants (LITERAL1)
 #######################################
 
+KEYNONE	LITERAL1
+KEYUP	LITERAL1
+KEYDOWN	LITERAL1
+KEYLEFT	LITERAL1
+KEYRIGHT	LITERAL1
+KEYSELECT	LITERAL1
