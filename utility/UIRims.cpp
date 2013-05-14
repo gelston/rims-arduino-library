@@ -16,7 +16,7 @@ DESC : Constructeur d'un objet UIRims
 UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 		   byte pinKeysAnalog)
 : _lcd(lcd), _pinKeysAnalog(pinKeysAnalog),
-  _cursorCol(0), _cursorRow(0), _waitNone(false)
+  _cursorCol(0), _cursorRow(0), _pinLight(pinLight)
 {
 	pinMode(pinLight,OUTPUT);
 	digitalWrite(pinLight,HIGH);
@@ -81,13 +81,13 @@ byte UIRims::_readKeysADC()
 
 /*
 ============================================================
-TITLE : readKeys
+TITLE : waitForKeys
 INPUT : none
 OUTPUT : byte (bouton appuyé)
 DESC : Récupère le bouton présentement appuyé avec debounce
 ============================================================
 */
-byte UIRims::readKeys()
+byte UIRims::waitForKeyChange()
 {
 	boolean keyConfirmed = false, keyDetected = false;
 	byte lastKey = this->_readKeysADC(), currentKey;
@@ -98,19 +98,7 @@ byte UIRims::readKeys()
 		currentKey = this->_readKeysADC();
 		if(keyDetected)
 		{
-			if(currentTime - refTime >= 10)
-			{
-				if(currentKey == lastKey)
-				{
-					keyConfirmed = true;
-				}
-				else
-				{
-					keyDetected = false;
-					refTime = currentTime;
-					lastKey = currentKey;
-				}
-			}
+			if(currentTime - refTime >= 10) keyConfirmed = true;
 		}
 		if(currentKey != lastKey)
 		{
@@ -121,6 +109,7 @@ byte UIRims::readKeys()
 	}
 	return currentKey;
 }
+
 /*
 ============================================================
 TITLE : _printStrLCD
@@ -229,9 +218,6 @@ void UIRims::setTime(unsigned int timeSec)
 {
 	int minutes = timeSec / 60;
 	int seconds = timeSec % 60;
-	Serial.println(timeSec);
-	Serial.println(minutes);
-	Serial.println(seconds);
 	this->_printFloatLCD(minutes,3,0,5,0);
 	this->_printFloatLCD(seconds,2,0,9,0);
 }
@@ -333,47 +319,30 @@ float UIRims::_askValue(byte begin, byte end,
 	this->_lcd->blink();
 	while(not valSelected)
 	{
-		switch(this->readKeys())
+		switch(this->waitForKeyChange())
 		{
 			case KEYNONE :
-				if(this->_waitNone) this->_waitNone=false;
 				break;
 			case KEYUP :
-				if(not this->_waitNone)
-				{
-					value = this->_incDecValue(value,dotPosition,true,
-										lowerBound,upperBound,timeFormat);
-					this->_waitNone = true;
-				}
+				value = this->_incDecValue(value,dotPosition,true,
+									lowerBound,upperBound,timeFormat);
 				break;
 			case KEYDOWN :
-				if(not this->_waitNone)
-				{
-					value = this->_incDecValue(value,dotPosition,false,
-										lowerBound,upperBound,timeFormat);
-					this->_waitNone = true;
-				}
+				value = this->_incDecValue(value,dotPosition,false,
+									lowerBound,upperBound,timeFormat);
 				break;
 			case KEYLEFT :
-				if(not this->_waitNone)
-					this->_moveCursorLR(begin,end,dotPosition,
-										row,true);
-					this->_waitNone = true;
+				this->_moveCursorLR(begin,end,dotPosition,
+									row,true);
 				break;
 			case KEYRIGHT :
-				if(not this->_waitNone)
-					this->_moveCursorLR(begin,end,dotPosition,
-										row,false);
-					this->_waitNone = true;
+				this->_moveCursorLR(begin,end,dotPosition,
+									row,false);
 				break;
 			case KEYSELECT :
-				if(not this->_waitNone)
-				{
-					valSelected = true;
-					this->_lcd->noBlink();
-					this->_setCursorPosition(0,0);
-					this->_waitNone = true;
-				}
+				valSelected = true;
+				this->_lcd->noBlink();
+				this->_setCursorPosition(0,0);
 				break;
 		}
 	}
@@ -392,6 +361,7 @@ float UIRims::askSetPoint(float defaultVal)
 {
 	float res;
 	this->showTempScreen();
+	this->_printStrLCD("                 ",0,1);
 	res = this->_askValue(3,6,5,0,defaultVal,0.0,99.9,false);
 	return res;
 }
@@ -408,6 +378,34 @@ int UIRims::askTime(float defaultVal)
 {
 	int res;
 	this->showTimeFlowScreen();
+	this->_printStrLCD("                 ",0,1);
 	res = this->_askValue(5,10,8,0,defaultVal,0,59999,true);
 	return res;
+}
+
+/*
+============================================================
+TITLE : showEnd
+INPUT : -
+OUTPUT : void
+DESC :
+============================================================
+*/
+void UIRims::showEnd()
+{
+	unsigned long refTime, currentTime;
+	this->_lcd->clear();
+	this->_printStrLCD("finished!",0,0);
+	refTime = currentTime = millis();
+	boolean lightState = true;
+	while(true)
+	{
+		currentTime = millis();
+		if(currentTime-refTime>=500)
+		{
+			refTime = millis();
+			lightState = not lightState;
+			digitalWrite(this->_pinLight,lightState);
+		}
+	}
 }

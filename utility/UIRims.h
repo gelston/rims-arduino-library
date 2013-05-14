@@ -28,20 +28,27 @@ class UIRims
 {
 	
 public:
+	
 	UIRims(LiquidCrystal* lcd, byte col, byte row, byte pinLight,
 	     byte pinKeysAnalog);
+	
 	void showTempScreen();
 	void showTimeFlowScreen();
+	void showEnd();
+	
 	void setTempSP(float tempCelcius);
 	void setTempPV(float tempCelcius);
 	void setTime(unsigned int timeSec);
 	void setFlow(int flow); //liter/min
 	
-	byte readKeys();
+	byte waitForKeyChange();
 	
 	float askSetPoint(float defaultVal); // Celsius
 	int askTime(float defaultVal); // seconds
+	
+	
 protected:
+	
 	byte _readKeysADC();
 	void _printStrLCD(String mess, byte col, byte row);
 	void _printFloatLCD(float val, int width, int prec,
@@ -60,11 +67,12 @@ protected:
 				    float lowerBound, float upperBound,
 					boolean timeFormat);
 private:
+	
 	LiquidCrystal* _lcd;
 	byte _cursorCol;
 	byte _cursorRow;
 	byte _pinKeysAnalog;
-	boolean _waitNone;
+	byte _pinLight;
 };
 
 #endif
