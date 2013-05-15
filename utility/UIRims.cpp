@@ -141,6 +141,10 @@ void UIRims::_printFloatLCD(float val, int width, int prec,
 	char myFloatStr[17];
 	String res(dtostrf(val,width,prec,myFloatStr));
 	res.replace(' ','0');
+	if(res.length() > width)
+	{
+		res = String(dtostrf(val,width,0,myFloatStr));
+	}
 	this->_lcd->setCursor(col,row);
 	this->_lcd->print(res);
 	this->_lcd->setCursor(this->_cursorCol,this->_cursorRow);
@@ -408,4 +412,22 @@ void UIRims::showEnd()
 			digitalWrite(this->_pinLight,lightState);
 		}
 	}
+}
+
+/*
+============================================================
+TITLE : show
+INPUT : -
+OUTPUT : void
+DESC :
+============================================================
+*/
+void UIRims::showErrorPV(String mess)
+{
+	if(mess.length() > 2)
+	{
+		mess = String(mess).substring(0,2);
+	}
+	this->_printStrLCD(String(" #")+mess,3,1);
+	this->_printStrLCD(String("#")+mess,10,1);
 }

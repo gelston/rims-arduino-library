@@ -32,19 +32,26 @@ public:
 	UIRims(LiquidCrystal* lcd, byte col, byte row, byte pinLight,
 	     byte pinKeysAnalog);
 	
+	// === INFO DIALOGS ===
 	void showTempScreen();
 	void showTimeFlowScreen();
 	void showEnd();
 	
+	// === VARIABLES ===
 	void setTempSP(float tempCelcius);
 	void setTempPV(float tempCelcius);
 	void setTime(unsigned int timeSec);
 	void setFlow(int flow); //liter/min
 	
+	// === KEYS LISTENERS ===
 	byte waitForKeyChange();
 	
+	// === SETUP DIALOGS ===
 	float askSetPoint(float defaultVal); // Celsius
 	int askTime(float defaultVal); // seconds
+	
+	// === ERROR HANDLING ===
+	void showErrorPV(String mess);
 	
 	
 protected:
