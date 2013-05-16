@@ -18,9 +18,6 @@
 #define KEYRIGHT 4
 #define KEYSELECT 5
 
-#define DEFAULTSP 68 // Celsius
-#define DEFAULTTIME 5400 // seconds
-
 #include "Arduino.h"
 #include "LiquidCrystal.h"
 
@@ -35,6 +32,8 @@ public:
 	// === INFO DIALOGS ===
 	void showTempScreen();
 	void showTimeFlowScreen();
+	void switchScreen();
+	boolean getTempScreenShown();
 	void showEnd();
 	
 	// === VARIABLES ===
@@ -43,20 +42,21 @@ public:
 	void setTime(unsigned int timeSec);
 	void setFlow(int flow); //liter/min
 	
-	// === KEYS LISTENERS ===
-	byte waitForKeyChange();
+	// === KEYS READER ===
+	byte readKeysADC();
 	
 	// === SETUP DIALOGS ===
 	float askSetPoint(float defaultVal); // Celsius
-	int askTime(float defaultVal); // seconds
-	
+	unsigned int askTime(unsigned int defaultVal); // seconds
+
 	// === ERROR HANDLING ===
 	void showErrorPV(String mess);
 	
 	
 protected:
 	
-	byte _readKeysADC();
+	byte _waitForKeyChange();
+	
 	void _printStrLCD(String mess, byte col, byte row);
 	void _printFloatLCD(float val, int width, int prec,
 						byte col, byte row);
@@ -80,6 +80,7 @@ private:
 	byte _cursorRow;
 	byte _pinKeysAnalog;
 	byte _pinLight;
+	boolean _tempScreenShown;
 };
 
 #endif

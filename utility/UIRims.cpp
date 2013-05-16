@@ -8,8 +8,6 @@
 /*
 ============================================================
 TITLE : UIRims (constructeur)
-INPUT : int pin (entrée 0-3.3V)
-OUTPUT : void
 DESC : Constructeur d'un objet UIRims
 ============================================================
 */
@@ -27,8 +25,6 @@ UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 /*
 ============================================================
 TITLE : showTempScreen
-INPUT : 
-OUTPUT : void
 DESC : 
 ============================================================
 */
@@ -41,13 +37,12 @@ void UIRims::showTempScreen()
 	this->_printStrLCD(
 	    String("PV:00.0") + (char)223 +
 	    String("C(000") + (char)223 + String("F)"),0,1);
+	this->_tempScreenShown = true;
 }
 
 /*
 ============================================================
 TITLE : showTimeFlowScreen
-INPUT : 
-OUTPUT : void
 DESC : 
 ============================================================
 */
@@ -56,17 +51,47 @@ void UIRims::showTimeFlowScreen()
 	this->_lcd->clear();
 	this->_printStrLCD("time:000m00s",0,0);
 	this->_printStrLCD("flow:00.0l/min",0,1);
+	this->_tempScreenShown = false;
 }
 
 /*
 ============================================================
-TITLE : _readKeysADC
-INPUT : none
-OUTPUT : byte (bouton appuyé)
+TITLE : switchScreen
+DESC : 
+============================================================
+*/
+void UIRims::switchScreen()
+{
+	if(this->_tempScreenShown)
+	{
+		this->showTimeFlowScreen();
+		this->_tempScreenShown = false;
+	}
+	else
+	{
+		this->showTempScreen();
+		this->_tempScreenShown = true;
+	}
+}
+
+/*
+============================================================
+TITLE : getTempScreenShown
+DESC : 
+============================================================
+*/
+boolean UIRims::getTempScreenShown()
+{
+	return this->_tempScreenShown;
+}
+
+/*
+============================================================
+TITLE : readKeysADC
 DESC : Récupère le bouton présentement appuyé sans debounce
 ============================================================
 */
-byte UIRims::_readKeysADC()
+byte UIRims::readKeysADC()
 {
 	byte res;
 	int adcKeyVal = analogRead(0);  
@@ -81,21 +106,19 @@ byte UIRims::_readKeysADC()
 
 /*
 ============================================================
-TITLE : waitForKeys
-INPUT : none
-OUTPUT : byte (bouton appuyé)
+TITLE : _waitForKeyChange
 DESC : Récupère le bouton présentement appuyé avec debounce
 ============================================================
 */
-byte UIRims::waitForKeyChange()
+byte UIRims::_waitForKeyChange()
 {
 	boolean keyConfirmed = false, keyDetected = false;
-	byte lastKey = this->_readKeysADC(), currentKey;
+	byte lastKey = this->readKeysADC(), currentKey;
 	unsigned long refTime = millis(), currentTime;
 	while(not keyConfirmed)
 	{
 		currentTime = millis();
-		currentKey = this->_readKeysADC();
+		currentKey = this->readKeysADC();
 		if(keyDetected)
 		{
 			if(currentTime - refTime >= 10) keyConfirmed = true;
@@ -113,8 +136,6 @@ byte UIRims::waitForKeyChange()
 /*
 ============================================================
 TITLE : _printStrLCD
-INPUT : LiquidCrystal* lcd, String mess
-OUTPUT : void
 DESC : Affiche mess sur le lcd
 ============================================================
 */
@@ -129,9 +150,6 @@ void UIRims::_printStrLCD(String mess, byte col, byte row)
 /*
 ============================================================
 TITLE : _printFloatLCD
-INPUT : float val, int width, int prec,
-		byte col, byte row
-OUTPUT : void
 DESC : 
 ============================================================
 */
@@ -153,8 +171,6 @@ void UIRims::_printFloatLCD(float val, int width, int prec,
 /*
 ============================================================
 TITLE : _setCursorPosition
-INPUT : -
-OUTPUT : void
 DESC : Affiche un float de 3 digits sur le lcd à la 
        position donnée
 ============================================================
@@ -169,8 +185,6 @@ void UIRims::_setCursorPosition(byte col, byte row)
 /*
 ============================================================
 TITLE : _celciusToFahrenheit
-INPUT : float celcius
-OUTPUT : float fahrenheit
 DESC : Convert celcius temp to fahrenheit temp
 ============================================================
 */
@@ -197,8 +211,6 @@ void UIRims::setTempSP(float tempCelcius)
 /*
 ============================================================
 TITLE : setTempPV
-INPUT : float tempCelcius
-OUTPUT : void
 DESC : 
 ============================================================
 */
@@ -213,8 +225,6 @@ void UIRims::setTempPV(float tempCelcius)
 /*
 ============================================================
 TITLE : setTime
-INPUT : float tempCelcius
-OUTPUT : void
 DESC : 
 ============================================================
 */
@@ -229,8 +239,6 @@ void UIRims::setTime(unsigned int timeSec)
 /*
 ============================================================
 TITLE : setFlow
-INPUT : float flow (liter/min)
-OUTPUT : void
 DESC : 
 ============================================================
 */
@@ -241,8 +249,6 @@ void UIRims::setFlow(int flow)
 /*
 ============================================================
 TITLE : _incDecValue
-INPUT : byte col, byte row, boolean time
-OUTPUT : float
 DESC : 
 ============================================================
 */
@@ -282,6 +288,12 @@ float UIRims::_incDecValue(float value,byte dotPosition, boolean increase,
 	return constrainedRes;
 }
 
+/*
+============================================================
+TITLE : _moveCursorLR
+DESC : 
+============================================================
+*/
 void UIRims::_moveCursorLR(byte begin, byte end, byte dotPosition,
 						   byte row,boolean left)
 {
@@ -305,8 +317,6 @@ void UIRims::_moveCursorLR(byte begin, byte end, byte dotPosition,
 /*
 ============================================================
 TITLE : _askValue
-INPUT : -
-OUTPUT : float value
 DESC : Demande le setPoint à l'utilisateur.
 ============================================================
 */
@@ -323,7 +333,7 @@ float UIRims::_askValue(byte begin, byte end,
 	this->_lcd->blink();
 	while(not valSelected)
 	{
-		switch(this->waitForKeyChange())
+		switch(this->_waitForKeyChange())
 		{
 			case KEYNONE :
 				break;
@@ -353,11 +363,9 @@ float UIRims::_askValue(byte begin, byte end,
 	return value;
 }
 
-/*setPoint
+/*
 ============================================================
 TITLE : askSetPoint
-INPUT : -
-OUTPUT : float setPoint
 DESC : Demande le setPoint à l'utilisateur.setPoint
 ============================================================
 */
@@ -373,14 +381,12 @@ float UIRims::askSetPoint(float defaultVal)
 /*
 ============================================================
 TITLE : askTime
-INPUT : -
-OUTPUT : float time (seconds)
 DESC : Demande le temps du pallier à l'utilisateur
 ============================================================
 */
-int UIRims::askTime(float defaultVal)
+unsigned int UIRims::askTime(unsigned int defaultVal)
 {
-	int res;
+	unsigned int res;
 	this->showTimeFlowScreen();
 	this->_printStrLCD("                 ",0,1);
 	res = this->_askValue(5,10,8,0,defaultVal,0,59999,true);
@@ -390,8 +396,6 @@ int UIRims::askTime(float defaultVal)
 /*
 ============================================================
 TITLE : showEnd
-INPUT : -
-OUTPUT : void
 DESC :
 ============================================================
 */
@@ -417,8 +421,6 @@ void UIRims::showEnd()
 /*
 ============================================================
 TITLE : show
-INPUT : -
-OUTPUT : void
 DESC :
 ============================================================
 */

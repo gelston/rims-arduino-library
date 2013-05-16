@@ -13,19 +13,30 @@ UIRims	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
+
+### Rims ###
+
+start	KEYWORD2
+
+### UIRims ###
+
 showTempScreen	KEYWORD2
 showTimeFlowScreen	KEYWORD2
+switchScreen	KEYWORD2
+getTempScreenShown	KEYWORD2
 showEnd	KEYWORD2
 
 setTempSP	KEYWORD2
 setTempPV	KEYWORD2
 setTime	KEYWORD2
 setFlow	KEYWORD2
-waitForKeyChange	KEYWORD2
+
+readKeysADC	KEYWORD2
 	
 askSetPoint	KEYWORD2
 askTime	KEYWORD2
-	
+
+showErrorPV	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
