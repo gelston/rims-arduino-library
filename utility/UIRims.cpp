@@ -50,7 +50,7 @@ void UIRims::showTimeFlowScreen()
 {
 	this->_lcd->clear();
 	this->_printStrLCD("time:000m00s",0,0);
-	this->_printStrLCD("flow:00.0l/min",0,1);
+	this->_printStrLCD("flow:00.0L/min",0,1);
 	this->_tempScreenShown = false;
 }
 
@@ -242,9 +242,9 @@ TITLE : setFlow
 DESC : 
 ============================================================
 */
-void UIRims::setFlow(int flow)
+void UIRims::setFlow(float flow)
 {
-	this->_printFloatLCD(flow,3,1,5,1);
+	this->_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
 }
 /*
 ============================================================

@@ -22,7 +22,7 @@ DESC : Constructeur d'un objet Rims
 */
 Rims::Rims(UIRims uiRims, byte analogPinPV, byte interruptFlow)
 : _uiRims(uiRims), _analogPinPV(analogPinPV),
-  _flowLastPulseTime(0), _flow(0)
+  _flowLastTime(0), _flowCurTime(0)
 {
 	Rims::_rimsPtr = this;
 	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
@@ -43,16 +43,22 @@ void Rims::start()
 	        tempScreenShown = true;
 	while(not timePassed)
 	{
-		int val = analogRead(this->_analogPinPV);
-		Serial.println(val);
-		if(val >= 1023)
+		this->_tempPV = analogRead(this->_analogPinPV);
+		if(this->_uiRims.getTempScreenShown())
 		{
-			this->_uiRims.showErrorPV("NC");
+			if(this->_tempPV >= 1023)
+			{
+				this->_uiRims.showErrorPV("NC");
+			}
+			else
+			{
+				this->_uiRims.setTempPV(this->analogInToCelcius(this->_tempPV));
+				Serial.println(this->analogInToCelcius(this->_tempPV));
+			}
 		}
 		else
 		{
-			this->_uiRims.setTempPV(this->analogInToCelcius(val));
-			Serial.println(this->analogInToCelcius(val));
+			this->_uiRims.setFlow(this->getFlow());
 		}
 		// === KEY CHECK ===
 		if(waitNone)
@@ -64,6 +70,7 @@ void Rims::start()
 			if(this->_uiRims.readKeysADC() != KEYNONE)
 			{
 				this->_uiRims.switchScreen();
+				waitNone = true;
 			}
 		}
 	}
@@ -97,7 +104,21 @@ DESC :
 */
 float Rims::getFlow()
 {
-	return this->_flow;
+	float flow;
+	if(this->_flowCurTime == 0)
+	{
+		flow = 0.0;
+	}
+	else if(micros() - this->_flowCurTime >= 5e06)
+	{
+		flow = 0.0;
+	}
+	else
+	{
+		flow = (1e06 / (4.8* \ 
+		(this->_flowCurTime - this->_flowLastTime)));
+	}
+	return flow;
 }
 
 /*
@@ -108,8 +129,6 @@ DESC :
 */
 void Rims::_isrFlowSensor()
 {
-	unsigned long currentTime = millis();
-	Rims::_rimsPtr->_flow = (currentTime - Rims::_rimsPtr->_flowLastPulseTime) \
-							/ (1000.0*4.8);
-	Rims::_rimsPtr->_flowLastPulseTime = currentTime;
+	Rims::_rimsPtr->_flowLastTime = Rims::_rimsPtr->_flowCurTime;
+	Rims::_rimsPtr->_flowCurTime = micros();
 }

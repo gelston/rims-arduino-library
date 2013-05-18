@@ -40,7 +40,7 @@ public:
 	void setTempSP(float tempCelcius);
 	void setTempPV(float tempCelcius);
 	void setTime(unsigned int timeSec);
-	void setFlow(int flow); //liter/min
+	void setFlow(float flow); //liter/min
 	
 	// === KEYS READER ===
 	byte readKeysADC();
