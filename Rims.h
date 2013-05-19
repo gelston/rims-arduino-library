@@ -54,11 +54,12 @@ private:
 	
 	float _tempSP;
 	float _tempPV;
-	unsigned int _time;
-	unsigned int _startTime;
 	
-	volatile unsigned long _flowLastTime; //µSec
-	volatile unsigned long _flowCurTime; //µSec
+	unsigned long _time;					//mSec
+	unsigned long _startTime;				//mSec
+	
+	volatile unsigned long _flowLastTime;	//µSec
+	volatile unsigned long _flowCurTime;	//µSec
 };
 
 #endif

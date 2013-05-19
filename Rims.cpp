@@ -37,12 +37,16 @@ DESC : Routine principale
 void Rims::start()
 {
 	this->_tempSP = this->_uiRims.askSetPoint(DEFAULTSP);
-	this->_time = this->_uiRims.askTime(DEFAULTTIME);
+	this->_time = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
+	Serial.println(this->_time);
 	this->_uiRims.showTempScreen();
 	boolean timePassed = false, waitNone = true,
 	        tempScreenShown = true;
+	this->_startTime = millis();
 	while(not timePassed)
-	{
+	{	
+		unsigned long remainingTime = this->_time-(millis()-this->_startTime);
+		Serial.println(remainingTime);
 		this->_tempPV = analogRead(this->_analogPinPV);
 		if(this->_uiRims.getTempScreenShown())
 		{
@@ -59,6 +63,7 @@ void Rims::start()
 		else
 		{
 			this->_uiRims.setFlow(this->getFlow());
+			this->_uiRims.setTime(remainingTime/1000);
 		}
 		// === KEY CHECK ===
 		if(waitNone)
