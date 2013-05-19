@@ -37,45 +37,56 @@ DESC : Routine principale
 void Rims::start()
 {
 	this->_tempSP = this->_uiRims.askSetPoint(DEFAULTSP);
-	this->_time = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
-	Serial.println(this->_time);
+	this->_settedTime = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
 	this->_uiRims.showTempScreen();
+	this->_uiRims.setTempSP(this->_tempSP);
 	boolean timePassed = false, waitNone = true,
 	        tempScreenShown = true;
+	unsigned long currentTime, runningTime, remainingTime, lastRefreshTime;
+	int curTempADC = 1023;
 	this->_startTime = millis();
 	while(not timePassed)
 	{	
-		unsigned long remainingTime = this->_time-(millis()-this->_startTime);
-		Serial.println(remainingTime);
-		this->_tempPV = analogRead(this->_analogPinPV);
-		if(this->_uiRims.getTempScreenShown())
+		// === TIME REMAINING ===
+		currentTime = millis();
+		runningTime = currentTime - this->_startTime;
+		remainingTime = this->_settedTime-runningTime;
+		// === READ TEMPERATURE ===
+		curTempADC = analogRead(this->_analogPinPV);
+		this->_tempPV = this->analogInToCelcius(curTempADC);
+		// === REFRESH DISPLAY ===
+		if(currentTime - lastRefreshTime >= LCDREFRESHTIME)
 		{
-			if(this->_tempPV >= 1023)
+			Serial.print("REFRESH");
+			lastRefreshTime = currentTime;
+			if(this->_uiRims.getTempScreenShown())
 			{
-				this->_uiRims.showErrorPV("NC");
+				if(curTempADC >= 1023)
+				{
+					this->_uiRims.showErrorPV("NC");
+				}
+				else
+				{
+					this->_uiRims.setTempPV(this->_tempPV);;
+				}
 			}
 			else
 			{
-				this->_uiRims.setTempPV(this->analogInToCelcius(this->_tempPV));
-				Serial.println(this->analogInToCelcius(this->_tempPV));
+				this->_uiRims.setFlow(this->getFlow());
+				this->_uiRims.setTime(remainingTime/1000);
 			}
-		}
-		else
-		{
-			this->_uiRims.setFlow(this->getFlow());
-			this->_uiRims.setTime(remainingTime/1000);
-		}
-		// === KEY CHECK ===
-		if(waitNone)
-		{
-			if(this->_uiRims.readKeysADC() == KEYNONE) waitNone = false;
-		}
-		else
-		{
-			if(this->_uiRims.readKeysADC() != KEYNONE)
+			// === KEY CHECK ===
+			if(waitNone)
 			{
-				this->_uiRims.switchScreen();
-				waitNone = true;
+				if(this->_uiRims.readKeysADC() == KEYNONE) waitNone = false;
+			}
+			else
+			{
+				if(this->_uiRims.readKeysADC() != KEYNONE)
+				{
+					this->_uiRims.switchScreen();
+					waitNone = true;
+				}
 			}
 		}
 	}
