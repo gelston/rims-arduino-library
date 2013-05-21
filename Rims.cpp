@@ -58,10 +58,6 @@ void Rims::start()
 		{
 			this->_uiRims.showErrorPV("NC");
 		}
-		if(this->_flow < 2.0 or this->_flow > 4.0)
-		{
-			//this->_uiRims.showErrorFlow("RE");
-		}
 		// === REFRESH DISPLAY ===
 		this->_uiRims.setTempPV(this->_tempPV);
 		this->_uiRims.setTime(remainingTime/1000);

@@ -42,7 +42,7 @@ public:
 	void setTempSP(float tempCelcius, boolean waitRefresh = true);
 	void setTempPV(float tempCelcius, boolean waitRefresh = true);
 	void setTime(unsigned int timeSec, boolean waitRefresh = true);
-	void setFlow(float flow, boolean waitRefresh = false); //liter/min
+	void setFlow(float flow, boolean waitRefresh = true); //liter/min
 	
 	// === KEYS READER ===
 	byte readKeysADC();

@@ -24,7 +24,7 @@ UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 	this->_lcd->begin(col,row);
 	this->_lcd->clear();
 	byte okChar[8] = {
-		B11110,
+		B01110,
 		B10001,
 		B01110,
 		B00000,
@@ -53,9 +53,9 @@ UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 		B00100,
 		B00000
 	};
-	this->_lcd->createChar(0,okChar);
-	this->_lcd->createChar(1,upChar);
-	this->_lcd->createChar(2,downChar);
+	this->_lcd->createChar(1,okChar);
+	this->_lcd->createChar(2,upChar);
+	this->_lcd->createChar(3,downChar);
 }
 
 /*
@@ -333,9 +333,9 @@ void UIRims::setFlow(float flow, boolean waitRefresh)
 		{
 			this->_lastRefreshFlow = currentTime;
 			this->_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
-			if(flow<2.0) this->_printStrLCD(String((char)2),15,1);
-			else if(flow>4.0) this->_printStrLCD(String((char)1),15,1);
-			else this->_printStrLCD(String((char)0),15,1);
+			if(flow>=2.0 and flow<=4.0) this->_printStrLCD("\x01",15,1);
+			else if(flow<2.0) this->_printStrLCD("\x03",15,1);
+			else this->_printStrLCD("\x02",15,1);
 		}
 	}
 }
