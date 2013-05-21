@@ -54,13 +54,13 @@ void Rims::start()
 		currentTime = millis();
 		runningTime = currentTime - this->_startTime;
 		remainingTime = this->_settedTime-runningTime;
-		if(curTempADC >= 1023 or this->_flow < 2.0 or this->_flow > 4.0)
+		if(curTempADC >= 1023)
 		{
-			//TODO
-			//TODO
-			//STOP TOUTTEEE
-			//TODO
-			//TODO
+			this->_uiRims.showErrorPV("NC");
+		}
+		if(this->_flow < 2.0 or this->_flow > 4.0)
+		{
+			//this->_uiRims.showErrorFlow("RE");
 		}
 		// === REFRESH DISPLAY ===
 		this->_uiRims.setTempPV(this->_tempPV);

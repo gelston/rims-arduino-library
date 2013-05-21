@@ -23,6 +23,39 @@ UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 	digitalWrite(pinLight,HIGH);
 	this->_lcd->begin(col,row);
 	this->_lcd->clear();
+	byte okChar[8] = {
+		B11110,
+		B10001,
+		B01110,
+		B00000,
+		B11111,
+		B00100,
+		B11011,
+		B00000
+	};
+	byte upChar[8] = {
+		B00100,
+		B01110,
+		B11111,
+		B00100,
+		B00100,
+		B00100,
+		B00100,
+		B00000
+	};
+	byte downChar[8] = {
+		B00100,
+		B00100,
+		B00100,
+		B00100,
+		B11111,
+		B01110,
+		B00100,
+		B00000
+	};
+	this->_lcd->createChar(0,okChar);
+	this->_lcd->createChar(1,upChar);
+	this->_lcd->createChar(2,downChar);
 }
 
 /*
@@ -56,7 +89,7 @@ void UIRims::showTimeFlowScreen()
 	this->_tempScreenShown = false;
 	this->_lcd->clear();
 	this->_printStrLCD("time:000m00s",0,0);
-	this->_printStrLCD("flow:00.0L/min",0,1);
+	this->_printStrLCD(String("flow:00.0L/min "+(char)0),0,1);
 	this->setTime(this->_time,false);
 	this->setFlow(this->_flow,false);
 }
@@ -300,6 +333,9 @@ void UIRims::setFlow(float flow, boolean waitRefresh)
 		{
 			this->_lastRefreshFlow = currentTime;
 			this->_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
+			if(flow<2.0) this->_printStrLCD(String((char)2),15,1);
+			else if(flow>4.0) this->_printStrLCD(String((char)1),15,1);
+			else this->_printStrLCD(String((char)0),15,1);
 		}
 	}
 }
@@ -484,24 +520,13 @@ DESC :
 */
 void UIRims::showErrorPV(String mess)
 {
-	if(mess.length() > 2)
+	if(this->_tempScreenShown)
 	{
-		mess = String(mess).substring(0,2);
+		if(mess.length() > 2)
+		{
+			mess = String(mess).substring(0,2);
+		}
+		this->_printStrLCD(String(" #")+mess,3,1);
+		this->_printStrLCD(String("#")+mess,10,1);
 	}
-	this->_printStrLCD(String(" #")+mess,3,1);
-	this->_printStrLCD(String("#")+mess,10,1);
-}
-/*
-============================================================
-TITLE : showErrorPV
-DESC :
-============================================================
-*/
-void UIRims::showErrorFlow(String mess)
-{
-	if(mess.length() > 2)
-	{
-		mess = String(mess).substring(0,2);
-	}
-	this->_printStrLCD(String(" #")+mess,5,1);
 }

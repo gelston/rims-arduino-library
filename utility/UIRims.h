@@ -53,7 +53,6 @@ public:
 
 	// === ERROR HANDLING ===
 	void showErrorPV(String mess);
-	void showErrorFlow(String mess);
 	
 	
 protected:
