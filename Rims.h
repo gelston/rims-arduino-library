@@ -23,8 +23,6 @@
 #define DEFAULTSP 68 // Celsius
 #define DEFAULTTIME 5400 // seconds
 
-#define LCDREFRESHTIME 500 // mSec
-
 #include "Arduino.h"
 
 #include "LiquidCrystal.h"
@@ -59,6 +57,8 @@ private:
 	
 	unsigned long _settedTime;				//mSec
 	unsigned long _startTime;				//mSec
+	
+	float _flow;
 	
 	volatile unsigned long _flowLastTime;	//µSec
 	volatile unsigned long _flowCurTime;	//µSec

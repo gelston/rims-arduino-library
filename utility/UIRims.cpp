@@ -14,7 +14,10 @@ DESC : Constructeur d'un objet UIRims
 UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 		   byte pinKeysAnalog)
 : _lcd(lcd), _pinKeysAnalog(pinKeysAnalog),
-  _cursorCol(0), _cursorRow(0), _pinLight(pinLight)
+  _cursorCol(0), _cursorRow(0), _pinLight(pinLight),
+  _lastRefreshSP(0), _lastRefreshPV(0), 
+  _lastRefreshTime(0), _lastRefreshFlow(0),
+  _tempSP(0), _tempPV(0), _time(0), _flow(0)
 {
 	pinMode(pinLight,OUTPUT);
 	digitalWrite(pinLight,HIGH);
@@ -30,6 +33,7 @@ DESC :
 */
 void UIRims::showTempScreen()
 {
+	this->_tempScreenShown = true;
 	this->_lcd->clear();
 	this->_printStrLCD(
 		String("SP:00.0") + (char)223 +
@@ -37,7 +41,8 @@ void UIRims::showTempScreen()
 	this->_printStrLCD(
 	    String("PV:00.0") + (char)223 +
 	    String("C(000") + (char)223 + String("F)"),0,1);
-	this->_tempScreenShown = true;
+	this->setTempSP(this->_tempSP,false);
+	this->setTempPV(this->_tempPV,false);
 }
 
 /*
@@ -48,10 +53,12 @@ DESC :
 */
 void UIRims::showTimeFlowScreen()
 {
+	this->_tempScreenShown = false;
 	this->_lcd->clear();
 	this->_printStrLCD("time:000m00s",0,0);
 	this->_printStrLCD("flow:00.0L/min",0,1);
-	this->_tempScreenShown = false;
+	this->setTime(this->_time,false);
+	this->setFlow(this->_flow,false);
 }
 
 /*
@@ -65,12 +72,10 @@ void UIRims::switchScreen()
 	if(this->_tempScreenShown)
 	{
 		this->showTimeFlowScreen();
-		this->_tempScreenShown = false;
 	}
 	else
 	{
 		this->showTempScreen();
-		this->_tempScreenShown = true;
 	}
 }
 
@@ -201,11 +206,24 @@ OUTPUT : void
 DESC : 
 ============================================================
 */
-void UIRims::setTempSP(float tempCelcius)
+void UIRims::setTempSP(float tempCelcius, boolean waitRefresh)
 {
-	float tempFahren = this->_celciusToFahrenheit(tempCelcius);
-	this->_printFloatLCD(tempCelcius,4,1,3,0);
-	this->_printFloatLCD(tempFahren,3,0,10,0);
+	this->_tempSP = tempCelcius;
+	if(this->_tempScreenShown)
+	{
+		boolean refreshLCD = false;
+		unsigned long currentTime = millis();
+		if(not waitRefresh)	refreshLCD = true;
+		else if(currentTime - this->_lastRefreshSP >= LCDREFRESHTIME) \
+				refreshLCD = true;
+		if(refreshLCD)
+		{
+			this->_lastRefreshSP = currentTime;
+			float tempFahren = this->_celciusToFahrenheit(tempCelcius);
+			this->_printFloatLCD(tempCelcius,4,1,3,0);
+			this->_printFloatLCD(tempFahren,3,0,10,0);
+		}
+	}
 }
 
 /*
@@ -214,11 +232,24 @@ TITLE : setTempPV
 DESC : 
 ============================================================
 */
-void UIRims::setTempPV(float tempCelcius)
+void UIRims::setTempPV(float tempCelcius, boolean waitRefresh)
 {
-	float tempFahren = this->_celciusToFahrenheit(tempCelcius);
-	this->_printFloatLCD(tempCelcius,4,1,3,1);
-	this->_printFloatLCD(tempFahren,3,0,10,1);
+	this->_tempPV = tempCelcius;
+	if(this->_tempScreenShown)
+	{
+		boolean refreshLCD = false;
+		unsigned long currentTime = millis();
+		if(not waitRefresh)	refreshLCD = true;
+		else if(currentTime - this->_lastRefreshPV >= LCDREFRESHTIME) \
+				refreshLCD = true;
+		if(refreshLCD)
+		{
+			this->_lastRefreshPV = currentTime;
+			float tempFahren = this->_celciusToFahrenheit(tempCelcius);
+			this->_printFloatLCD(tempCelcius,4,1,3,1);
+			this->_printFloatLCD(tempFahren,3,0,10,1);
+		}
+	}
 }
 
 
@@ -228,12 +259,25 @@ TITLE : setTime
 DESC : 
 ============================================================
 */
-void UIRims::setTime(unsigned int timeSec)
+void UIRims::setTime(unsigned int timeSec, boolean waitRefresh)
 {
-	int minutes = timeSec / 60;
-	int seconds = timeSec % 60;
-	this->_printFloatLCD(minutes,3,0,5,0);
-	this->_printFloatLCD(seconds,2,0,9,0);
+	this->_time = timeSec;
+	if(not this->_tempScreenShown)
+	{
+		boolean refreshLCD = false;
+		unsigned long currentTime = millis();
+		if(not waitRefresh)	refreshLCD = true;
+		else if(currentTime - this->_lastRefreshTime >= LCDREFRESHTIME) \
+				refreshLCD = true;
+		if(refreshLCD)
+		{
+			this->_lastRefreshTime = currentTime;
+			int minutes = timeSec / 60;
+			int seconds = timeSec % 60;
+			this->_printFloatLCD(minutes,3,0,5,0);
+			this->_printFloatLCD(seconds,2,0,9,0);
+		}
+	}
 }
 
 /*
@@ -242,9 +286,22 @@ TITLE : setFlow
 DESC : 
 ============================================================
 */
-void UIRims::setFlow(float flow)
+void UIRims::setFlow(float flow, boolean waitRefresh)
 {
-	this->_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
+	this->_flow = flow;
+	if(not this->_tempScreenShown)
+	{
+		boolean refreshLCD = false;
+		unsigned long currentTime = millis();
+		if(not waitRefresh)	refreshLCD = true;
+		else if(currentTime - this->_lastRefreshFlow >= LCDREFRESHTIME) \
+				refreshLCD = true;
+		if(refreshLCD)
+		{
+			this->_lastRefreshFlow = currentTime;
+			this->_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
+		}
+	}
 }
 /*
 ============================================================
@@ -283,8 +340,8 @@ float UIRims::_incDecValue(float value,byte dotPosition, boolean increase,
 	}
 	constrainedRes = (constrain(res,lowerBound,upperBound)!= res) ? \
 	                 (value) : (res);
-	if(not timeFormat) this->setTempSP(constrainedRes);
-	else this->setTime(constrainedRes);
+	if(not timeFormat) this->setTempSP(constrainedRes,false);
+	else this->setTime(constrainedRes,false);
 	return constrainedRes;
 }
 
@@ -328,7 +385,8 @@ float UIRims::_askValue(byte begin, byte end,
 {
 	boolean valSelected = false;
 	float value = defaultVal;
-	timeFormat ? this->setTime(defaultVal):this->setTempSP(defaultVal);
+	timeFormat ? this->setTime(defaultVal,false) : \
+	             this->setTempSP(defaultVal,false);
 	this->_setCursorPosition(dotPosition-1,row);
 	this->_lcd->blink();
 	while(not valSelected)
@@ -420,7 +478,7 @@ void UIRims::showEnd()
 
 /*
 ============================================================
-TITLE : show
+TITLE : showErrorPV
 DESC :
 ============================================================
 */
@@ -432,4 +490,18 @@ void UIRims::showErrorPV(String mess)
 	}
 	this->_printStrLCD(String(" #")+mess,3,1);
 	this->_printStrLCD(String("#")+mess,10,1);
+}
+/*
+============================================================
+TITLE : showErrorPV
+DESC :
+============================================================
+*/
+void UIRims::showErrorFlow(String mess)
+{
+	if(mess.length() > 2)
+	{
+		mess = String(mess).substring(0,2);
+	}
+	this->_printStrLCD(String(" #")+mess,5,1);
 }

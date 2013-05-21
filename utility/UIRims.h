@@ -18,6 +18,8 @@
 #define KEYRIGHT 4
 #define KEYSELECT 5
 
+#define LCDREFRESHTIME 500 // mSec
+
 #include "Arduino.h"
 #include "LiquidCrystal.h"
 
@@ -36,11 +38,11 @@ public:
 	boolean getTempScreenShown();
 	void showEnd();
 	
-	// === VARIABLES ===
-	void setTempSP(float tempCelcius);
-	void setTempPV(float tempCelcius);
-	void setTime(unsigned int timeSec);
-	void setFlow(float flow); //liter/min
+	// === VARIABLE SETTER ===
+	void setTempSP(float tempCelcius, boolean waitRefresh = true);
+	void setTempPV(float tempCelcius, boolean waitRefresh = true);
+	void setTime(unsigned int timeSec, boolean waitRefresh = true);
+	void setFlow(float flow, boolean waitRefresh = false); //liter/min
 	
 	// === KEYS READER ===
 	byte readKeysADC();
@@ -51,6 +53,7 @@ public:
 
 	// === ERROR HANDLING ===
 	void showErrorPV(String mess);
+	void showErrorFlow(String mess);
 	
 	
 protected:
@@ -81,6 +84,16 @@ private:
 	byte _pinKeysAnalog;
 	byte _pinLight;
 	boolean _tempScreenShown;
+	
+	unsigned long _lastRefreshSP;
+	unsigned long _lastRefreshPV;
+	unsigned long _lastRefreshTime;
+	unsigned long _lastRefreshFlow;
+	
+	float _tempSP;
+	float _tempPV;
+	unsigned int _time;
+	float _flow;
 };
 
 #endif
