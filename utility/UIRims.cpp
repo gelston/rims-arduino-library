@@ -333,8 +333,9 @@ void UIRims::setFlow(float flow, boolean waitRefresh)
 		{
 			this->_lastRefreshFlow = currentTime;
 			this->_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
-			if(flow>=2.0 and flow<=4.0) this->_printStrLCD("\x01",15,1);
-			else if(flow<2.0) this->_printStrLCD("\x03",15,1);
+			if(flow>=FLOWLOWBOUND and flow<=FLOWUPBOUND) \
+					this->_printStrLCD("\x01",15,1);
+			else if(flow<FLOWLOWBOUND) this->_printStrLCD("\x03",15,1);
 			else this->_printStrLCD("\x02",15,1);
 		}
 	}

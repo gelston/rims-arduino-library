@@ -20,6 +20,9 @@
 
 #define LCDREFRESHTIME 500 // mSec
 
+#define FLOWLOWBOUND 2.0
+#define FLOWUPBOUND 4.0
+
 #include "Arduino.h"
 #include "LiquidCrystal.h"
 

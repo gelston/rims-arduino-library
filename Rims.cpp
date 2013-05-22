@@ -95,7 +95,7 @@ float Rims::analogInToCelcius(int analogIn)
 	                  STEINHART1*logResTherm+\
 	                  STEINHART2*pow(logResTherm,2)+\
 	                  STEINHART3*pow(logResTherm,3);
-	return (1/invKelvin)-273.15;
+	return (1/invKelvin)-273.15+FINETUNETEMP;
 }
 
 /*
