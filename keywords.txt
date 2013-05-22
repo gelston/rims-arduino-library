@@ -9,6 +9,8 @@
 Rims	KEYWORD1
 UIRims	KEYWORD1
 
+MsTimer2	KEYWORD1
+
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
@@ -37,6 +39,12 @@ askSetPoint	KEYWORD2
 askTime	KEYWORD2
 
 showErrorPV	KEYWORD2
+
+### MsTimer2 ###
+
+set	KEYWORD2
+start	KEYWORD2
+stop	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
