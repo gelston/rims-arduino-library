@@ -4,6 +4,7 @@
 
 #include "Arduino.h"
 #include "math.h"
+#include "utility/TimerOne.h"
 #include "Rims.h"
 
 /* 
@@ -20,8 +21,10 @@ TITLE : Rims (constructeur)
 DESC : Constructeur d'un objet Rims
 ============================================================
 */
-Rims::Rims(UIRims uiRims, byte analogPinPV, byte interruptFlow)
+Rims::Rims(UIRims uiRims, byte analogPinPV, byte interruptFlow,
+	       byte ssrPin, byte ledPin)
 : _uiRims(uiRims), _analogPinPV(analogPinPV),
+  _ssrPin(ssrPin), _ledPin(ledPin),
   _flowLastTime(0), _flowCurTime(0)
 {
 	Rims::_rimsPtr = this;
@@ -40,9 +43,13 @@ void Rims::start()
 	this->_settedTime = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
 	this->_uiRims.showTempScreen();
 	this->_uiRims.setTempSP(this->_tempSP);
+	int curTempADC = analogRead(this->_analogPinPV);
+	this->_tempPV = this->analogInToCelcius(curTempADC);
+	this->_uiRims.setTempPV(this->_tempPV);
+	Timer1.initialize(PIDSAMPLETIME);
+	Timer1.attachInterrupt(Rims::_isrPID);
 	boolean timePassed = false, waitNone = true;
 	unsigned long currentTime, runningTime, remainingTime;
-	int curTempADC = 1023;
 	this->_startTime = millis();
 	while(not timePassed)
 	{	
@@ -75,6 +82,7 @@ void Rims::start()
 				waitNone = true;
 			}
 		}
+		if(runningTime >= this->_settedTime) timePassed = true;
 	}
 	this->_uiRims.showEnd();
 }
@@ -133,4 +141,16 @@ void Rims::_isrFlowSensor()
 {
 	Rims::_rimsPtr->_flowLastTime = Rims::_rimsPtr->_flowCurTime;
 	Rims::_rimsPtr->_flowCurTime = micros();
+}
+
+/*
+============================================================
+TITLE : _isrPID
+DESC : 
+============================================================
+*/
+void Rims::_isrPID()
+{
+	Serial.println("PID Interrupt!");
+	Rims::_rimsPts->_controlValue
 }

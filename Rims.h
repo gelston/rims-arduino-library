@@ -22,6 +22,8 @@
 
 #define FINETUNETEMP -0.3
 
+#define PIDSAMPLETIME 5e06 // µSec 
+
 #define DEFAULTSP 68 // Celsius
 #define DEFAULTTIME 5400 // seconds
 
@@ -34,7 +36,8 @@ class Rims
 {
 	
 public:
-	Rims(UIRims uiRims, byte analogPinPV, byte interruptFlow);
+	Rims(UIRims uiRims, byte analogPinPV, byte interruptFlow,
+		 byte ssrPin, byte ledPin);
 
 	void start();
 	
@@ -48,11 +51,14 @@ private:
 	
 	
 	static void _isrFlowSensor();
+	static void _isrPID();
 	
 	static Rims* _rimsPtr;
 	
 	UIRims _uiRims;
 	byte _analogPinPV;
+	byte _ssrPin;
+	byte _ledPin;
 	
 	float _tempSP;
 	float _tempPV;
@@ -64,6 +70,8 @@ private:
 	
 	volatile unsigned long _flowLastTime;	//µSec
 	volatile unsigned long _flowCurTime;	//µSec
+	
+	volatile float _controlValue; // [0,1]
 };
 
 #endif

@@ -8,8 +8,7 @@
 
 Rims	KEYWORD1
 UIRims	KEYWORD1
-
-MsTimer2	KEYWORD1
+TimerOne	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -27,24 +26,30 @@ showTimeFlowScreen	KEYWORD2
 switchScreen	KEYWORD2
 getTempScreenShown	KEYWORD2
 showEnd	KEYWORD2
-
 setTempSP	KEYWORD2
 setTempPV	KEYWORD2
 setTime	KEYWORD2
 setFlow	KEYWORD2
-
 readKeysADC	KEYWORD2
-	
 askSetPoint	KEYWORD2
 askTime	KEYWORD2
-
 showErrorPV	KEYWORD2
 
-### MsTimer2 ###
+### TimerOne ###
 
-set	KEYWORD2
+initialize	KEYWORD2
 start	KEYWORD2
 stop	KEYWORD2
+restart	KEYWORD2
+resume	KEYWORD2
+read	KEYWORD2
+pwm	KEYWORD2
+disablePwm	KEYWORD2
+attachInterrupt	KEYWORD2
+detachInterrupt	KEYWORD2
+setPeriod	KEYWORD2
+setPwmDuty	KEYWORD2
+
 
 #######################################
 # Constants (LITERAL1)
