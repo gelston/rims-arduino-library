@@ -4,7 +4,7 @@
 
 #include "Arduino.h"
 #include "math.h"
-#include "utility/TimerOne.h"
+#include "utility/PID_v1.h"
 #include "Rims.h"
 
 /* 
@@ -22,12 +22,15 @@ DESC : Constructeur d'un objet Rims
 ============================================================
 */
 Rims::Rims(UIRims uiRims, byte analogPinPV, byte interruptFlow,
-	       byte ssrPin, byte ledPin)
-: _uiRims(uiRims), _analogPinPV(analogPinPV),
+	       byte ssrPin, byte ledPin, 
+		   PID myPID)
+: _myPID(myPID),
+  _uiRims(uiRims), _analogPinPV(analogPinPV),
   _ssrPin(ssrPin), _ledPin(ledPin),
   _flowLastTime(0), _flowCurTime(0)
 {
 	Rims::_rimsPtr = this;
+	_myPID.SetSampleTime(PIDSAMPLETIME);
 	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
 }
 
@@ -39,15 +42,13 @@ DESC : Routine principale
 */
 void Rims::start()
 {
-	this->_tempSP = this->_uiRims.askSetPoint(DEFAULTSP);
+	*this->_tempSP = this->_uiRims.askSetPoint(DEFAULTSP);
 	this->_settedTime = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
 	this->_uiRims.showTempScreen();
-	this->_uiRims.setTempSP(this->_tempSP);
+	this->_uiRims.setTempSP(*this->_tempSP);
 	int curTempADC = analogRead(this->_analogPinPV);
-	this->_tempPV = this->analogInToCelcius(curTempADC);
-	this->_uiRims.setTempPV(this->_tempPV);
-	Timer1.initialize(PIDSAMPLETIME);
-	Timer1.attachInterrupt(Rims::_isrPID);
+	*this->_tempPV = this->analogInToCelcius(curTempADC);
+	this->_uiRims.setTempPV(*this->_tempPV);
 	boolean timePassed = false, waitNone = true;
 	unsigned long currentTime, runningTime, remainingTime;
 	this->_startTime = millis();
@@ -55,7 +56,7 @@ void Rims::start()
 	{	
 		// === READ TEMPERATURE/FLOW ===
 		curTempADC = analogRead(this->_analogPinPV);
-		this->_tempPV = this->analogInToCelcius(curTempADC);
+		*this->_tempPV = this->analogInToCelcius(curTempADC);
 		this->_flow = this->getFlow();
 		// === TIME REMAINING ===
 		currentTime = millis();
@@ -66,7 +67,7 @@ void Rims::start()
 			this->_uiRims.showErrorPV("NC");
 		}
 		// === REFRESH DISPLAY ===
-		this->_uiRims.setTempPV(this->_tempPV);
+		this->_uiRims.setTempPV(*this->_tempPV);
 		this->_uiRims.setTime(remainingTime/1000);
 		this->_uiRims.setFlow(this->_flow);
 		// === KEY CHECK ===
@@ -133,6 +134,17 @@ float Rims::getFlow()
 
 /*
 ============================================================
+TITLE : getPID
+DESC : 
+============================================================
+*/
+PID Rims::getPID()
+{
+	return this->_myPID;
+}
+
+/*
+============================================================
 TITLE : _isrFlowSensor
 DESC : 
 ============================================================
@@ -141,16 +153,4 @@ void Rims::_isrFlowSensor()
 {
 	Rims::_rimsPtr->_flowLastTime = Rims::_rimsPtr->_flowCurTime;
 	Rims::_rimsPtr->_flowCurTime = micros();
-}
-
-/*
-============================================================
-TITLE : _isrPID
-DESC : 
-============================================================
-*/
-void Rims::_isrPID()
-{
-	Serial.println("PID Interrupt!");
-	Rims::_rimsPts->_controlValue
 }

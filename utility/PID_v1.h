@@ -41,8 +41,8 @@ class PID
 										  //   once it is set in the constructor.
     void SetSampleTime(int);              // * sets the frequency, in Milliseconds, with which 
                                           //   the PID calculation is performed.  default is 100
-	void SetPIDFilter(double);			 									  
-										  
+	void SetPIDFilter(double);			  // * add a low pass filter with the given time constant at 
+										  //   the output of the PID. Call with "0" for no filtering (default).
 										  
   //Display functions ****************************************************************
 	double GetKp();						  // These functions query the pid for interal values.

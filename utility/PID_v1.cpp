@@ -63,7 +63,7 @@ bool PID::Compute()
       double dInput = (input - lastInput);
  
       /*Compute PID Output*/
-      double output = 1;//kp * error + ITerm- kd * dInput;
+      double output = 1;// kp * error + ITerm- kd * dInput;
       
 	  /*Low-pass filter, if setted*/
 	  if(filterCst != 0)
@@ -165,13 +165,15 @@ void PID::SetMode(int Mode)
 
 /* SetPIDFilter(...)***********************************************************
  * Apply a lowpass filter at the output of the PID controller with the given
- * time constant tauFilter
+ * time constant "tauFilter". 
  ******************************************************************************/ 
 void PID::SetPIDFilter(double tauFilterInSec)
 {
-	if(tauFilterInSec
-	filterCst = exp((-1.0)*(double)SampleTime/(tauFilterInSec*1000.0));
-	lastFilterOutput = 0;
+	if(tauFilterInSec>=0)
+	{
+		filterCst = exp((-1.0)*(double)SampleTime/(tauFilterInSec*1000.0));
+		lastFilterOutput = 0;
+	}
 }
  
 /* Initialize()****************************************************************

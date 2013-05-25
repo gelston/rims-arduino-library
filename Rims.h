@@ -22,28 +22,30 @@
 
 #define FINETUNETEMP -0.3
 
-#define PIDSAMPLETIME 5e06 // µSec 
+#define PIDSAMPLETIME 5000 // mSec 
 
 #define DEFAULTSP 68 // Celsius
 #define DEFAULTTIME 5400 // seconds
 
 #include "Arduino.h"
 
-#include "LiquidCrystal.h"
 #include "utility/UIRims.h"
+#include "utility/PID_v1.h"
 
 class Rims
 {
 	
 public:
 	Rims(UIRims uiRims, byte analogPinPV, byte interruptFlow,
-		 byte ssrPin, byte ledPin);
+		 byte ssrPin, byte ledPin,
+		 PID myPID);
 
 	void start();
 	
 	float analogInToCelcius(int analogIn);
 	
 	float getFlow();
+	PID getPID();
 	
 protected:
 	
@@ -56,12 +58,14 @@ private:
 	static Rims* _rimsPtr;
 	
 	UIRims _uiRims;
+	PID _myPID;
 	byte _analogPinPV;
 	byte _ssrPin;
 	byte _ledPin;
 	
-	float _tempSP;
-	float _tempPV;
+	double* _tempSP;
+	double* _tempPV;
+	double* _controlValue; // [0,1]
 	
 	unsigned long _settedTime;				//mSec
 	unsigned long _startTime;				//mSec
@@ -71,7 +75,6 @@ private:
 	volatile unsigned long _flowLastTime;	//µSec
 	volatile unsigned long _flowCurTime;	//µSec
 	
-	volatile float _controlValue; // [0,1]
 };
 
 #endif
