@@ -53,7 +53,6 @@ private:
 	
 	
 	static void _isrFlowSensor();
-	static void _isrPID();
 	
 	static Rims* _rimsPtr;
 	

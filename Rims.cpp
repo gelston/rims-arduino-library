@@ -42,12 +42,12 @@ DESC : Routine principale
 */
 void Rims::start()
 {
-	*this->_tempSP = this->_uiRims.askSetPoint(DEFAULTSP);
+	*(this->_tempSP) = this->_uiRims.askSetPoint(DEFAULTSP);
 	this->_settedTime = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
 	this->_uiRims.showTempScreen();
 	this->_uiRims.setTempSP(*this->_tempSP);
 	int curTempADC = analogRead(this->_analogPinPV);
-	*this->_tempPV = this->analogInToCelcius(curTempADC);
+	*(this->_tempPV) = this->analogInToCelcius(curTempADC);
 	this->_uiRims.setTempPV(*this->_tempPV);
 	boolean timePassed = false, waitNone = true;
 	unsigned long currentTime, runningTime, remainingTime;
@@ -56,7 +56,7 @@ void Rims::start()
 	{	
 		// === READ TEMPERATURE/FLOW ===
 		curTempADC = analogRead(this->_analogPinPV);
-		*this->_tempPV = this->analogInToCelcius(curTempADC);
+		*(this->_tempPV) = this->analogInToCelcius(curTempADC);
 		this->_flow = this->getFlow();
 		// === TIME REMAINING ===
 		currentTime = millis();
