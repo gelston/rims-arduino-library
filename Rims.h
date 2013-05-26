@@ -46,6 +46,7 @@ public:
 	
 	float getFlow();
 	PID getPID();
+	void setPIDFilter(double tauFilter);
 	
 protected:
 	
@@ -65,6 +66,9 @@ private:
 	double* _tempSP;
 	double* _tempPV;
 	double* _controlValue; // [0,1]
+	
+	double _filterCst;
+	double _lastFilterOutput;
 	
 	unsigned long _settedTime;				//mSec
 	unsigned long _startTime;				//mSec

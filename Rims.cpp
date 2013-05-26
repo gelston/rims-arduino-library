@@ -42,50 +42,58 @@ DESC : Routine principale
 */
 void Rims::start()
 {
-	*(this->_tempSP) = this->_uiRims.askSetPoint(DEFAULTSP);
-	this->_settedTime = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
-	this->_uiRims.showTempScreen();
-	this->_uiRims.setTempSP(*this->_tempSP);
-	int curTempADC = analogRead(this->_analogPinPV);
-	*(this->_tempPV) = this->analogInToCelcius(curTempADC);
-	this->_uiRims.setTempPV(*this->_tempPV);
+	*(_tempSP) = _uiRims.askSetPoint(DEFAULTSP);
+	_settedTime = (unsigned long)_uiRims.askTime(DEFAULTTIME)*1000;
+	_uiRims.showTempScreen();
+	_uiRims.setTempSP(*_tempSP);
+	int curTempADC = analogRead(_analogPinPV);
+	*(_tempPV) = this->analogInToCelcius(curTempADC);
+	_uiRims.setTempPV(*_tempPV);
 	boolean timePassed = false, waitNone = true;
 	unsigned long currentTime, runningTime, remainingTime;
-	this->_startTime = millis();
+	_startTime = millis();
 	while(not timePassed)
 	{	
 		// === READ TEMPERATURE/FLOW ===
-		curTempADC = analogRead(this->_analogPinPV);
-		*(this->_tempPV) = this->analogInToCelcius(curTempADC);
-		this->_flow = this->getFlow();
+		curTempADC = analogRead(_analogPinPV);
+		*(_tempPV) = this->analogInToCelcius(curTempADC);
+		_flow = this->getFlow();
+		// === PID COMPUTE ===
+		// === PID FILTERING ===
+		if(_filterCst != 0)
+		{
+			*_controlValue = (1-_filterCst)*(*_controlValue) + \
+							_filterCst * _lastFilterOutput;
+			_lastFilterOutput = *_controlValue;
+		}
 		// === TIME REMAINING ===
 		currentTime = millis();
-		runningTime = currentTime - this->_startTime;
-		remainingTime = this->_settedTime-runningTime;
+		runningTime = currentTime - _startTime;
+		remainingTime = _settedTime-runningTime;
 		if(curTempADC >= 1023)
 		{
-			this->_uiRims.showErrorPV("NC");
+			_uiRims.showErrorPV("NC");
 		}
 		// === REFRESH DISPLAY ===
-		this->_uiRims.setTempPV(*this->_tempPV);
-		this->_uiRims.setTime(remainingTime/1000);
-		this->_uiRims.setFlow(this->_flow);
+		_uiRims.setTempPV(*_tempPV);
+		_uiRims.setTime(remainingTime/1000);
+		_uiRims.setFlow(_flow);
 		// === KEY CHECK ===
 		if(waitNone)
 		{
-			if(this->_uiRims.readKeysADC() == KEYNONE) waitNone = false;
+			if(_uiRims.readKeysADC() == KEYNONE) waitNone = false;
 		}
 		else
 		{
-			if(this->_uiRims.readKeysADC() != KEYNONE)
+			if(_uiRims.readKeysADC() != KEYNONE)
 			{
-				this->_uiRims.switchScreen();
+				_uiRims.switchScreen();
 				waitNone = true;
 			}
 		}
-		if(runningTime >= this->_settedTime) timePassed = true;
+		if(runningTime >= _settedTime) timePassed = true;
 	}
-	this->_uiRims.showEnd();
+	_uiRims.showEnd();
 }
 
 /*
@@ -116,18 +124,18 @@ DESC :
 float Rims::getFlow()
 {
 	float flow;
-	if(this->_flowCurTime == 0)
+	if(_flowCurTime == 0)
 	{
 		flow = 0.0;
 	}
-	else if(micros() - this->_flowCurTime >= 5e06)
+	else if(micros() - _flowCurTime >= 5e06)
 	{
 		flow = 0.0;
 	}
 	else
 	{
 		flow = (1e06 / (4.8* \ 
-		(this->_flowCurTime - this->_flowLastTime)));
+		(_flowCurTime - _flowLastTime)));
 	}
 	return flow;
 }
@@ -140,7 +148,22 @@ DESC :
 */
 PID Rims::getPID()
 {
-	return this->_myPID;
+	return _myPID;
+}
+
+/*
+============================================================
+TITLE : setPIDFilter
+DESC : 
+============================================================
+*/
+void Rims::setPIDFilter(double tauFilter)
+{
+	if(tauFilter>=0)
+	{
+		_filterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
+		_lastFilterOutput = 0;
+	}
 }
 
 /*

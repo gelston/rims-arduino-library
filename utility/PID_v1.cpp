@@ -11,7 +11,6 @@
   #include "WProgram.h"
 #endif
 
-#include <math.h>
 #include <PID_v1.h>
 
 /*Constructor (...)*********************************************************
@@ -31,8 +30,6 @@ PID::PID(double* Input, double* Output, double* Setpoint,
 												//the arduino pwm limits
 
     SampleTime = 100;							//default Controller Sample Time is 0.1 seconds
-    
-    PID::SetPIDFilter(0);						//default : no filter applied
 
     PID::SetControllerDirection(ControllerDirection);
     PID::SetTunings(Kp, Ki, Kd);
@@ -63,14 +60,8 @@ bool PID::Compute()
       double dInput = (input - lastInput);
  
       /*Compute PID Output*/
-      double output = 1;// kp * error + ITerm- kd * dInput;
+      double output = kp * error + ITerm- kd * dInput;
       
-	  /*Low-pass filter, if setted*/
-	  if(filterCst != 0)
-	  {
-         output = (1-filterCst)*output + filterCst*lastFilterOutput;
-		 lastFilterOutput = output;
-	  }
 	  if(output > outMax) output = outMax;
       else if(output < outMin) output = outMin;
 	  *myOutput = output;
@@ -160,20 +151,6 @@ void PID::SetMode(int Mode)
         PID::Initialize();
     }
     inAuto = newAuto;
-}
-
-
-/* SetPIDFilter(...)***********************************************************
- * Apply a lowpass filter at the output of the PID controller with the given
- * time constant "tauFilter". 
- ******************************************************************************/ 
-void PID::SetPIDFilter(double tauFilterInSec)
-{
-	if(tauFilterInSec>=0)
-	{
-		filterCst = exp((-1.0)*(double)SampleTime/(tauFilterInSec*1000.0));
-		lastFilterOutput = 0;
-	}
 }
  
 /* Initialize()****************************************************************
