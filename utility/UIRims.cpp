@@ -501,7 +501,7 @@ void UIRims::showEnd()
 	this->_printStrLCD("finished!",0,0);
 	refTime = currentTime = millis();
 	boolean lightState = true;
-	while(true)
+	while(this->readKeysADC() == KEYNONE)
 	{
 		currentTime = millis();
 		if(currentTime-refTime>=500)
@@ -511,6 +511,7 @@ void UIRims::showEnd()
 			digitalWrite(this->_pinLight,lightState);
 		}
 	}
+	digitalWrite(this->_pinLight,HIGH);
 }
 
 /*
