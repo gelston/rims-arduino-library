@@ -17,7 +17,7 @@ UIRims	KEYWORD1
 ### Rims ###
 
 setTunningPID	KEYWORD2
-setLedPin	KEYWORD2
+setPinLED	KEYWORD2
 setInterruptFlow	KEYWORD2
 start	KEYWORD2
 analogInToCelcius	KEYWORD2

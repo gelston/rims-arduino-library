@@ -20,10 +20,13 @@
 #define STEINHART3 8.65973846884587e-08
 #define FINETUNETEMP -0.3 // celsius
 
-#define PIDSAMPLETIME 5000 // mSec 
+#define PIDSAMPLETIME 1000 // mSec 
+#define SSRWINDOWSIZE 5000 // mSec
 
 #define DEFAULTSP 68 // celsius
 #define DEFAULTTIME 5400 // seconds
+
+#define DELTATEMPOK 2.0 // celsius
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
@@ -37,7 +40,7 @@ public:
 		 double* currentTemp, double* ssrControl, double* settedTemp);
 
 	void setTunningPID(double Kp, double Ki, double Kd, double tauFilter);
-	void setLedPin(byte ledPin);
+	void setPinLED(byte pinLED);
 	void setInterruptFlow(byte interruptFlow);
 	
 	void start();
@@ -47,6 +50,9 @@ public:
 	float getFlow();
 	
 protected:
+	
+	void _refreshTimer();
+	void _refreshDisplay();
 	
 private:
 	
@@ -59,7 +65,7 @@ private:
 	PID _myPID;
 	byte _analogPinPV;
 	byte _pinCV;
-	byte _ledPin;
+	byte _pinLED;
 	
 	double* _setPointPtr;
 	double* _processValPtr;
@@ -70,6 +76,11 @@ private:
 	
 	unsigned long _settedTime;				//mSec
 	unsigned long _runningTime;				//mSec
+	unsigned long _totalStoppedTime;
+	unsigned long _timerStopTime;
+	unsigned long _timerStartTime;
+	boolean _sumStoppedTime;
+	
 	
 	float _flow;
 	
