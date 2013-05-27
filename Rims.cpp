@@ -26,12 +26,15 @@ Rims::Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin,
 : _uiRims(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
   _processValPtr(currentTemp), _controlValPtr(ssrControl), _setPointPtr(settedTemp),
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
+  _ledPin(13), _filterCst(0)
   _flowLastTime(0), _flowCurTime(0)
 {
 //	Rims::_rimsPtr = this;
 //	_myPID.SetSampleTime(PIDSAMPLETIME);
 //	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
 }
+
+
 
 /*
 ============================================================
