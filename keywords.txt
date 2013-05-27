@@ -8,7 +8,6 @@
 
 Rims	KEYWORD1
 UIRims	KEYWORD1
-PID	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -17,7 +16,12 @@ PID	KEYWORD1
 
 ### Rims ###
 
+setTunningPID	KEYWORD2
+setLedPin	KEYWORD2
+setInterruptFlow	KEYWORD2
 start	KEYWORD2
+analogInToCelcius	KEYWORD2
+getFlow	KEYWORD2
 
 ### UIRims ###
 
@@ -35,20 +39,6 @@ askSetPoint	KEYWORD2
 askTime	KEYWORD2
 showErrorPV	KEYWORD2
 
-### PID ####
-
-SetMode	KEYWORD2
-Compute	KEYWORD2
-SetOutputLimits	KEYWORD2
-SetTunings	KEYWORD2
-SetControllerDirection	KEYWORD2
-SetSampleTime	KEYWORD2
-GetKp	KEYWORD2
-GetKi	KEYWORD2
-GetKd	KEYWORD2
-GetMode	KEYWORD2
-GetDirection	KEYWORD2
-
 
 #######################################
 # Constants (LITERAL1)
@@ -62,10 +52,3 @@ KEYDOWN	LITERAL1
 KEYLEFT	LITERAL1
 KEYRIGHT	LITERAL1
 KEYSELECT	LITERAL1
-
-### PID ###
-
-AUTOMATIC	LITERAL1
-MANUAL	LITERAL1
-DIRECT	LITERAL1
-REVERSE	LITERAL1
