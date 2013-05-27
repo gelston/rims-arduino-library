@@ -21,17 +21,16 @@ TITLE : Rims (constructeur)
 DESC : Constructeur d'un objet Rims
 ============================================================
 */
-Rims::Rims(UIRims uiRims, byte analogPinPV, byte interruptFlow,
-	       byte ssrPin, byte ledPin, 
-		   PID myPID)
-: _myPID(myPID),
-  _uiRims(uiRims), _analogPinPV(analogPinPV),
-  _ssrPin(ssrPin), _ledPin(ledPin),
+Rims::Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
+	       double* currentTemp, double* ssrControl, double* settedTemp)
+: _uiRims(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
+  _processValPtr(currentTemp), _controlValPtr(ssrControl), _setPointPtr(settedTemp),
+  _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
   _flowLastTime(0), _flowCurTime(0)
 {
-	Rims::_rimsPtr = this;
-	_myPID.SetSampleTime(PIDSAMPLETIME);
-	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
+//	Rims::_rimsPtr = this;
+//	_myPID.SetSampleTime(PIDSAMPLETIME);
+//	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
 }
 
 /*
@@ -42,58 +41,50 @@ DESC : Routine principale
 */
 void Rims::start()
 {
-	*(_tempSP) = _uiRims.askSetPoint(DEFAULTSP);
-	_settedTime = (unsigned long)_uiRims.askTime(DEFAULTTIME)*1000;
-	_uiRims.showTempScreen();
-	_uiRims.setTempSP(*_tempSP);
-	int curTempADC = analogRead(_analogPinPV);
-	*(_tempPV) = this->analogInToCelcius(curTempADC);
-	_uiRims.setTempPV(*_tempPV);
+	*(this->_setPointPtr) = this->_uiRims.askSetPoint(DEFAULTSP);
+	this->_settedTime = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
+	this->_uiRims.showTempScreen();
+	this->_uiRims.setTempSP(*(this->_setPointPtr));
+	int curTempADC = analogRead(this->_analogPinPV);
+	*(this->_processValPtr) = this->analogInToCelcius(curTempADC);
+	this->_uiRims.setTempPV(*(this->_processValPtr));
 	boolean timePassed = false, waitNone = true;
 	unsigned long currentTime, runningTime, remainingTime;
-	_startTime = millis();
+	this->_startTime = millis();
 	while(not timePassed)
 	{	
 		// === READ TEMPERATURE/FLOW ===
-		curTempADC = analogRead(_analogPinPV);
-		*(_tempPV) = this->analogInToCelcius(curTempADC);
-		_flow = this->getFlow();
-		// === PID COMPUTE ===
-		// === PID FILTERING ===
-		if(_filterCst != 0)
-		{
-			*_controlValue = (1-_filterCst)*(*_controlValue) + \
-							_filterCst * _lastFilterOutput;
-			_lastFilterOutput = *_controlValue;
-		}
+		curTempADC = analogRead(this->_analogPinPV);
+		*(this->_processValPtr) = this->analogInToCelcius(curTempADC);
+		this->_flow = this->getFlow();
 		// === TIME REMAINING ===
 		currentTime = millis();
-		runningTime = currentTime - _startTime;
-		remainingTime = _settedTime-runningTime;
+		runningTime = currentTime - this->_startTime;
+		remainingTime = this->_settedTime-runningTime;
 		if(curTempADC >= 1023)
 		{
-			_uiRims.showErrorPV("NC");
+			this->_uiRims.showErrorPV("NC");
 		}
 		// === REFRESH DISPLAY ===
-		_uiRims.setTempPV(*_tempPV);
-		_uiRims.setTime(remainingTime/1000);
-		_uiRims.setFlow(_flow);
+		this->_uiRims.setTempPV(*(this->_processValPtr));
+		this->_uiRims.setTime(remainingTime/1000);
+		this->_uiRims.setFlow(this->_flow);
 		// === KEY CHECK ===
 		if(waitNone)
 		{
-			if(_uiRims.readKeysADC() == KEYNONE) waitNone = false;
+			if(this->_uiRims.readKeysADC() == KEYNONE) waitNone = false;
 		}
 		else
 		{
-			if(_uiRims.readKeysADC() != KEYNONE)
+			if(this->_uiRims.readKeysADC() != KEYNONE)
 			{
-				_uiRims.switchScreen();
+				this->_uiRims.switchScreen();
 				waitNone = true;
 			}
 		}
-		if(runningTime >= _settedTime) timePassed = true;
+		if(runningTime >= this->_settedTime) timePassed = true;
 	}
-	_uiRims.showEnd();
+	this->_uiRims.showEnd();
 }
 
 /*
@@ -124,18 +115,18 @@ DESC :
 float Rims::getFlow()
 {
 	float flow;
-	if(_flowCurTime == 0)
+	if(this->_flowCurTime == 0)
 	{
 		flow = 0.0;
 	}
-	else if(micros() - _flowCurTime >= 5e06)
+	else if(micros() - this->_flowCurTime >= 5e06)
 	{
 		flow = 0.0;
 	}
 	else
 	{
 		flow = (1e06 / (4.8* \ 
-		(_flowCurTime - _flowLastTime)));
+		(this->_flowCurTime - this->_flowLastTime)));
 	}
 	return flow;
 }
@@ -146,25 +137,10 @@ TITLE : getPID
 DESC : 
 ============================================================
 */
-PID Rims::getPID()
-{
-	return _myPID;
-}
-
-/*
-============================================================
-TITLE : setPIDFilter
-DESC : 
-============================================================
-*/
-void Rims::setPIDFilter(double tauFilter)
-{
-	if(tauFilter>=0)
-	{
-		_filterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
-		_lastFilterOutput = 0;
-	}
-}
+// PID Rims::getPID()
+// {
+// 	return this->_myPID;
+// }
 
 /*
 ============================================================

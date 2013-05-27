@@ -36,17 +36,19 @@ class Rims
 {
 	
 public:
-	Rims(UIRims uiRims, byte analogPinPV, byte interruptFlow,
-		 byte ssrPin, byte ledPin,
-		 PID myPID);
+	Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
+		 double* currentTemp, double* ssrControl, double* settedTemp);
 
+	void setLedPin(byte ledPin);
+	void setInterruptFlow(byte interruptFlow);
+	void setPIDFilter(double tauFilter);
+	
 	void start();
 	
 	float analogInToCelcius(int analogIn);
 	
 	float getFlow();
-	PID getPID();
-	void setPIDFilter(double tauFilter);
+//	PID getPID();
 	
 protected:
 	
@@ -60,15 +62,12 @@ private:
 	UIRims _uiRims;
 	PID _myPID;
 	byte _analogPinPV;
-	byte _ssrPin;
+	byte _pinCV;
 	byte _ledPin;
 	
-	double* _tempSP;
-	double* _tempPV;
-	double* _controlValue; // [0,1]
-	
-	double _filterCst;
-	double _lastFilterOutput;
+	double* _setPointPtr;
+	double* _processValPtr;
+	double* _controlValPtr; // [0,1]
 	
 	unsigned long _settedTime;				//mSec
 	unsigned long _startTime;				//mSec

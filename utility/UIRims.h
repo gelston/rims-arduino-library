@@ -31,7 +31,7 @@ class UIRims
 	
 public:
 	
-	UIRims(LiquidCrystal* lcd, byte col, byte row, byte pinLight,
+	UIRims(LiquidCrystal lcd, byte col, byte row, byte pinLight,
 	     byte pinKeysAnalog);
 	
 	// === INFO DIALOGS ===
@@ -80,7 +80,7 @@ protected:
 					boolean timeFormat);
 private:
 	
-	LiquidCrystal* _lcd;
+	LiquidCrystal _lcd;
 	byte _cursorCol;
 	byte _cursorRow;
 	byte _pinKeysAnalog;
