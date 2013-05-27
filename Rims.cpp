@@ -101,6 +101,15 @@ void Rims::start()
 		curTempADC = analogRead(this->_analogPinPV);
 		*(this->_processValPtr) = this->analogInToCelcius(curTempADC);
 		this->_flow = this->getFlow();
+		if(curTempADC >= 1023)
+		{
+			if(this->_myPID.GetMode()==AUTOMATIC)
+			{
+				this->_myPID.SetMode(MANUAL);
+				*(this->_controlValPtr) = 0;
+			}
+		}
+		else if(this->_myPID.GetMode()==MANUAL) this->_myPID.SetMode(AUTOMATIC);
 		// === PID COMPUTE ===
 		this->_myPID.Compute();
 		// === PID FILTERING ===
@@ -126,17 +135,11 @@ void Rims::start()
 		}
 		//Serial.println(*this->_setPointPtr);
 		//Serial.println(*this->_processValPtr);
-		//Serial.println(*this->_controlValPtr);
+		Serial.println(*this->_controlValPtr);
 		// === TIME REMAINING ===
 		this->_refreshTimer();
 		// === REFRESH DISPLAY ===
-		if(curTempADC >= 1023)
-		{
-			this->_uiRims.showErrorPV("NC");
-		}
-		this->_uiRims.setTempPV(*(this->_processValPtr));
-		this->_uiRims.setTime((this->_settedTime-this->_runningTime)/1000);
-		this->_uiRims.setFlow(this->_flow);
+		this->_refreshDisplay();
 		// === KEY CHECK ===
 		if(waitNone)
 		{
@@ -150,8 +153,6 @@ void Rims::start()
 				waitNone = true;
 			}
 		}
-		Serial.println(this->_runningTime);
-		Serial.println(this->_settedTime);
 		if(this->_runningTime >= this->_settedTime) timerElapsed = true;
 	}
 	this->_myPID.SetMode(MANUAL);
@@ -193,6 +194,11 @@ DESC :
 */
 void Rims::_refreshDisplay()
 {
+	if(analogRead(this->_analogPinPV) >= 1023) this->_uiRims.showErrorPV("NC");
+	else this->_uiRims.setTempPV(*(this->_processValPtr));
+	this->_uiRims.setTime((this->_settedTime-this->_runningTime)/1000);
+	this->_uiRims.setFlow(this->_flow);
+		
 }
 
 /*
