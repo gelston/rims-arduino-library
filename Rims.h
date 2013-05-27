@@ -40,7 +40,6 @@ public:
 	void setTunningPID(double Kp, double Ki, double Kd, double tauFilter);
 	void setLedPin(byte ledPin);
 	void setInterruptFlow(byte interruptFlow);
-	void setPIDFilter(double tauFilter);
 	
 	void start();
 	

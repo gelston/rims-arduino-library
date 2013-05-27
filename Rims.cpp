@@ -29,18 +29,48 @@ Rims::Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin,
   _ledPin(13), _filterCst(0),
   _flowLastTime(0), _flowCurTime(0)
 {
-//	Rims::_rimsPtr = this;
-//	_myPID.SetSampleTime(PIDSAMPLETIME);
-//	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
+	_myPID.SetSampleTime(PIDSAMPLETIME);
+	pinMode(13,OUTPUT);
 }
 
-void Rims::setPIDFilter(double tauFilter)
+/*
+============================================================
+TITLE : setTunningPID
+DESC : 
+============================================================
+*/
+void Rims::setTunningPID(double Kp, double Ki, double Kd, double tauFilter)
 {
+	this->_myPID.SetTunings(Kp,Ki,Kd);
 	if(tauFilter>=0)
 	{
 		_filterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
 		_lastFilterOutput = 0;
 	}
+}
+
+/*
+============================================================
+TITLE : setInterruptFlow
+DESC : 
+============================================================
+*/
+void Rims::setInterruptFlow(byte interruptFlow)
+{
+	Rims::_rimsPtr = this;
+	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
+}
+
+/*
+============================================================
+TITLE : setInterruptFlow
+DESC : 
+============================================================
+*/
+void Rims::setLedPin(byte ledPin)
+{
+	pinMode(ledPin,OUTPUT);
+	this->_ledPin = ledPin;
 }
 
 /*
@@ -148,16 +178,6 @@ float Rims::getFlow()
 	return flow;
 }
 
-/*
-============================================================
-TITLE : getPID
-DESC : 
-============================================================
-*/
-// PID Rims::getPID()
-// {
-// 	return this->_myPID;
-// }
 
 /*
 ============================================================
