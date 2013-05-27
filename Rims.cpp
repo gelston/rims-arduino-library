@@ -21,17 +21,16 @@ TITLE : Rims (constructeur)
 DESC : Constructeur d'un objet Rims
 ============================================================
 */
-Rims::Rims(UIRims uiRims, byte analogPinPV, byte interruptFlow,
-	       byte ssrPin, byte ledPin, 
-		   PID myPID)
-: _myPID(myPID),
-  _uiRims(uiRims), _analogPinPV(analogPinPV),
-  _ssrPin(ssrPin), _ledPin(ledPin),
+Rims::Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
+	       double* currentTemp, double* ssrControl, double* settedTemp)
+: _uiRims(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
+  _processValPtr(currentTemp), _controlValPtr(ssrControl), _setPointPtr(settedTemp),
+  _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
   _flowLastTime(0), _flowCurTime(0)
 {
-	Rims::_rimsPtr = this;
-	_myPID.SetSampleTime(PIDSAMPLETIME);
-	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
+//	Rims::_rimsPtr = this;
+//	_myPID.SetSampleTime(PIDSAMPLETIME);
+//	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
 }
 
 /*
@@ -42,13 +41,13 @@ DESC : Routine principale
 */
 void Rims::start()
 {
-	*(this->_tempSP) = this->_uiRims.askSetPoint(DEFAULTSP);
+	*(this->_setPointPtr) = this->_uiRims.askSetPoint(DEFAULTSP);
 	this->_settedTime = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
 	this->_uiRims.showTempScreen();
-	this->_uiRims.setTempSP(*this->_tempSP);
+	this->_uiRims.setTempSP(*(this->_setPointPtr));
 	int curTempADC = analogRead(this->_analogPinPV);
-	*(this->_tempPV) = this->analogInToCelcius(curTempADC);
-	this->_uiRims.setTempPV(*this->_tempPV);
+	*(this->_processValPtr) = this->analogInToCelcius(curTempADC);
+	this->_uiRims.setTempPV(*(this->_processValPtr));
 	boolean timePassed = false, waitNone = true;
 	unsigned long currentTime, runningTime, remainingTime;
 	this->_startTime = millis();
@@ -56,7 +55,7 @@ void Rims::start()
 	{	
 		// === READ TEMPERATURE/FLOW ===
 		curTempADC = analogRead(this->_analogPinPV);
-		*(this->_tempPV) = this->analogInToCelcius(curTempADC);
+		*(this->_processValPtr) = this->analogInToCelcius(curTempADC);
 		this->_flow = this->getFlow();
 		// === TIME REMAINING ===
 		currentTime = millis();
@@ -67,7 +66,7 @@ void Rims::start()
 			this->_uiRims.showErrorPV("NC");
 		}
 		// === REFRESH DISPLAY ===
-		this->_uiRims.setTempPV(*this->_tempPV);
+		this->_uiRims.setTempPV(*(this->_processValPtr));
 		this->_uiRims.setTime(remainingTime/1000);
 		this->_uiRims.setFlow(this->_flow);
 		// === KEY CHECK ===
@@ -138,10 +137,10 @@ TITLE : getPID
 DESC : 
 ============================================================
 */
-PID Rims::getPID()
-{
-	return this->_myPID;
-}
+// PID Rims::getPID()
+// {
+// 	return this->_myPID;
+// }
 
 /*
 ============================================================

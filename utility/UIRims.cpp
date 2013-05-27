@@ -11,8 +11,8 @@ TITLE : UIRims (constructeur)
 DESC : Constructeur d'un objet UIRims
 ============================================================
 */
-UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
-		   byte pinKeysAnalog)
+UIRims::UIRims(LiquidCrystal lcd,byte col,byte row, byte pinLight,
+		       byte pinKeysAnalog)
 : _lcd(lcd), _pinKeysAnalog(pinKeysAnalog),
   _cursorCol(0), _cursorRow(0), _pinLight(pinLight),
   _lastRefreshSP(0), _lastRefreshPV(0), 
@@ -21,8 +21,8 @@ UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 {
 	pinMode(pinLight,OUTPUT);
 	digitalWrite(pinLight,HIGH);
-	this->_lcd->begin(col,row);
-	this->_lcd->clear();
+	this->_lcd.begin(col,row);
+	this->_lcd.clear();
 	byte okChar[8] = {
 		B01110,
 		B10001,
@@ -53,9 +53,9 @@ UIRims::UIRims(LiquidCrystal* lcd,byte col,byte row, byte pinLight,
 		B00100,
 		B00000
 	};
-	this->_lcd->createChar(1,okChar);
-	this->_lcd->createChar(2,upChar);
-	this->_lcd->createChar(3,downChar);
+	this->_lcd.createChar(1,okChar);
+	this->_lcd.createChar(2,upChar);
+	this->_lcd.createChar(3,downChar);
 }
 
 /*
@@ -67,7 +67,7 @@ DESC :
 void UIRims::showTempScreen()
 {
 	this->_tempScreenShown = true;
-	this->_lcd->clear();
+	this->_lcd.clear();
 	this->_printStrLCD(
 		String("SP:00.0") + (char)223 +
 		String("C(000") + (char)223 + String("F)"),0,0);
@@ -87,7 +87,7 @@ DESC :
 void UIRims::showTimeFlowScreen()
 {
 	this->_tempScreenShown = false;
-	this->_lcd->clear();
+	this->_lcd.clear();
 	this->_printStrLCD("time:000m00s",0,0);
 	this->_printStrLCD(String("flow:00.0L/min "+(char)0),0,1);
 	this->setTime(this->_time,false);
@@ -179,9 +179,9 @@ DESC : Affiche mess sur le lcd
 */
 void UIRims::_printStrLCD(String mess, byte col, byte row)
 {
-	this->_lcd->setCursor(col,row);
-	this->_lcd->print(mess);
-	this->_lcd->setCursor(this->_cursorCol,this->_cursorRow);
+	this->_lcd.setCursor(col,row);
+	this->_lcd.print(mess);
+	this->_lcd.setCursor(this->_cursorCol,this->_cursorRow);
 }
 
 
@@ -201,9 +201,9 @@ void UIRims::_printFloatLCD(float val, int width, int prec,
 	{
 		res = String(dtostrf(val,width,0,myFloatStr));
 	}
-	this->_lcd->setCursor(col,row);
-	this->_lcd->print(res);
-	this->_lcd->setCursor(this->_cursorCol,this->_cursorRow);
+	this->_lcd.setCursor(col,row);
+	this->_lcd.print(res);
+	this->_lcd.setCursor(this->_cursorCol,this->_cursorRow);
 }
 
 /*
@@ -217,7 +217,7 @@ void UIRims::_setCursorPosition(byte col, byte row)
 {
 	this->_cursorCol = col;
 	this->_cursorRow = row;
-	this->_lcd->setCursor(col,row);
+	this->_lcd.setCursor(col,row);
 }
 
 /*
@@ -425,7 +425,7 @@ float UIRims::_askValue(byte begin, byte end,
 	timeFormat ? this->setTime(defaultVal,false) : \
 	             this->setTempSP(defaultVal,false);
 	this->_setCursorPosition(dotPosition-1,row);
-	this->_lcd->blink();
+	this->_lcd.blink();
 	while(not valSelected)
 	{
 		switch(this->_waitForKeyChange())
@@ -450,7 +450,7 @@ float UIRims::_askValue(byte begin, byte end,
 				break;
 			case KEYSELECT :
 				valSelected = true;
-				this->_lcd->noBlink();
+				this->_lcd.noBlink();
 				this->_setCursorPosition(0,0);
 				break;
 		}
@@ -497,7 +497,7 @@ DESC :
 void UIRims::showEnd()
 {
 	unsigned long refTime, currentTime;
-	this->_lcd->clear();
+	this->_lcd.clear();
 	this->_printStrLCD("finished!",0,0);
 	refTime = currentTime = millis();
 	boolean lightState = true;

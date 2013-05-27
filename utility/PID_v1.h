@@ -41,8 +41,8 @@ class PID
 										  //   once it is set in the constructor.
     void SetSampleTime(int);              // * sets the frequency, in Milliseconds, with which 
                                           //   the PID calculation is performed.  default is 100
-	void SetPIDFilter(double);			  // * add a low pass filter with the given time constant at 
-										  //   the output of the PID. Call with "0" for no filtering (default).
+										  
+										  
 										  
   //Display functions ****************************************************************
 	double GetKp();						  // These functions query the pid for interal values.
@@ -61,8 +61,6 @@ class PID
 	double kp;                  // * (P)roportional Tuning Parameter
     double ki;                  // * (I)ntegral Tuning Parameter
     double kd;                  // * (D)erivative Tuning Parameter
-    
-    double filterCst;
 
 	int controllerDirection;
 
@@ -73,7 +71,6 @@ class PID
 			  
 	unsigned long lastTime;
 	double ITerm, lastInput;
-	double lastFilterOutput;
 
 	unsigned long SampleTime;
 	double outMin, outMax;
