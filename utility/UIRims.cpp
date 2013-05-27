@@ -102,14 +102,8 @@ DESC :
 */
 void UIRims::switchScreen()
 {
-	if(this->_tempScreenShown)
-	{
-		this->showTimeFlowScreen();
-	}
-	else
-	{
-		this->showTempScreen();
-	}
+	if(this->_tempScreenShown) this->showTimeFlowScreen();
+	else this->showTempScreen();
 }
 
 /*

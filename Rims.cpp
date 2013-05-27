@@ -26,10 +26,11 @@ Rims::Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin,
 : _uiRims(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
   _processValPtr(currentTemp), _controlValPtr(ssrControl), _setPointPtr(settedTemp),
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
-  _ledPin(13), _filterCst(0),
+  _pinLED(13), _filterCst(0),
   _flowLastTime(0), _flowCurTime(0)
 {
-	_myPID.SetSampleTime(PIDSAMPLETIME);
+	this->_myPID.SetSampleTime(PIDSAMPLETIME);
+	this->_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
 	pinMode(13,OUTPUT);
 }
 
@@ -67,10 +68,10 @@ TITLE : setInterruptFlow
 DESC : 
 ============================================================
 */
-void Rims::setLedPin(byte ledPin)
+void Rims::setPinLED(byte pinLED)
 {
-	pinMode(ledPin,OUTPUT);
-	this->_ledPin = ledPin;
+	pinMode(pinLED,OUTPUT);
+	this->_pinLED = pinLED;
 }
 
 /*
@@ -88,12 +89,13 @@ void Rims::start()
 	int curTempADC = analogRead(this->_analogPinPV);
 	*(this->_processValPtr) = this->analogInToCelcius(curTempADC);
 	this->_uiRims.setTempPV(*(this->_processValPtr));
-	boolean timePassed = false, waitNone = true,
-	        countTime = false, sumStoppedTime = false;
-	unsigned long currentTime, totalStoppedTime,
-				  stopTime, startTime;
-	totalStoppedTime = millis();
-	while(not timePassed)
+	boolean timerElapsed = false, waitNone = true;
+	unsigned long currentTime, windowStartTime;
+	this->_sumStoppedTime = true;
+	this->_runningTime = this->_totalStoppedTime = this->_timerStopTime = 0;
+	this->_myPID.SetMode(AUTOMATIC);
+	currentTime = windowStartTime = this->_timerStartTime = millis();
+	while(not timerElapsed)
 	{	
 		// === READ TEMPERATURE/FLOW ===
 		curTempADC = analogRead(this->_analogPinPV);
@@ -108,25 +110,25 @@ void Rims::start()
 							_filterCst * _lastFilterOutput;
 			_lastFilterOutput = *(_controlValPtr);
 		}
-		// === TIME REMAINING ===
+		// === SSR CONTROL ===
 		currentTime = millis();
-		countTime = abs(*(this->_setPointPtr) - *(this->_processValPtr)) <= \
-					*(this->_setPointPtr)*0.05;
-		if(countTime)
+		if(currentTime - windowStartTime > SSRWINDOWSIZE) \
+					windowStartTime += SSRWINDOWSIZE;
+		if(currentTime - windowStartTime <= *(this->_controlValPtr))
 		{
-			if(sumStoppedTime)
-			{
-				sumStoppedTime = false;
-				totalStoppedTime += (startTime - stopTime);
-			}
-			this->_runningTime = currentTime - totalStoppedTime;
-			stopTime = currentTime;
+			digitalWrite(this->_pinCV,HIGH);
+			digitalWrite(this->_pinLED,HIGH);
 		}
 		else
 		{
-			startTime = currentTime;
-			if(not sumStoppedTime) sumStoppedTime = true;
+			digitalWrite(this->_pinCV,LOW);
+			digitalWrite(this->_pinLED,LOW);
 		}
+		//Serial.println(*this->_setPointPtr);
+		//Serial.println(*this->_processValPtr);
+		//Serial.println(*this->_controlValPtr);
+		// === TIME REMAINING ===
+		this->_refreshTimer();
 		// === REFRESH DISPLAY ===
 		if(curTempADC >= 1023)
 		{
@@ -148,9 +150,49 @@ void Rims::start()
 				waitNone = true;
 			}
 		}
-		if(this->_runningTime >= this->_settedTime) timePassed = true;
+		Serial.println(this->_runningTime);
+		Serial.println(this->_settedTime);
+		if(this->_runningTime >= this->_settedTime) timerElapsed = true;
 	}
+	this->_myPID.SetMode(MANUAL);
 	this->_uiRims.showEnd();
+}
+
+/*
+============================================================
+TITLE : _refreshTimer
+DESC : 
+============================================================
+*/
+void Rims::_refreshTimer()
+{
+	unsigned long currentTime = millis();
+	if(abs(*(this->_setPointPtr) - *(this->_processValPtr)) <= DELTATEMPOK)
+	{
+		if(this->_sumStoppedTime)
+		{
+			this->_sumStoppedTime = false;
+			this->_totalStoppedTime += (this->_timerStartTime - 
+										this->_timerStopTime);
+		}
+		this->_runningTime = currentTime - this->_totalStoppedTime;
+		this->_timerStopTime = currentTime;
+	}
+	else
+	{
+		this->_timerStartTime = currentTime;
+		if(not this->_sumStoppedTime) this->_sumStoppedTime = true;
+	}
+}
+
+/*
+============================================================
+TITLE : _refreshDisplay
+DESC : 
+============================================================
+*/
+void Rims::_refreshDisplay()
+{
 }
 
 /*
