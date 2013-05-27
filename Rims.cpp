@@ -97,6 +97,8 @@ void Rims::start()
 		curTempADC = analogRead(this->_analogPinPV);
 		*(this->_processValPtr) = this->analogInToCelcius(curTempADC);
 		this->_flow = this->getFlow();
+		// === PID COMPUTE ===
+		this->_myPID.Compute();
 		// === PID FILTERING ===
 		if(_filterCst != 0)
 		{
@@ -108,11 +110,11 @@ void Rims::start()
 		currentTime = millis();
 		runningTime = currentTime - this->_startTime;
 		remainingTime = this->_settedTime-runningTime;
+		// === REFRESH DISPLAY ===
 		if(curTempADC >= 1023)
 		{
 			this->_uiRims.showErrorPV("NC");
 		}
-		// === REFRESH DISPLAY ===
 		this->_uiRims.setTempPV(*(this->_processValPtr));
 		this->_uiRims.setTime(remainingTime/1000);
 		this->_uiRims.setFlow(this->_flow);
