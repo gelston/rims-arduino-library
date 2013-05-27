@@ -67,6 +67,9 @@ private:
 	double* _processValPtr;
 	double* _controlValPtr; // [0,1]
 	
+	double _filterCst;
+	double _lastFilterOutput;
+	
 	unsigned long _settedTime;				//mSec
 	unsigned long _startTime;				//mSec
 	
