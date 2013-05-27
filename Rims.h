@@ -26,7 +26,6 @@
 #define DEFAULTTIME 5400 // seconds
 
 #include "Arduino.h"
-
 #include "utility/UIRims.h"
 #include "utility/PID_v1.h"
 
@@ -43,7 +42,7 @@ public:
 	
 	void start();
 	
-	float analogInToCelcius(int analogIn);
+	double analogInToCelcius(int analogIn);
 	
 	float getFlow();
 	
@@ -70,7 +69,7 @@ private:
 	double _lastFilterOutput;
 	
 	unsigned long _settedTime;				//mSec
-	unsigned long _startTime;				//mSec
+	unsigned long _runningTime;				//mSec
 	
 	float _flow;
 	
