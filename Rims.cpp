@@ -88,9 +88,11 @@ void Rims::start()
 	int curTempADC = analogRead(this->_analogPinPV);
 	*(this->_processValPtr) = this->analogInToCelcius(curTempADC);
 	this->_uiRims.setTempPV(*(this->_processValPtr));
-	boolean timePassed = false, waitNone = true;
-	unsigned long currentTime, runningTime, remainingTime;
-	this->_startTime = millis();
+	boolean timePassed = false, waitNone = true,
+	        countTime = false, sumStoppedTime = false;
+	unsigned long currentTime, totalStoppedTime,
+				  stopTime, startTime;
+	totalStoppedTime = millis();
 	while(not timePassed)
 	{	
 		// === READ TEMPERATURE/FLOW ===
@@ -108,15 +110,30 @@ void Rims::start()
 		}
 		// === TIME REMAINING ===
 		currentTime = millis();
-		runningTime = currentTime - this->_startTime;
-		remainingTime = this->_settedTime-runningTime;
+		countTime = abs(*(this->_setPointPtr) - *(this->_processValPtr)) <= \
+					*(this->_setPointPtr)*0.05;
+		if(countTime)
+		{
+			if(sumStoppedTime)
+			{
+				sumStoppedTime = false;
+				totalStoppedTime += (startTime - stopTime);
+			}
+			this->_runningTime = currentTime - totalStoppedTime;
+			stopTime = currentTime;
+		}
+		else
+		{
+			startTime = currentTime;
+			if(not sumStoppedTime) sumStoppedTime = true;
+		}
 		// === REFRESH DISPLAY ===
 		if(curTempADC >= 1023)
 		{
 			this->_uiRims.showErrorPV("NC");
 		}
 		this->_uiRims.setTempPV(*(this->_processValPtr));
-		this->_uiRims.setTime(remainingTime/1000);
+		this->_uiRims.setTime((this->_settedTime-this->_runningTime)/1000);
 		this->_uiRims.setFlow(this->_flow);
 		// === KEY CHECK ===
 		if(waitNone)
@@ -131,7 +148,7 @@ void Rims::start()
 				waitNone = true;
 			}
 		}
-		if(runningTime >= this->_settedTime) timePassed = true;
+		if(this->_runningTime >= this->_settedTime) timePassed = true;
 	}
 	this->_uiRims.showEnd();
 }
@@ -143,12 +160,12 @@ DESC : Steinhart-hart thermistor equation with a voltage
        divider with RES1
 ============================================================
 */
-float Rims::analogInToCelcius(int analogIn)
+double Rims::analogInToCelcius(int analogIn)
 {
-	float vin = ((float)analogIn*VALIM)/(float)1024;
-	float resTherm = (RES1*vin)/(VALIM-vin);
-	float logResTherm = log(resTherm);
-	float invKelvin = STEINHART0+\
+	double vin = ((double)analogIn*VALIM)/1024.0;
+	double resTherm = (RES1*vin)/(VALIM-vin);
+	double logResTherm = log(resTherm);
+	double invKelvin = STEINHART0+\
 	                  STEINHART1*logResTherm+\
 	                  STEINHART2*pow(logResTherm,2)+\
 	                  STEINHART3*pow(logResTherm,3);
@@ -164,14 +181,8 @@ DESC :
 float Rims::getFlow()
 {
 	float flow;
-	if(this->_flowCurTime == 0)
-	{
-		flow = 0.0;
-	}
-	else if(micros() - this->_flowCurTime >= 5e06)
-	{
-		flow = 0.0;
-	}
+	if(this->_flowCurTime == 0) flow = 0.0;
+	else if(micros() - this->_flowCurTime >= 5e06) flow = 0.0;
 	else
 	{
 		flow = (1e06 / (4.8* \ 
