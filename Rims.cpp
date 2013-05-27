@@ -26,7 +26,7 @@ Rims::Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin,
 : _uiRims(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
   _processValPtr(currentTemp), _controlValPtr(ssrControl), _setPointPtr(settedTemp),
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
-  _ledPin(13), _filterCst(0)
+  _ledPin(13), _filterCst(0),
   _flowLastTime(0), _flowCurTime(0)
 {
 //	Rims::_rimsPtr = this;
@@ -34,7 +34,14 @@ Rims::Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin,
 //	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
 }
 
-
+void Rims::setPIDFilter(double tauFilter)
+{
+	if(tauFilter>=0)
+	{
+		_filterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
+		_lastFilterOutput = 0;
+	}
+}
 
 /*
 ============================================================
@@ -60,6 +67,13 @@ void Rims::start()
 		curTempADC = analogRead(this->_analogPinPV);
 		*(this->_processValPtr) = this->analogInToCelcius(curTempADC);
 		this->_flow = this->getFlow();
+		// === PID FILTERING ===
+		if(_filterCst != 0)
+		{
+			*(_controlValPtr) = (1-_filterCst)*(*_controlValPtr) + \
+							_filterCst * _lastFilterOutput;
+			_lastFilterOutput = *(_controlValPtr);
+		}
 		// === TIME REMAINING ===
 		currentTime = millis();
 		runningTime = currentTime - this->_startTime;
