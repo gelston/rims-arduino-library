@@ -1,5 +1,5 @@
 /*
-  Rims.cpp - Définition de Rims.h
+  Rims.cpp - Rims.h definition
 */
 
 #include "Arduino.h"
@@ -17,8 +17,8 @@ Rims* Rims::_rimsPtr = 0;
 
 /*
 ============================================================
-TITLE : Rims (constructeur)
-DESC : Constructeur d'un objet Rims
+TITLE : Rims (constructor)
+DESC : Rims constructor
 ============================================================
 */
 Rims::Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
@@ -133,9 +133,13 @@ void Rims::start()
 			digitalWrite(this->_pinCV,LOW);
 			digitalWrite(this->_pinLED,LOW);
 		}
-		//Serial.println(*this->_setPointPtr);
-		//Serial.println(*this->_processValPtr);
-		Serial.println(*this->_controlValPtr);
+		Serial.print(currentTime);
+		Serial.print(",");
+		Serial.print(*this->_setPointPtr,2);
+		Serial.print(",");
+		Serial.print(*this->_controlValPtr,15);
+		Serial.print(",");
+		Serial.println(*this->_processValPtr,15);
 		// === TIME REMAINING ===
 		this->_refreshTimer();
 		// === REFRESH DISPLAY ===

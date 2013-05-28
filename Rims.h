@@ -1,9 +1,7 @@
 /*
   Rims.h
   
-  Librairie pour un système RIMS 
-  (recirculation infusion mash system)
-  Gestion du PID en température
+  Recirculation infusion mash system (RIMS) library for Arduino
   
   Francis Gagnon
 */
@@ -34,7 +32,7 @@
 
 class Rims
 {
-	
+	friend class IdentRims;	
 public:
 	Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
 		 double* currentTemp, double* ssrControl, double* settedTemp);
@@ -69,7 +67,7 @@ private:
 	
 	double* _setPointPtr;
 	double* _processValPtr;
-	double* _controlValPtr; // [0,1]
+	double* _controlValPtr; // [0,SSRWINDOWSIZE]
 	
 	double _filterCst;
 	double _lastFilterOutput;
