@@ -7,6 +7,14 @@
 #include "utility/PID_v1.h"
 #include "Rims.h"
 
+/*************************************************************
+ ************************************************************* 
+ * Rims
+ *     Main library for Rims
+ ************************************************************* 
+ *************************************************************/
+
+
 /* 
 ============================================================
 static member _rimsPtr definition
@@ -269,4 +277,31 @@ void Rims::_isrFlowSensor()
 {
 	Rims::_rimsPtr->_flowLastTime = Rims::_rimsPtr->_flowCurTime;
 	Rims::_rimsPtr->_flowCurTime = micros();
+}
+
+
+
+/*************************************************************
+ ************************************************************* 
+ * IdentRims
+ *     Identification tools for Rims library 
+ ************************************************************* 
+ *************************************************************/
+
+
+IdentRims::IdentRims(Rims myRims)
+: _myRims(myRims)
+{
+}
+
+IdentRims::startIdent()
+{
+	unsigned long startTime, currentTime;
+	startTime = currentTime = millis
+	while(current - startTime <= 900000) // 15 minutes
+	{
+		//TODO
+		step 0%-25%. 25%-100%, 100%-75%
+		//TODO
+	}
 }
