@@ -1,10 +1,10 @@
-/*
-  Rims.h
-  
-  Recirculation infusion mash system (RIMS) library for Arduino
-  
-  Francis Gagnon
-*/
+/*****************************************************************
+ * Rims.h
+ * 
+ * Recirculation infusion mash system (RIMS) library for Arduino
+ * 
+ * Francis Gagnon * This Library is licensed under a GPLv3 License
+ *****************************************************************/
 
 
 #ifndef Rims_h
@@ -33,6 +33,7 @@
 class Rims
 {
 	friend class IdentRims;	
+	
 public:
 	Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
 		 double* currentTemp, double* ssrControl, double* settedTemp);
@@ -87,6 +88,19 @@ private:
 	
 	volatile unsigned long _flowLastTime;	//µSec
 	volatile unsigned long _flowCurTime;	//µSec
+	
+};
+
+class IdentRims
+{
+	
+public:
+	IdentRims(Rims myRims);
+	
+	startIdent();
+
+private:
+	Rims _myRims;
 	
 };
 
