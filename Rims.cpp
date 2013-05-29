@@ -94,7 +94,7 @@ void Rims::start()
 	this->_sumStoppedTime = true;
 	this->_runningTime = this->_totalStoppedTime = this->_timerStopTime = 0;
 	this->_myPID.SetMode(AUTOMATIC);
-	currentTime = windowStartTime = this->_timerStartTime = millis();
+	currentTime = this->_windowStartTime = this->_timerStartTime = millis();
 	while(not timerElapsed)
 	{	
 		// === READ TEMPERATURE/FLOW ===
@@ -120,20 +120,8 @@ void Rims::start()
 			_lastFilterOutput = *(_controlValPtr);
 		}
 		// === SSR CONTROL ===
-		currentTime = millis();
-		if(currentTime - windowStartTime > SSRWINDOWSIZE) \
-					windowStartTime += SSRWINDOWSIZE;
-		if(currentTime - windowStartTime <= *(this->_controlValPtr))
-		{
-			digitalWrite(this->_pinCV,HIGH);
-			digitalWrite(this->_pinLED,HIGH);
-		}
-		else
-		{
-			digitalWrite(this->_pinCV,LOW);
-			digitalWrite(this->_pinLED,LOW);
-		}
-		Serial.print(currentTime);
+		this->_refreshSSR();
+		Serial.print(millis());
 		Serial.print(",");
 		Serial.print(*this->_setPointPtr,2);
 		Serial.print(",");
@@ -160,6 +148,8 @@ void Rims::start()
 		if(this->_runningTime >= this->_settedTime) timerElapsed = true;
 	}
 	this->_myPID.SetMode(MANUAL);
+	*(this->_controlValPtr) = 0;
+	this->_refreshSSR();
 	this->_uiRims.showEnd();
 }
 
@@ -203,6 +193,31 @@ void Rims::_refreshDisplay()
 	this->_uiRims.setTime((this->_settedTime-this->_runningTime)/1000);
 	this->_uiRims.setFlow(this->_flow);
 		
+}
+
+/*
+============================================================
+TITLE : _refreshSSR
+DESC : 
+============================================================
+*/
+void Rims::_refreshSSR()
+{
+	unsigned long currentTime = millis();
+	if(currentTime - this->_windowStartTime > SSRWINDOWSIZE)
+	{
+		this->_windowStartTime += SSRWINDOWSIZE;
+	}
+	if(currentTime - this->_windowStartTime <= *(this->_controlValPtr))
+	{
+		digitalWrite(this->_pinCV,HIGH);
+		digitalWrite(this->_pinLED,HIGH);
+	}
+	else
+	{
+		digitalWrite(this->_pinCV,LOW);
+		digitalWrite(this->_pinLED,LOW);
+	}
 }
 
 /*

@@ -51,6 +51,7 @@ protected:
 	
 	void _refreshTimer();
 	void _refreshDisplay();
+	void _refreshSSR();
 	
 private:
 	
@@ -72,11 +73,13 @@ private:
 	double _filterCst;
 	double _lastFilterOutput;
 	
+	unsigned long _windowStartTime;			//mSec
+	
 	unsigned long _settedTime;				//mSec
 	unsigned long _runningTime;				//mSec
-	unsigned long _totalStoppedTime;
-	unsigned long _timerStopTime;
-	unsigned long _timerStartTime;
+	unsigned long _totalStoppedTime;		//mSec
+	unsigned long _timerStopTime;			//mSec
+	unsigned long _timerStartTime;			//mSec
 	boolean _sumStoppedTime;
 	
 	
