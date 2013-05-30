@@ -129,13 +129,6 @@ void Rims::start()
 		}
 		// === SSR CONTROL ===
 		this->_refreshSSR();
-		Serial.print(millis());
-		Serial.print(",");
-		Serial.print(*this->_setPointPtr,2);
-		Serial.print(",");
-		Serial.print(*this->_controlValPtr,15);
-		Serial.print(",");
-		Serial.println(*this->_processValPtr,15);
 		// === TIME REMAINING ===
 		this->_refreshTimer();
 		// === REFRESH DISPLAY ===
@@ -297,11 +290,31 @@ IdentRims::IdentRims(UIRims uiRims, byte analogPinTherm, byte ssrPin,
 
 void IdentRims::startIdent()
 {
-	unsigned long startTime, currentTime;
-	startTime = currentTime = millis();
-	while(currentTime - startTime <= 900000) // 15 minutes
+	unsigned long startTime, currentTime, relativeTime;
+	Serial.begin(9600);
+	startTime = currentTime = this->_windowStartTime = millis();
+	while(millis() - startTime <= 900000) // 15 minutes
 	{
+		*(this->_processValPtr) = this->analogInToCelcius(this->_analogPinPV);
 		currentTime = millis();
-		
+		relativeTime = currentTime - startTime;
+		if(relativeTime >= 600000)
+		{
+			*(this->_controlValPtr) = 0.75 * SSRWINDOWSIZE;
+		}
+		else if(relativeTime >= 300000)
+		{
+			*(this->_controlValPtr) = SSRWINDOWSIZE;
+		}
+		else
+		{
+			*(this->_controlValPtr) = 0.5*SSRWINDOWSIZE;
+		}
+		this->_refreshSSR();
+		Serial.print((double)relativeTime/1000.0,3);
+		Serial.print(",");
+		Serial.print(*(this->_controlValPtr),0);
+		Serial.print(",");
+		Serial.println(*(this->_processValPtr),15);
 	}
 }
