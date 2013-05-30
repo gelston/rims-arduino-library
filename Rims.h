@@ -32,7 +32,7 @@
 
 class Rims
 {
-//	friend class IdentRims;	
+	friend class IdentRims;	
 	
 public:
 	Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
