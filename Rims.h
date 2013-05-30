@@ -32,7 +32,7 @@
 
 class Rims
 {
-	friend class IdentRims;	
+//	friend class IdentRims;	
 	
 public:
 	Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
@@ -83,7 +83,6 @@ private:
 	unsigned long _timerStartTime;			//mSec
 	boolean _sumStoppedTime;
 	
-	
 	float _flow;
 	
 	volatile unsigned long _flowLastTime;	//µSec
@@ -91,16 +90,16 @@ private:
 	
 };
 
-class IdentRims
+class IdentRims : public Rims
 {
 	
 public:
-	IdentRims(Rims myRims);
+	IdentRims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
+		 double* currentTemp, double* ssrControl, double* settedTemp);
 	
-	startIdent();
+	void startIdent();
 
 private:
-	Rims _myRims;
 	
 };
 
