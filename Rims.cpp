@@ -289,19 +289,19 @@ void Rims::_isrFlowSensor()
  *************************************************************/
 
 
-IdentRims::IdentRims(Rims myRims)
-: _myRims(myRims)
+IdentRims::IdentRims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
+			double* currentTemp, double* ssrControl, double* settedTemp)
+: Rims(uiRims, analogPinTherm, ssrPin, currentTemp, ssrControl, settedTemp)
 {
 }
 
-IdentRims::startIdent()
+void IdentRims::startIdent()
 {
 	unsigned long startTime, currentTime;
-	startTime = currentTime = millis
-	while(current - startTime <= 900000) // 15 minutes
+	startTime = currentTime = millis();
+	while(currentTime - startTime <= 900000) // 15 minutes
 	{
-		//TODO
-		step 0%-25%. 25%-100%, 100%-75%
-		//TODO
+		currentTime = millis();
+		
 	}
 }
