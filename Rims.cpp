@@ -94,8 +94,7 @@ void Rims::start()
 	this->_settedTime = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
 	this->_uiRims.showTempScreen();
 	this->_uiRims.setTempSP(*(this->_setPointPtr));
-	int curTempADC = analogRead(this->_analogPinPV);
-	*(this->_processValPtr) = this->analogInToCelcius(curTempADC);
+	*(this->_processValPtr) = this->getTempPV();
 	this->_uiRims.setTempPV(*(this->_processValPtr));
 	boolean timerElapsed = false, waitNone = true;
 	unsigned long currentTime, windowStartTime;
@@ -106,18 +105,7 @@ void Rims::start()
 	while(not timerElapsed)
 	{	
 		// === READ TEMPERATURE/FLOW ===
-		curTempADC = analogRead(this->_analogPinPV);
-		*(this->_processValPtr) = this->analogInToCelcius(curTempADC);
-		this->_flow = this->getFlow();
-		if(curTempADC >= 1023)
-		{
-			if(this->_myPID.GetMode()==AUTOMATIC)
-			{
-				this->_myPID.SetMode(MANUAL);
-				*(this->_controlValPtr) = 0;
-			}
-		}
-		else if(this->_myPID.GetMode()==MANUAL) this->_myPID.SetMode(AUTOMATIC);
+		*(this->_processValPtr) = this->getTempPV();
 		// === PID COMPUTE ===
 		this->_myPID.Compute();
 		// === PID FILTERING ===
@@ -230,14 +218,34 @@ DESC : Steinhart-hart thermistor equation with a voltage
 */
 double Rims::analogInToCelcius(int analogIn)
 {
-	double vin = ((double)analogIn*VALIM)/1024.0;
-	double resTherm = (RES1*vin)/(VALIM-vin);
-	double logResTherm = log(resTherm);
-	double invKelvin = STEINHART0+\
-	                  STEINHART1*logResTherm+\
-	                  STEINHART2*pow(logResTherm,2)+\
-	                  STEINHART3*pow(logResTherm,3);
-	return (1/invKelvin)-273.15+FINETUNETEMP;
+
+}
+
+double Rims::getTempPV()
+{
+	double tempPV = 0;
+	int curTempADC = analogRead(this->_analogPinPV);
+	if(curTempADC >= 1023)
+	{
+		if(this->_myPID.GetMode()==AUTOMATIC)
+		{
+			this->_myPID.SetMode(MANUAL);
+			*(this->_controlValPtr) = 0;
+		}
+	}
+	else
+	{
+		if(this->_myPID.GetMode()==MANUAL) this->_myPID.SetMode(AUTOMATIC);
+		double vin = ((double)curTempADC*VALIM)/1024.0;
+		double resTherm = (RES1*vin)/(VALIM-vin);
+		double logResTherm = log(resTherm);
+		double invKelvin = STEINHART0+\
+						STEINHART1*logResTherm+\
+						STEINHART2*pow(logResTherm,2)+\
+						STEINHART3*pow(logResTherm,3);
+		tempPV = (1/invKelvin)-273.15+FINETUNETEMP;
+	}
+	return tempPV;
 }
 
 /*
