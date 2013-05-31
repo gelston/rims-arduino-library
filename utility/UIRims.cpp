@@ -13,7 +13,7 @@ DESC : Constructeur d'un objet UIRims
 */
 UIRims::UIRims(LiquidCrystal lcd,byte col,byte row, byte pinLight,
 		       byte pinKeysAnalog)
-: _lcd(lcd), _pinKeysAnalog(pinKeysAnalog),
+: _lcd(lcd), _pinKeysAnalog(pinKeysAnalog),_waitNone(true),
   _cursorCol(0), _cursorRow(0), _pinLight(pinLight),
   _lastRefreshSP(0), _lastRefreshPV(0), 
   _lastRefreshTime(0), _lastRefreshFlow(0),
@@ -123,16 +123,26 @@ TITLE : readKeysADC
 DESC : Récupère le bouton présentement appuyé sans debounce
 ============================================================
 */
-byte UIRims::readKeysADC()
+byte UIRims::readKeysADC(boolean waitNone)
 {
 	byte res;
-	int adcKeyVal = analogRead(0);  
+	int adcKeyVal = analogRead(this->_pinKeysAnalog);  
 	if (adcKeyVal > 1000) res = KEYNONE;
 	else if (adcKeyVal < 50) res = KEYRIGHT;
 	else if (adcKeyVal < 195) res = KEYUP;
 	else if (adcKeyVal < 380) res = KEYDOWN;
 	else if (adcKeyVal < 555) res = KEYLEFT;
 	else if (adcKeyVal < 790) res = KEYSELECT;
+	if(waitNone)
+	{
+		if(res==KEYNONE and this->_waitNone) this->_waitNone = false;
+		else if(res!=KEYNONE)
+		{
+			if(this->_waitNone) res = KEYNONE;
+			else this->_waitNone = true;
+		}
+	}
+	else this->_waitNone = true;
 	return res;
 }
 
@@ -145,12 +155,12 @@ DESC : Récupère le bouton présentement appuyé avec debounce
 byte UIRims::_waitForKeyChange()
 {
 	boolean keyConfirmed = false, keyDetected = false;
-	byte lastKey = this->readKeysADC(), currentKey;
+	byte lastKey = this->readKeysADC(false), currentKey;
 	unsigned long refTime = millis(), currentTime;
 	while(not keyConfirmed)
 	{
 		currentTime = millis();
-		currentKey = this->readKeysADC();
+		currentKey = this->readKeysADC(false);
 		if(keyDetected)
 		{
 			if(currentTime - refTime >= 10) keyConfirmed = true;
@@ -506,6 +516,19 @@ void UIRims::showEnd()
 		}
 	}
 	digitalWrite(this->_pinLight,HIGH);
+}
+
+/*
+============================================================
+TITLE : showPumpWarning
+DESC :
+============================================================
+*/
+void UIRims::showPumpWarning()
+{
+	this->_lcd.clear();
+	this->_printStrLCD("start pump! [OK]",0,0);
+	this->_printStrLCD(String("flow:00.0L/min "+(char)0),0,1);
 }
 
 /*
