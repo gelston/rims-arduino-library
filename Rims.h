@@ -46,6 +46,7 @@ public:
 	
 	double analogInToCelcius(int analogIn);
 	
+	double getTempPV();
 	float getFlow();
 	
 protected:
