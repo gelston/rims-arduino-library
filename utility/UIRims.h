@@ -35,6 +35,7 @@ public:
 	     byte pinKeysAnalog);
 	
 	// === INFO DIALOGS ===
+	void showPumpWarning();
 	void showTempScreen();
 	void showTimeFlowScreen();
 	void switchScreen();
@@ -48,7 +49,7 @@ public:
 	void setFlow(float flow, boolean waitRefresh = true); //liter/min
 	
 	// === KEYS READER ===
-	byte readKeysADC();
+	byte readKeysADC(boolean waitNone = true);
 	
 	// === SETUP DIALOGS ===
 	float askSetPoint(float defaultVal); // Celsius
@@ -85,6 +86,8 @@ private:
 	byte _cursorRow;
 	byte _pinKeysAnalog;
 	byte _pinLight;
+	
+	boolean _waitNone;
 	boolean _tempScreenShown;
 	
 	unsigned long _lastRefreshSP;

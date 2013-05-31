@@ -90,14 +90,20 @@ DESC : Routine principale
 */
 void Rims::start()
 {
+	boolean timerElapsed = false;
+	unsigned long currentTime, windowStartTime;
 	*(this->_setPointPtr) = this->_uiRims.askSetPoint(DEFAULTSP);
 	this->_settedTime = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
+	this->_uiRims.showPumpWarning();
+	while(this->_uiRims.readKeysADC()==KEYNONE)
+	{
+		this->_uiRims.setFlow(this->getFlow());
+	}
 	this->_uiRims.showTempScreen();
 	this->_uiRims.setTempSP(*(this->_setPointPtr));
 	*(this->_processValPtr) = this->getTempPV();
 	this->_uiRims.setTempPV(*(this->_processValPtr));
-	boolean timerElapsed = false, waitNone = true;
-	unsigned long currentTime, windowStartTime;
+
 	this->_sumStoppedTime = true;
 	this->_runningTime = this->_totalStoppedTime = this->_timerStopTime = 0;
 	this->_myPID.SetMode(AUTOMATIC);
@@ -122,17 +128,9 @@ void Rims::start()
 		// === REFRESH DISPLAY ===
 		this->_refreshDisplay();
 		// === KEY CHECK ===
-		if(waitNone)
+		if(this->_uiRims.readKeysADC() != KEYNONE)
 		{
-			if(this->_uiRims.readKeysADC() == KEYNONE) waitNone = false;
-		}
-		else
-		{
-			if(this->_uiRims.readKeysADC() != KEYNONE)
-			{
-				this->_uiRims.switchScreen();
-				waitNone = true;
-			}
+			this->_uiRims.switchScreen();
 		}
 		if(this->_runningTime >= this->_settedTime) timerElapsed = true;
 	}
