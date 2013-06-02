@@ -88,7 +88,7 @@ void UIRims::showTimeFlowScreen()
 {
 	this->_tempScreenShown = false;
 	this->_lcd.clear();
-	this->_printStrLCD("time:000m00s",0,0);
+	this->_printStrLCD("time:000m00s",0 ,0);
 	this->_printStrLCD(String("flow:00.0L/min "+(char)0),0,1);
 	this->setTime(this->_time,false);
 	this->setFlow(this->_flow,false);
@@ -529,6 +529,19 @@ void UIRims::showPumpWarning()
 	this->_lcd.clear();
 	this->_printStrLCD("start pump! [OK]",0,0);
 	this->_printStrLCD(String("flow:00.0L/min "+(char)0),0,1);
+}
+
+/*
+============================================================
+TITLE : showHeaterWarning
+DESC :
+============================================================
+*/
+void UIRims::showHeaterWarning()
+{
+	this->_lcd.clear();
+	this->_printStrLCD("start heater!",0,0);
+	this->_printStrLCD("[OK]",0,1);
 }
 
 /*

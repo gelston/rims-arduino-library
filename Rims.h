@@ -57,7 +57,6 @@ protected:
 	
 private:
 	
-	
 	static void _isrFlowSensor();
 	
 	static Rims* _rimsPtr;
