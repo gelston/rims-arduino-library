@@ -36,6 +36,7 @@ public:
 	
 	// === INFO DIALOGS ===
 	void showPumpWarning();
+	void showHeaterWarning();
 	void showTempScreen();
 	void showTimeFlowScreen();
 	void switchScreen();

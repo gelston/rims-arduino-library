@@ -99,6 +99,8 @@ void Rims::start()
 	{
 		this->_uiRims.setFlow(this->getFlow());
 	}
+	this->_uiRims.showHeaterWarning();
+	while(this->_uiRims.readKeysADC()==KEYNONE){}
 	this->_uiRims.showTempScreen();
 	this->_uiRims.setTempSP(*(this->_setPointPtr));
 	*(this->_processValPtr) = this->getTempPV();
