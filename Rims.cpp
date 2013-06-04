@@ -91,16 +91,21 @@ DESC : Routine principale
 void Rims::start()
 {
 	boolean timerElapsed = false;
-	unsigned long currentTime, windowStartTime;
+	unsigned long windowStartTime, lastScreenSwitchTime;
+	// === ASK SETPOINT ===
 	*(this->_setPointPtr) = this->_uiRims.askSetPoint(DEFAULTSP);
+	// === ASK TIMER ===
 	this->_settedTime = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
+	// === PUMP SWITCHING ===
 	this->_uiRims.showPumpWarning();
 	while(this->_uiRims.readKeysADC()==KEYNONE)
 	{
 		this->_uiRims.setFlow(this->getFlow());
 	}
+	// === HEATER SWITCHING ===
 	this->_uiRims.showHeaterWarning();
 	while(this->_uiRims.readKeysADC()==KEYNONE) continue;
+	
 	this->_uiRims.showTempScreen();
 	this->_uiRims.setTempSP(*(this->_setPointPtr));
 	*(this->_processValPtr) = this->getTempPV();
@@ -109,7 +114,7 @@ void Rims::start()
 	this->_sumStoppedTime = true;
 	this->_runningTime = this->_totalStoppedTime = this->_timerStopTime = 0;
 	this->_myPID.SetMode(AUTOMATIC);
-	currentTime = this->_windowStartTime = this->_timerStartTime = millis();
+	this->_windowStartTime = this->_timerStartTime = millis();
 	while(not timerElapsed)
 	{	
 		// === READ TEMPERATURE/FLOW ===
@@ -130,9 +135,11 @@ void Rims::start()
 		// === REFRESH DISPLAY ===
 		this->_refreshDisplay();
 		// === KEY CHECK ===
-		if(this->_uiRims.readKeysADC() != KEYNONE)
+		if(this->_uiRims.readKeysADC() != KEYNONE and \
+		   millis() - lastScreenSwitchTime >= 500)
 		{
 			this->_uiRims.switchScreen();
+			lastScreenSwitchTime = millis();
 		}
 		if(this->_runningTime >= this->_settedTime) timerElapsed = true;
 	}
