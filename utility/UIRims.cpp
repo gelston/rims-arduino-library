@@ -479,6 +479,7 @@ float UIRims::_askValue(byte begin, byte end,
 	             this->setTempSP(defaultVal,false);
 	this->_setCursorPosition(dotPosition-1,row);
 	this->_lcd.blink();
+	this->_waitTime(500);
 	while(not valSelected)
 	{
 		switch(this->_waitForKeyChange())
@@ -523,7 +524,6 @@ float UIRims::askSetPoint(float defaultVal)
 	this->showTempScreen();
 	this->_printStrLCD("                 ",0,1);
 	res = this->_askValue(3,6,5,0,defaultVal,0.0,99.9,false);
-	this->_waitTime(500);
 	return res;
 }
 
@@ -539,7 +539,6 @@ unsigned int UIRims::askTime(unsigned int defaultVal)
 	this->showTimeFlowScreen();
 	this->_printStrLCD("                 ",0,1);
 	res = this->_askValue(5,10,8,0,defaultVal,0,59999,true);
-	this->_waitTime(500);
 	return res;
 }
 
@@ -555,6 +554,7 @@ void UIRims::showEnd()
 	this->_lcd.clear();
 	this->_printStrLCD("finished!",0,0);
 	refTime = currentTime = millis();
+	this->_waitTime(500);
 	boolean lightState = true;
 	while(this->readKeysADC() == KEYNONE)
 	{
@@ -567,7 +567,6 @@ void UIRims::showEnd()
 		}
 	}
 	digitalWrite(this->_pinLight,HIGH);
-	this->_waitTime(500);
 }
 
 /*
