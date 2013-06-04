@@ -91,7 +91,7 @@ DESC : Routine principale
 void Rims::start()
 {
 	boolean timerElapsed = false;
-	unsigned long windowStartTime, lastScreenSwitchTime;
+	unsigned long lastScreenSwitchTime;
 	// === ASK SETPOINT ===
 	*(this->_setPointPtr) = this->_uiRims.askSetPoint(DEFAULTSP);
 	// === ASK TIMER ===
@@ -114,7 +114,8 @@ void Rims::start()
 	this->_sumStoppedTime = true;
 	this->_runningTime = this->_totalStoppedTime = this->_timerStopTime = 0;
 	this->_myPID.SetMode(AUTOMATIC);
-	this->_windowStartTime = this->_timerStartTime = millis();
+	this->_windowStartTime = this->_timerStartTime \
+						   = lastScreenSwitchTime = millis();
 	while(not timerElapsed)
 	{	
 		// === READ TEMPERATURE/FLOW ===
