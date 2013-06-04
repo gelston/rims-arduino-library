@@ -69,12 +69,8 @@ void UIRims::showTempScreen()
 {
 	this->_tempScreenShown = true;
 	this->_lcd.clear();
-	this->_printStrLCD(
-		String("SP:00.0") + (char)223 +
-		String("C(000") + (char)223 + String("F)"),0,0);
-	this->_printStrLCD(
-	    String("PV:00.0") + (char)223 +
-	    String("C(000") + (char)223 + String("F)"),0,1);
+	this->_printStrLCD("SP:00.0\xdf""C(000\xdf""F)",0,0);
+	this->_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
 	this->setTempSP(this->_tempSP,false);
 	this->setTempPV(this->_tempPV,false);
 }
@@ -380,6 +376,19 @@ void UIRims::setFlow(float flow, boolean waitRefresh)
 		}
 	}
 }
+
+/*
+============================================================
+TITLE : setIdentCV
+DESC : Set ident CV on identScreen
+============================================================
+*/
+void UIRims::setIdentCV(unsigned long controlValue)
+{
+	//TODO use ssrwindowsize
+	this->_printFloatLCD(controlValue*100/5000,3,0,3,0);
+	this->_printFloatLCD(controlValue,5,0,8,0);
+}
 /*
 ============================================================
 TITLE : _incDecValue
@@ -615,4 +624,17 @@ void UIRims::showErrorPV(String mess)
 		this->_printStrLCD(String(" #")+mess,3,1);
 		this->_printStrLCD(String("#")+mess,10,1);
 	}
+}
+
+/*
+============================================================
+TITLE : showIdentScreen
+DESC : Show system identification screen on this->_lcd
+============================================================
+*/
+void UIRims::showIdentScreen()
+{
+	this->_printStrLCD("CV:000%(00000)",0,0);
+	this->_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
+	this->_tempScreenShown = true;
 }
