@@ -219,16 +219,12 @@ void Rims::_refreshSSR()
 
 /*
 ============================================================
-TITLE : analogInToCelcius
-DESC : Steinhart-hart thermistor equation with a voltage
+TITLE : getTempPV
+DESC : Get process value temperature from _analogPinPV.
+       It uses Steinhart-hart thermistor equation with a voltage
        divider with RES1
 ============================================================
 */
-double Rims::analogInToCelcius(int analogIn)
-{
-
-}
-
 double Rims::getTempPV()
 {
 	double tempPV = 0;
@@ -306,25 +302,30 @@ IdentRims::IdentRims(UIRims uiRims, byte analogPinTherm, byte ssrPin,
 
 void IdentRims::startIdent()
 {
+	this->_uiRims.showIdentScreen();
 	unsigned long startTime, currentTime, relativeTime;
 	Serial.begin(9600);
 	startTime = currentTime = this->_windowStartTime = millis();
 	while(millis() - startTime <= 900000) // 15 minutes
 	{
-		*(this->_processValPtr) = this->analogInToCelcius(this->_analogPinPV);
+		*(this->_processValPtr) = this->getTempPV();
+		this->_uiRims.setTempPV(*(this->_processValPtr));
 		currentTime = millis();
 		relativeTime = currentTime - startTime;
 		if(relativeTime >= 600000)
 		{
 			*(this->_controlValPtr) = 0.75 * SSRWINDOWSIZE;
+			this->_uiRims.setIdentCV(0.75 * SSRWINDOWSIZE);
 		}
 		else if(relativeTime >= 300000)
 		{
 			*(this->_controlValPtr) = SSRWINDOWSIZE;
+			this->_uiRims.setIdentCV(SSRWINDOWSIZE);
 		}
 		else
 		{
 			*(this->_controlValPtr) = 0.5*SSRWINDOWSIZE;
+			this->_uiRims.setIdentCV(0.5 * SSRWINDOWSIZE);
 		}
 		this->_refreshSSR();
 		Serial.print((double)relativeTime/1000.0,3);

@@ -43,7 +43,7 @@ public:
 	UIRims(LiquidCrystal lcd, byte col, byte row, byte pinLight,
 	     byte pinKeysAnalog);
 	
-	// === INFO DIALOGS ===
+	// === STD DIALOGS METHOD ===
 	void showPumpWarning();
 	void showHeaterWarning();
 	void showTempScreen();
@@ -51,12 +51,14 @@ public:
 	void switchScreen();
 	boolean getTempScreenShown();
 	void showEnd();
+	void showIdentScreen();
 	
 	// === VARIABLE SETTER ===
 	void setTempSP(float tempCelcius, boolean waitRefresh = true);
 	void setTempPV(float tempCelcius, boolean waitRefresh = true);
 	void setTime(unsigned int timeSec, boolean waitRefresh = true);
 	void setFlow(float flow, boolean waitRefresh = true); //liter/min
+	void setIdentCV(unsigned long controlValue);
 	
 	// === KEYS READER ===
 	byte readKeysADC(boolean waitNone = true);
