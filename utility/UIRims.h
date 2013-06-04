@@ -27,6 +27,7 @@
 #define KEYSELECT 5
 
 #define LCDREFRESHTIME 500 // mSec
+#define KEYDEBOUNCETIME 15 // mSec
 
 #define FLOWLOWBOUND 2.0
 #define FLOWUPBOUND 4.0
@@ -71,6 +72,7 @@ public:
 protected:
 	
 	byte _waitForKeyChange();
+	void _waitTime(unsigned long timeInMilliSec);
 	
 	void _printStrLCD(String mess, byte col, byte row);
 	void _printFloatLCD(float val, int width, int prec,

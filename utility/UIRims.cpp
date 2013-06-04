@@ -153,7 +153,7 @@ byte UIRims::readKeysADC(boolean waitNone)
 /*
 ============================================================
 TITLE : _waitForKeyChange
-DESC : Read jeys with software debounce
+DESC : Read keys with software debounce
 ============================================================
 */
 byte UIRims::_waitForKeyChange()
@@ -167,7 +167,7 @@ byte UIRims::_waitForKeyChange()
 		currentKey = this->readKeysADC(false);
 		if(keyDetected)
 		{
-			if(currentTime - refTime >= 10) keyConfirmed = true;
+			if(currentTime - refTime >= KEYDEBOUNCETIME) keyConfirmed = true;
 		}
 		if(currentKey != lastKey)
 		{
@@ -177,6 +177,19 @@ byte UIRims::_waitForKeyChange()
 		}
 	}
 	return currentKey;
+}
+
+/*
+============================================================
+TITLE : _waitTime
+DESC : Pause the Arduino for the given timeInMilliSec
+============================================================
+*/
+
+void UIRims::_waitTime(unsigned long timeInMilliSec)
+{
+	unsigned long startTime = millis();
+	while(millis() - startTime <= timeInMilliSec) continue;
 }
 
 /*
@@ -510,6 +523,7 @@ float UIRims::askSetPoint(float defaultVal)
 	this->showTempScreen();
 	this->_printStrLCD("                 ",0,1);
 	res = this->_askValue(3,6,5,0,defaultVal,0.0,99.9,false);
+	this->_waitTime(500);
 	return res;
 }
 
@@ -525,6 +539,7 @@ unsigned int UIRims::askTime(unsigned int defaultVal)
 	this->showTimeFlowScreen();
 	this->_printStrLCD("                 ",0,1);
 	res = this->_askValue(5,10,8,0,defaultVal,0,59999,true);
+	this->_waitTime(500);
 	return res;
 }
 
@@ -552,6 +567,7 @@ void UIRims::showEnd()
 		}
 	}
 	digitalWrite(this->_pinLight,HIGH);
+	this->_waitTime(500);
 }
 
 /*
@@ -565,6 +581,7 @@ void UIRims::showPumpWarning()
 	this->_lcd.clear();
 	this->_printStrLCD("start pump! [OK]",0,0);
 	this->_printStrLCD(String("flow:00.0L/min "+(char)0),0,1);
+	this->_waitTime(500);
 }
 
 /*
@@ -578,6 +595,7 @@ void UIRims::showHeaterWarning()
 	this->_lcd.clear();
 	this->_printStrLCD("start heater!",0,0);
 	this->_printStrLCD("[OK]",0,1);
+	this->_waitTime(500);
 }
 
 /*
