@@ -109,6 +109,10 @@ public:
 	
 	void startIdent();
 	
+private :
+	
+	UIRimsIdent* _ui;
+	
 };
 
 #endif

@@ -294,9 +294,12 @@ void Rims::_isrFlowSensor()
  *************************************************************/
 
 
-RimsIdent::RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm, byte ssrPin, 
-			double* currentTemp, double* ssrControl, double* settedTemp)
-: Rims(uiRimsIdent, analogPinTherm, ssrPin, currentTemp, ssrControl, settedTemp)
+RimsIdent::RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm, 
+					 byte ssrPin, double* currentTemp, double* ssrControl, 
+					 double* settedTemp)
+: Rims(uiRimsIdent, analogPinTherm, ssrPin, 
+	   currentTemp, ssrControl, settedTemp),
+ _ui(uiRimsIdent)
 {
 }
 
@@ -313,9 +316,7 @@ void RimsIdent::startIdent()
 		*(this->_processValPtr) = this->getTempPV();
 		this->_ui->setTempPV(*(this->_processValPtr));
 		this->_runningTime = millis() - this->_totalStoppedTime;
-		this->_ui->setTempScreenShown(false);
 		this->_ui->setTime((this->_settedTime-this->_runningTime)/1000);
-		this->_ui->setTempScreenShown(true);
 		if(this->_runningTime >= 240000)
 		{
 			*(this->_controlValPtr) = 0;

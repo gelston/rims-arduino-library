@@ -113,17 +113,6 @@ void UIRims::switchScreen()
 
 /*
 ============================================================
-TITLE : getTempScreenShown
-DESC : Return a boolean indicating if tempScreen is shown now.
-============================================================
-*/
-boolean UIRims::getTempScreenShown()
-{
-	return this->_tempScreenShown;
-}
-
-/*
-============================================================
 TITLE : readKeysADC
 DESC : Read keys without software debouce. If waitNone
        is true (true by default), KEYNONE must be detected
@@ -638,7 +627,7 @@ DESC : Constructor
 ============================================================
 */
 UIRimsIdent::UIRimsIdent(LiquidCrystal lcd, byte col, byte row, 
-						 byte pinLight,byte pinKeysAnalog);
+						 byte pinLight,byte pinKeysAnalog)
 : UIRims(lcd,col,row,pinLight,pinKeysAnalog)
 {
 }
