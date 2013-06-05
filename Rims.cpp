@@ -305,6 +305,16 @@ RimsIdent::RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm,
 
 void RimsIdent::startIdent()
 {
+	// === PUMP SWITCHING ===
+	this->_ui->showPumpWarning();
+	while(this->_ui->readKeysADC()==KEYNONE)
+	{
+		this->_ui->setFlow(this->getFlow());
+	}
+	// === HEATER SWITCHING ===
+	this->_ui->showHeaterWarning();
+	while(this->_ui->readKeysADC()==KEYNONE) continue;
+	// === IDENTIFICATION TESTS ===
 	this->_ui->showIdentScreen();
 	Serial.begin(9600);
 	this->_settedTime = 600000;
