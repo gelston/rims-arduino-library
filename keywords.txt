@@ -7,8 +7,9 @@
 #######################################
 
 Rims	KEYWORD1
-IdentRims	KEYWORD1
+RimsIdent	KEYWORD1
 UIRims	KEYWORD1
+UIRimsIdent	KEYWORD2
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -23,6 +24,10 @@ setInterruptFlow	KEYWORD2
 start	KEYWORD2
 analogInToCelcius	KEYWORD2
 getFlow	KEYWORD2
+
+### IdentRims ###
+
+startIdent	KEYWORD2
 
 ### UIRims ###
 
@@ -40,6 +45,11 @@ askSetPoint	KEYWORD2
 askTime	KEYWORD2
 showErrorPV	KEYWORD2
 
+### UIRimsIdent ###
+
+setTempScreenShown	KEYWORD2
+setIdentCV	KEYWORD2
+showIdentScreen	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

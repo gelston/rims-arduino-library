@@ -29,9 +29,9 @@ TITLE : Rims (constructor)
 DESC : Rims constructor
 ============================================================
 */
-Rims::Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
+Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin, 
 	       double* currentTemp, double* ssrControl, double* settedTemp)
-: _uiRims(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
+: _ui(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
   _processValPtr(currentTemp), _controlValPtr(ssrControl), _setPointPtr(settedTemp),
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
   _pinLED(13), _filterCst(0),
@@ -93,23 +93,23 @@ void Rims::start()
 	boolean timerElapsed = false;
 	unsigned long lastScreenSwitchTime;
 	// === ASK SETPOINT ===
-	*(this->_setPointPtr) = this->_uiRims.askSetPoint(DEFAULTSP);
+	*(this->_setPointPtr) = this->_ui->askSetPoint(DEFAULTSP);
 	// === ASK TIMER ===
-	this->_settedTime = (unsigned long)this->_uiRims.askTime(DEFAULTTIME)*1000;
+	this->_settedTime = (unsigned long)this->_ui->askTime(DEFAULTTIME)*1000;
 	// === PUMP SWITCHING ===
-	this->_uiRims.showPumpWarning();
-	while(this->_uiRims.readKeysADC()==KEYNONE)
+	this->_ui->showPumpWarning();
+	while(this->_ui->readKeysADC()==KEYNONE)
 	{
-		this->_uiRims.setFlow(this->getFlow());
+		this->_ui->setFlow(this->getFlow());
 	}
 	// === HEATER SWITCHING ===
-	this->_uiRims.showHeaterWarning();
-	while(this->_uiRims.readKeysADC()==KEYNONE) continue;
+	this->_ui->showHeaterWarning();
+	while(this->_ui->readKeysADC()==KEYNONE) continue;
 	
-	this->_uiRims.showTempScreen();
-	this->_uiRims.setTempSP(*(this->_setPointPtr));
+	this->_ui->showTempScreen();
+	this->_ui->setTempSP(*(this->_setPointPtr));
 	*(this->_processValPtr) = this->getTempPV();
-	this->_uiRims.setTempPV(*(this->_processValPtr));
+	this->_ui->setTempPV(*(this->_processValPtr));
 
 	this->_sumStoppedTime = true;
 	this->_runningTime = this->_totalStoppedTime = this->_timerStopTime = 0;
@@ -136,10 +136,10 @@ void Rims::start()
 		// === REFRESH DISPLAY ===
 		this->_refreshDisplay();
 		// === KEY CHECK ===
-		if(this->_uiRims.readKeysADC() != KEYNONE and \
+		if(this->_ui->readKeysADC() != KEYNONE and \
 		   millis() - lastScreenSwitchTime >= 500)
 		{
-			this->_uiRims.switchScreen();
+			this->_ui->switchScreen();
 			lastScreenSwitchTime = millis();
 		}
 		if(this->_runningTime >= this->_settedTime) timerElapsed = true;
@@ -147,7 +147,7 @@ void Rims::start()
 	this->_myPID.SetMode(MANUAL);
 	*(this->_controlValPtr) = 0;
 	this->_refreshSSR();
-	this->_uiRims.showEnd();
+	this->_ui->showEnd();
 }
 
 /*
@@ -185,10 +185,10 @@ DESC :
 */
 void Rims::_refreshDisplay()
 {
-	if(analogRead(this->_analogPinPV) >= 1023) this->_uiRims.showErrorPV("NC");
-	else this->_uiRims.setTempPV(*(this->_processValPtr));
-	this->_uiRims.setTime((this->_settedTime-this->_runningTime)/1000);
-	this->_uiRims.setFlow(this->_flow);
+	if(analogRead(this->_analogPinPV) >= 1023) this->_ui->showErrorPV("NC");
+	else this->_ui->setTempPV(*(this->_processValPtr));
+	this->_ui->setTime((this->_settedTime-this->_runningTime)/1000);
+	this->_ui->setFlow(this->_flow);
 		
 }
 
@@ -288,50 +288,55 @@ void Rims::_isrFlowSensor()
 
 /*************************************************************
  ************************************************************* 
- * IdentRims
+ * RimsIdent
  *     Identification tools for Rims library 
  ************************************************************* 
  *************************************************************/
 
 
-IdentRims::IdentRims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
+RimsIdent::RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm, byte ssrPin, 
 			double* currentTemp, double* ssrControl, double* settedTemp)
-: Rims(uiRims, analogPinTherm, ssrPin, currentTemp, ssrControl, settedTemp)
+: Rims(uiRimsIdent, analogPinTherm, ssrPin, currentTemp, ssrControl, settedTemp)
 {
 }
 
-void IdentRims::startIdent()
+void RimsIdent::startIdent()
 {
-	this->_uiRims.showIdentScreen();
-	unsigned long startTime, currentTime, relativeTime;
+	this->_ui->showIdentScreen();
 	Serial.begin(9600);
-	startTime = currentTime = this->_windowStartTime = millis();
-	while(millis() - startTime <= 900000) // 15 minutes
+	this->_settedTime = 600000;
+	this->_totalStoppedTime = this->_windowStartTime = millis();
+	this->_runningTime = 0;
+	Serial.println("time,cv,pv");
+	while(this->_runningTime <= this->_settedTime) // 15 minutes
 	{
 		*(this->_processValPtr) = this->getTempPV();
-		this->_uiRims.setTempPV(*(this->_processValPtr));
-		currentTime = millis();
-		relativeTime = currentTime - startTime;
-		if(relativeTime >= 600000)
+		this->_ui->setTempPV(*(this->_processValPtr));
+		this->_runningTime = millis() - this->_totalStoppedTime;
+		this->_ui->setTempScreenShown(false);
+		this->_ui->setTime((this->_settedTime-this->_runningTime)/1000);
+		this->_ui->setTempScreenShown(true);
+		if(this->_runningTime >= 240000)
 		{
-			*(this->_controlValPtr) = 0.75 * SSRWINDOWSIZE;
-			this->_uiRims.setIdentCV(0.75 * SSRWINDOWSIZE);
+			*(this->_controlValPtr) = 0;
+			this->_ui->setIdentCV(0,SSRWINDOWSIZE);
 		}
-		else if(relativeTime >= 300000)
+		else if(this->_runningTime >= 120000)
 		{
 			*(this->_controlValPtr) = SSRWINDOWSIZE;
-			this->_uiRims.setIdentCV(SSRWINDOWSIZE);
+			this->_ui->setIdentCV(SSRWINDOWSIZE,SSRWINDOWSIZE);
 		}
 		else
 		{
 			*(this->_controlValPtr) = 0.5*SSRWINDOWSIZE;
-			this->_uiRims.setIdentCV(0.5 * SSRWINDOWSIZE);
+			this->_ui->setIdentCV(0.5 * SSRWINDOWSIZE, SSRWINDOWSIZE);
 		}
 		this->_refreshSSR();
-		Serial.print((double)relativeTime/1000.0,3);
+		Serial.print((double)this->_runningTime/1000.0,3);
 		Serial.print(",");
 		Serial.print(*(this->_controlValPtr),0);
 		Serial.print(",");
 		Serial.println(*(this->_processValPtr),15);
 	}
+	this->_ui->showEnd();
 }

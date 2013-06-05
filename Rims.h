@@ -30,12 +30,17 @@
 #include "utility/UIRims.h"
 #include "utility/PID_v1.h"
 
+
+
+// === Rims =======================================
+// === Main class for Rims library ================
+// ================================================
 class Rims
 {
-	friend class IdentRims;	
+	friend class RimsIdent;
 	
 public:
-	Rims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
+	Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin, 
 		 double* currentTemp, double* ssrControl, double* settedTemp);
 
 	void setTunningPID(double Kp, double Ki, double Kd, double tauFilter);
@@ -61,7 +66,7 @@ private:
 	
 	static Rims* _rimsPtr;
 	
-	UIRims _uiRims;
+	UIRims* _ui;
 	PID _myPID;
 	byte _analogPinPV;
 	byte _pinCV;
@@ -90,16 +95,19 @@ private:
 	
 };
 
-class IdentRims : public Rims
+
+// === RimsIdent ==================================
+// === Toolkits for process identification ========
+// === to facilitate PID tunning.          ========
+// ================================================
+class RimsIdent : public Rims
 {
 	
 public:
-	IdentRims(UIRims uiRims, byte analogPinTherm, byte ssrPin, 
+	RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm, byte ssrPin, 
 		 double* currentTemp, double* ssrControl, double* settedTemp);
 	
 	void startIdent();
-
-private:
 	
 };
 
