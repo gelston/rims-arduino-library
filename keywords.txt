@@ -9,7 +9,7 @@
 Rims	KEYWORD1
 RimsIdent	KEYWORD1
 UIRims	KEYWORD1
-UIRimsIdent	KEYWORD2
+UIRimsIdent	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
