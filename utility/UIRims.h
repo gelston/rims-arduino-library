@@ -35,8 +35,15 @@
 #include "Arduino.h"
 #include "LiquidCrystal.h"
 
+
+// === UIRims =====================================
+// === UI class for rims library.          ========
+// === Uses DFRobot LCD Keypad.            ========
+// ================================================
+
 class UIRims
 {
+	friend class UIRimsIdent;
 	
 public:
 	
@@ -49,16 +56,13 @@ public:
 	void showTempScreen();
 	void showTimeFlowScreen();
 	void switchScreen();
-	boolean getTempScreenShown();
 	void showEnd();
-	void showIdentScreen();
 	
 	// === VARIABLE SETTER ===
 	void setTempSP(float tempCelcius, boolean waitRefresh = true);
 	void setTempPV(float tempCelcius, boolean waitRefresh = true);
 	void setTime(unsigned int timeSec, boolean waitRefresh = true);
 	void setFlow(float flow, boolean waitRefresh = true); //liter/min
-	void setIdentCV(unsigned long controlValue);
 	
 	// === KEYS READER ===
 	byte readKeysADC(boolean waitNone = true);
@@ -112,6 +116,25 @@ private:
 	float _tempPV;
 	unsigned int _time;
 	float _flow;
+};
+
+
+// === UIRimsIdent ================================
+// === UI for identification toolkit      =========
+// === IdentRims class                    =========
+// ================================================
+class UIRimsIdent : public UIRims
+{
+	
+public:
+	
+	UIRimsIdent(LiquidCrystal lcd, byte col, byte row, byte pinLight,
+				byte pinKeysAnalog);
+
+	void showIdentScreen();
+	
+	void setIdentCV(unsigned long controlValue, unsigned long ssrWindow);
+	void setTime(unsigned int timeSec, boolean waitRefresh = true);
 };
 
 #endif

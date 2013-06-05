@@ -5,6 +5,13 @@
 #include "Arduino.h"
 #include "UIRims.h"
 
+/*************************************************************
+ ************************************************************* 
+ * UIRims
+ *     UI library for Rims
+ ************************************************************* 
+ *************************************************************/
+
 /*
 ============================================================
 TITLE : UIRims (constructor)
@@ -379,18 +386,6 @@ void UIRims::setFlow(float flow, boolean waitRefresh)
 
 /*
 ============================================================
-TITLE : setIdentCV
-DESC : Set ident CV on identScreen
-============================================================
-*/
-void UIRims::setIdentCV(unsigned long controlValue)
-{
-	//TODO use ssrwindowsize
-	this->_printFloatLCD(controlValue*100/5000,3,0,3,0);
-	this->_printFloatLCD(controlValue,5,0,8,0);
-}
-/*
-============================================================
 TITLE : _incDecValue
 DESC : Increse or decreasw a floating point value on this->_lcd.
        dotPosition give the position (column) of the point mark.
@@ -626,15 +621,80 @@ void UIRims::showErrorPV(String mess)
 	}
 }
 
+
+
+/*************************************************************
+ ************************************************************* 
+ * UIRimsIdent
+ *     UI library for RimsIdent class
+ ************************************************************* 
+ *************************************************************/
+
+
+/*
+============================================================
+TITLE : UIRimsIdent
+DESC : Constructor
+============================================================
+*/
+UIRimsIdent::UIRimsIdent(LiquidCrystal lcd, byte col, byte row, 
+						 byte pinLight,byte pinKeysAnalog);
+: UIRims(lcd,col,row,pinLight,pinKeysAnalog)
+{
+}
 /*
 ============================================================
 TITLE : showIdentScreen
 DESC : Show system identification screen on this->_lcd
 ============================================================
 */
-void UIRims::showIdentScreen()
+void UIRimsIdent::showIdentScreen()
 {
-	this->_printStrLCD("CV:000%(00000)",0,0);
+	this->_printStrLCD("000% 000m00s",0,0);
 	this->_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
 	this->_tempScreenShown = true;
+}
+
+/*
+============================================================
+TITLE : setIdentCV
+DESC : Set ident CV on identScreen
+============================================================
+*/
+void UIRimsIdent::setIdentCV(unsigned long controlValue, 
+							 unsigned long ssrWindow)
+{
+	this->_printFloatLCD(controlValue*100/ssrWindow,3,0,0,0);
+}
+
+/*
+============================================================
+TITLE : setTime
+DESC : Set a new remaining time. If timeFlowScreen is 
+       shown, it will be updated on the lcd this->_lcd else
+       it will be memorized for when it will be shown.
+       If waitRefresh is true (default is true) it will
+       wait LCDREFRESHTIME mSec before updating
+       this->_lcd.
+============================================================
+*/
+void UIRimsIdent::setTime(unsigned int timeSec, boolean waitRefresh)
+{
+	this->_time = timeSec;
+	if(not this->_tempScreenShown)
+	{
+		boolean refreshLCD = false;
+		unsigned long currentTime = millis();
+		if(not waitRefresh)	refreshLCD = true;
+		else if(currentTime - this->_lastRefreshTime >= LCDREFRESHTIME) \
+				refreshLCD = true;
+		if(refreshLCD)
+		{
+			this->_lastRefreshTime = currentTime;
+			int minutes = timeSec / 60;
+			int seconds = timeSec % 60;
+			this->_printFloatLCD(minutes,3,0,5,0);
+			this->_printFloatLCD(seconds,2,0,9,0);
+		}
+	}
 }
