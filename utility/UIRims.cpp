@@ -92,7 +92,7 @@ void UIRims::showTimeFlowScreen()
 {
 	this->_tempScreenShown = false;
 	this->_lcd.clear();
-	this->_printStrLCD("time:000m00s",0 ,0);
+	this->_printStrLCD("time:000m00s    ",0 ,0);
 	this->_printStrLCD(String("flow:00.0L/min \x03"),0,1);
 	this->setTime(this->_time,false);
 	this->setFlow(this->_flow,false);
@@ -639,7 +639,7 @@ DESC : Show system identification screen on this->_lcd
 */
 void UIRimsIdent::showIdentScreen()
 {
-	this->_printStrLCD("000% 000m00s",0,0);
+	this->_printStrLCD("000% 000m00s    ",0,0);
 	this->_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
 	this->_tempScreenShown = true;
 }
@@ -669,21 +669,7 @@ DESC : Set a new remaining time. If timeFlowScreen is
 */
 void UIRimsIdent::setTime(unsigned int timeSec, boolean waitRefresh)
 {
-	this->_time = timeSec;
-	if(not this->_tempScreenShown)
-	{
-		boolean refreshLCD = false;
-		unsigned long currentTime = millis();
-		if(not waitRefresh)	refreshLCD = true;
-		else if(currentTime - this->_lastRefreshTime >= LCDREFRESHTIME) \
-				refreshLCD = true;
-		if(refreshLCD)
-		{
-			this->_lastRefreshTime = currentTime;
-			int minutes = timeSec / 60;
-			int seconds = timeSec % 60;
-			this->_printFloatLCD(minutes,3,0,5,0);
-			this->_printFloatLCD(seconds,2,0,9,0);
-		}
-	}
+	this->_tempScreenShown = false;
+	UIRims::setTime(timeSec,waitRefresh);
+	this->_tempScreenShown = true;
 }
