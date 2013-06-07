@@ -44,6 +44,7 @@ public:
 		 double* currentTemp, double* ssrControl, double* settedTemp);
 
 	void setTunningPID(double Kp, double Ki, double Kd, double tauFilter);
+	void setSetPointFilter(double tauFilter);
 	void setPinLED(byte pinLED);
 	void setInterruptFlow(byte interruptFlow);
 	
@@ -76,8 +77,11 @@ private:
 	double* _processValPtr;
 	double* _controlValPtr; // [0,SSRWINDOWSIZE]
 	
-	double _filterCst;
-	double _lastFilterOutput;
+	double _PIDFilterCst;
+	double _lastPIDFilterOutput;
+	
+	double _setPointFilterCst;
+	double _lastSetPointFilterOutput;
 	
 	unsigned long _windowStartTime;			//mSec
 	

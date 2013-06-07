@@ -19,6 +19,7 @@ UIRimsIdent	KEYWORD1
 ### Rims ###
 
 setTunningPID	KEYWORD2
+setSetPointFilter	KEYWORD2
 setPinLED	KEYWORD2
 setInterruptFlow	KEYWORD2
 start	KEYWORD2
