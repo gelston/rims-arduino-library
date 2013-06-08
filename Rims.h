@@ -24,7 +24,7 @@
 #define DEFAULTSP 68 // celsius
 #define DEFAULTTIME 5400 // seconds
 
-#define DELTATEMPOK 2.0 // celsius
+#define MAXTEMPVAR 2.0 // celsius
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
