@@ -37,8 +37,8 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
   _pinLED(13), _PIDFilterCst(0),
   _flowLastTime(0), _flowCurTime(0)
 {
-	this->_myPID.SetSampleTime(PIDSAMPLETIME);
-	this->_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
+	_myPID.SetSampleTime(PIDSAMPLETIME);
+	_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
 	pinMode(13,OUTPUT);
 }
 
@@ -50,13 +50,13 @@ DESC :
 */
 void Rims::setTunningPID(double Kp, double Ki, double Kd, double tauFilter)
 {
-	this->_myPID.SetTunings(Kp,Ki,Kd);
+	_myPID.SetTunings(Kp,Ki,Kd);
 	if(tauFilter>=0)
 	{
-		this->_PIDFilterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
+		_PIDFilterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
 	}
-	else this->_PIDFilterCst = 0;	
-	this->_lastPIDFilterOutput = 0;
+	else _PIDFilterCst = 0;	
+	_lastPIDFilterOutput = 0;
 }
 
 /*
@@ -69,10 +69,10 @@ void Rims::setSetPointFilter(double tauFilter)
 {
 	if(tauFilter>=0)
 	{
-		this->_setPointFilterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
+		_setPointFilterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
 	}
-	else this->_setPointFilterCst = 0;
-	this->_lastSetPointFilterOutput = 0;
+	else _setPointFilterCst = 0;
+	_lastSetPointFilterOutput = 0;
 }
 
 /*
@@ -96,7 +96,7 @@ DESC :
 void Rims::setPinLED(byte pinLED)
 {
 	pinMode(pinLED,OUTPUT);
-	this->_pinLED = pinLED;
+	_pinLED = pinLED;
 }
 
 /*
@@ -110,29 +110,29 @@ void Rims::start()
 	boolean timerElapsed = false, pidJustCalculated = true;
 	unsigned long lastScreenSwitchTime;
 	// === ASK SETPOINT ===
-	*(this->_setPointPtr) = this->_ui->askSetPoint(DEFAULTSP);
+	*(_setPointPtr) = _ui->askSetPoint(DEFAULTSP);
 	Serial.println(*_setPointPtr);
 	// === ASK TIMER ===
-	this->_settedTime = (unsigned long)this->_ui->askTime(DEFAULTTIME)*1000;
+	_settedTime = (unsigned long)_ui->askTime(DEFAULTTIME)*1000;
 	// === PUMP SWITCHING ===
-	this->_ui->showPumpWarning();
-	while(this->_ui->readKeysADC()==KEYNONE)
+	_ui->showPumpWarning();
+	while(_ui->readKeysADC()==KEYNONE)
 	{
-		this->_ui->setFlow(this->getFlow());
+		_ui->setFlow(this->getFlow());
 	}
 	// === HEATER SWITCHING ===
-	this->_ui->showHeaterWarning();
-	while(this->_ui->readKeysADC()==KEYNONE) continue;
+	_ui->showHeaterWarning();
+	while(_ui->readKeysADC()==KEYNONE) continue;
 	
-	this->_ui->showTempScreen();
-	this->_ui->setTempSP(*(this->_setPointPtr));
-	*(this->_processValPtr) = this->getTempPV();
-	this->_ui->setTempPV(*(this->_processValPtr));
+	_ui->showTempScreen();
+	_ui->setTempSP(*(_setPointPtr));
+	*(_processValPtr) = this->getTempPV();
+	_ui->setTempPV(*(_processValPtr));
 
-	this->_sumStoppedTime = true;
-	this->_runningTime = this->_totalStoppedTime = this->_timerStopTime = 0;
-	this->_myPID.SetMode(AUTOMATIC);
-	this->_windowStartTime = this->_timerStartTime \
+	_sumStoppedTime = true;
+	_runningTime = _totalStoppedTime = _timerStopTime = 0;
+	_myPID.SetMode(AUTOMATIC);
+	_windowStartTime = _timerStartTime \
 						   = lastScreenSwitchTime = millis();
 	while(not timerElapsed)
 	{	
@@ -173,10 +173,10 @@ void Rims::start()
 		}
 		if(_runningTime >= _settedTime) timerElapsed = true;
 	}
-	this->_myPID.SetMode(MANUAL);
-	*(this->_controlValPtr) = 0;
-	this->_refreshSSR();
-	this->_ui->showEnd();
+	_myPID.SetMode(MANUAL);
+	*(_controlValPtr) = 0;
+	_refreshSSR();
+	_ui->showEnd();
 }
 
 /*
@@ -188,21 +188,21 @@ DESC :
 void Rims::_refreshTimer()
 {
 	unsigned long currentTime = millis();
-	if(abs(*(this->_setPointPtr) - *(this->_processValPtr)) <= DELTATEMPOK)
+	if(abs(*(_setPointPtr) - *(_processValPtr)) <= MAXTEMPVAR)
 	{
-		if(this->_sumStoppedTime)
+		if(_sumStoppedTime)
 		{
-			this->_sumStoppedTime = false;
-			this->_totalStoppedTime += (this->_timerStartTime - 
-										this->_timerStopTime);
+			_sumStoppedTime = false;
+			_totalStoppedTime += (_timerStartTime - 
+										_timerStopTime);
 		}
-		this->_runningTime = currentTime - this->_totalStoppedTime;
-		this->_timerStopTime = currentTime;
+		_runningTime = currentTime - _totalStoppedTime;
+		_timerStopTime = currentTime;
 	}
 	else
 	{
-		this->_timerStartTime = currentTime;
-		if(not this->_sumStoppedTime) this->_sumStoppedTime = true;
+		_timerStartTime = currentTime;
+		if(not _sumStoppedTime) _sumStoppedTime = true;
 	}
 }
 
@@ -214,10 +214,10 @@ DESC :
 */
 void Rims::_refreshDisplay()
 {
-	if(analogRead(this->_analogPinPV) >= 1023) this->_ui->showErrorPV("NC");
-	else this->_ui->setTempPV(*(this->_processValPtr));
-	this->_ui->setTime((this->_settedTime-this->_runningTime)/1000);
-	this->_ui->setFlow(this->_flow);
+	if(analogRead(_analogPinPV) >= 1023) _ui->showErrorPV("NC");
+	else _ui->setTempPV(*(_processValPtr));
+	_ui->setTime((_settedTime-_runningTime)/1000);
+	_ui->setFlow(_flow);
 		
 }
 
@@ -230,19 +230,19 @@ DESC :
 void Rims::_refreshSSR()
 {
 	unsigned long currentTime = millis();
-	if(currentTime - this->_windowStartTime > SSRWINDOWSIZE)
+	if(currentTime - _windowStartTime > SSRWINDOWSIZE)
 	{
-		this->_windowStartTime += SSRWINDOWSIZE;
+		_windowStartTime += SSRWINDOWSIZE;
 	}
-	if(currentTime - this->_windowStartTime <= *(this->_controlValPtr))
+	if(currentTime - _windowStartTime <= *(_controlValPtr))
 	{
-		digitalWrite(this->_pinCV,HIGH);
-		digitalWrite(this->_pinLED,HIGH);
+		digitalWrite(_pinCV,HIGH);
+		digitalWrite(_pinLED,HIGH);
 	}
 	else
 	{
-		digitalWrite(this->_pinCV,LOW);
-		digitalWrite(this->_pinLED,LOW);
+		digitalWrite(_pinCV,LOW);
+		digitalWrite(_pinLED,LOW);
 	}
 }
 
@@ -257,18 +257,18 @@ DESC : Get process value temperature from _analogPinPV.
 double Rims::getTempPV()
 {
 	double tempPV = 0;
-	int curTempADC = analogRead(this->_analogPinPV);
+	int curTempADC = analogRead(_analogPinPV);
 	if(curTempADC >= 1023)
 	{
-		if(this->_myPID.GetMode()==AUTOMATIC)
+		if(_myPID.GetMode()==AUTOMATIC)
 		{
-			this->_myPID.SetMode(MANUAL);
-			*(this->_controlValPtr) = 0;
+			_myPID.SetMode(MANUAL);
+			*(_controlValPtr) = 0;
 		}
 	}
 	else
 	{
-		if(this->_myPID.GetMode()==MANUAL) this->_myPID.SetMode(AUTOMATIC);
+		if(_myPID.GetMode()==MANUAL) _myPID.SetMode(AUTOMATIC);
 		double vin = ((double)curTempADC*VALIM)/1024.0;
 		double resTherm = (RES1*vin)/(VALIM-vin);
 		double logResTherm = log(resTherm);
@@ -290,12 +290,12 @@ DESC :
 float Rims::getFlow()
 {
 	float flow;
-	if(this->_flowCurTime == 0) flow = 0.0;
-	else if(micros() - this->_flowCurTime >= 5e06) flow = 0.0;
+	if(_flowCurTime == 0) flow = 0.0;
+	else if(micros() - _flowCurTime >= 5e06) flow = 0.0;
 	else
 	{
 		flow = (1e06 / (4.8* \ 
-		(this->_flowCurTime - this->_flowLastTime)));
+		(_flowCurTime - _flowLastTime)));
 	}
 	return flow;
 }
@@ -335,48 +335,48 @@ RimsIdent::RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm,
 void RimsIdent::startIdent()
 {
 	// === PUMP SWITCHING ===
-	this->_ui->showPumpWarning();
-	while(this->_ui->readKeysADC()==KEYNONE)
+	_ui->showPumpWarning();
+	while(_ui->readKeysADC()==KEYNONE)
 	{
-		this->_ui->setFlow(this->getFlow());
+		_ui->setFlow(this->getFlow());
 	}
 	// === HEATER SWITCHING ===
-	this->_ui->showHeaterWarning();
-	while(this->_ui->readKeysADC()==KEYNONE) continue;
+	_ui->showHeaterWarning();
+	while(_ui->readKeysADC()==KEYNONE) continue;
 	// === IDENTIFICATION TESTS ===
-	this->_ui->showIdentScreen();
+	_ui->showIdentScreen();
 	Serial.begin(9600);
-	this->_settedTime = 600000;
-	this->_totalStoppedTime = this->_windowStartTime = millis();
-	this->_runningTime = 0;
+	_settedTime = 600000;
+	_totalStoppedTime = _windowStartTime = millis();
+	_runningTime = 0;
 	Serial.println("time,cv,pv");
-	while(this->_runningTime <= this->_settedTime) // 15 minutes
+	while(_runningTime <= _settedTime) // 15 minutes
 	{
-		*(this->_processValPtr) = this->getTempPV();
-		this->_ui->setTempPV(*(this->_processValPtr));
-		this->_runningTime = millis() - this->_totalStoppedTime;
-		this->_ui->setTime((this->_settedTime-this->_runningTime)/1000);
-		if(this->_runningTime >= 240000)
+		*(_processValPtr) = this->getTempPV();
+		_ui->setTempPV(*(_processValPtr));
+		_runningTime = millis() - _totalStoppedTime;
+		_ui->setTime((_settedTime-_runningTime)/1000);
+		if(_runningTime >= 240000)
 		{
-			*(this->_controlValPtr) = 0;
-			this->_ui->setIdentCV(0,SSRWINDOWSIZE);
+			*(_controlValPtr) = 0;
+			_ui->setIdentCV(0,SSRWINDOWSIZE);
 		}
-		else if(this->_runningTime >= 120000)
+		else if(_runningTime >= 120000)
 		{
-			*(this->_controlValPtr) = SSRWINDOWSIZE;
-			this->_ui->setIdentCV(SSRWINDOWSIZE,SSRWINDOWSIZE);
+			*(_controlValPtr) = SSRWINDOWSIZE;
+			_ui->setIdentCV(SSRWINDOWSIZE,SSRWINDOWSIZE);
 		}
 		else
 		{
-			*(this->_controlValPtr) = 0.5*SSRWINDOWSIZE;
-			this->_ui->setIdentCV(0.5 * SSRWINDOWSIZE, SSRWINDOWSIZE);
+			*(_controlValPtr) = 0.5*SSRWINDOWSIZE;
+			_ui->setIdentCV(0.5 * SSRWINDOWSIZE, SSRWINDOWSIZE);
 		}
-		this->_refreshSSR();
-		Serial.print((double)this->_runningTime/1000.0,3);
+		_refreshSSR();
+		Serial.print((double)_runningTime/1000.0,3);
 		Serial.print(",");
-		Serial.print(*(this->_controlValPtr),0);
+		Serial.print(*(_controlValPtr),0);
 		Serial.print(",");
-		Serial.println(*(this->_processValPtr),15);
+		Serial.println(*(_processValPtr),15);
 	}
-	this->_ui->showEnd();
+	_ui->showEnd();
 }
