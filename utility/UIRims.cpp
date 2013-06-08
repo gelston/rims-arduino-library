@@ -28,8 +28,8 @@ UIRims::UIRims(LiquidCrystal lcd,byte col,byte row, byte pinLight,
 {
 	pinMode(pinLight,OUTPUT);
 	digitalWrite(pinLight,HIGH);
-	this->_lcd.begin(col,row);
-	this->_lcd.clear();
+	_lcd.begin(col,row);
+	_lcd.clear();
 	byte okChar[8] = {
 		B01110,
 		B10001,
@@ -60,54 +60,54 @@ UIRims::UIRims(LiquidCrystal lcd,byte col,byte row, byte pinLight,
 		B00100,
 		B00000
 	};
-	this->_lcd.createChar(1,okChar);
-	this->_lcd.createChar(2,upChar);
-	this->_lcd.createChar(3,downChar);
+	_lcd.createChar(1,okChar);
+	_lcd.createChar(2,upChar);
+	_lcd.createChar(3,downChar);
 }
 
 /*
 ============================================================
 TITLE : showTempScreen
 DESC : Show temperature (set point and process value) screen
-       on this->_lcd
+       on _lcd
 ============================================================
 */
 void UIRims::showTempScreen()
 {
-	this->_tempScreenShown = true;
-	this->_lcd.clear();
-	this->_printStrLCD("SP:00.0\xdf""C(000\xdf""F)",0,0);
-	this->_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
-	this->setTempSP(this->_tempSP,false);
-	this->setTempPV(this->_tempPV,false);
+	_tempScreenShown = true;
+	_lcd.clear();
+	_printStrLCD("SP:00.0\xdf""C(000\xdf""F)",0,0);
+	_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
+	this->setTempSP(_tempSP,false);
+	this->setTempPV(_tempPV,false);
 }
 
 /*
 ============================================================
 TITLE : showTimeFlowScreen
-DESC : Show remaining time and flow screen on this->_lcd
+DESC : Show remaining time and flow screen on _lcd
 ============================================================
 */
 void UIRims::showTimeFlowScreen()
 {
-	this->_tempScreenShown = false;
-	this->_lcd.clear();
-	this->_printStrLCD("time:000m00s    ",0 ,0);
-	this->_printStrLCD(String("flow:00.0L/min \x03"),0,1);
-	this->setTime(this->_time,false);
-	this->setFlow(this->_flow,false);
+	_tempScreenShown = false;
+	_lcd.clear();
+	_printStrLCD("time:000m00s    ",0 ,0);
+	_printStrLCD(String("flow:00.0L/min \x03"),0,1);
+	this->setTime(_time,false);
+	this->setFlow(_flow,false);
 }
 
 /*
 ============================================================
 TITLE : switchScreen
 DESC : Toggle between tempScreen and timeFlowScreen on
-       this->_lcd
+       _lcd
 ============================================================
 */
 void UIRims::switchScreen()
 {
-	if(this->_tempScreenShown) this->showTimeFlowScreen();
+	if(_tempScreenShown) this->showTimeFlowScreen();
 	else this->showTempScreen();
 }
 
@@ -122,7 +122,7 @@ DESC : Read keys without software debouce. If waitNone
 byte UIRims::readKeysADC(boolean waitNone)
 {
 	byte res;
-	int adcKeyVal = analogRead(this->_pinKeysAnalog);  
+	int adcKeyVal = analogRead(_pinKeysAnalog);  
 	if (adcKeyVal > 1000) res = KEYNONE;
 	else if (adcKeyVal < 50) res = KEYRIGHT;
 	else if (adcKeyVal < 195) res = KEYUP;
@@ -131,14 +131,14 @@ byte UIRims::readKeysADC(boolean waitNone)
 	else if (adcKeyVal < 790) res = KEYSELECT;
 	if(waitNone)
 	{
-		if(res==KEYNONE and this->_waitNone) this->_waitNone = false;
+		if(res==KEYNONE and _waitNone) _waitNone = false;
 		else if(res!=KEYNONE)
 		{
-			if(this->_waitNone) res = KEYNONE;
-			else this->_waitNone = true;
+			if(_waitNone) res = KEYNONE;
+			else _waitNone = true;
 		}
 	}
-	else this->_waitNone = true;
+	else _waitNone = true;
 	return res;
 }
 
@@ -187,14 +187,14 @@ void UIRims::_waitTime(unsigned long timeInMilliSec)
 /*
 ============================================================
 TITLE : _printStrLCD
-DESC : Show mess at column col and row row on this->_lcd
+DESC : Show mess at column col and row row on _lcd
 ============================================================
 */
 void UIRims::_printStrLCD(String mess, byte col, byte row)
 {
-	this->_lcd.setCursor(col,row);
-	this->_lcd.print(mess);
-	this->_lcd.setCursor(this->_cursorCol,this->_cursorRow);
+	_lcd.setCursor(col,row);
+	_lcd.print(mess);
+	_lcd.setCursor(_cursorCol,_cursorRow);
 }
 
 
@@ -202,7 +202,7 @@ void UIRims::_printStrLCD(String mess, byte col, byte row)
 ============================================================
 TITLE : _printFloatLCD
 DESC : Show a floating number at column col and row row
-       on this->_lcd. Width and prec indicate minimum width
+       on _lcd. Width and prec indicate minimum width
        (including the dot) and digit after point respectively.
 ============================================================
 */
@@ -216,22 +216,22 @@ void UIRims::_printFloatLCD(float val, int width, int prec,
 	{
 		res = String(dtostrf(val,width,0,myFloatStr));
 	}
-	this->_lcd.setCursor(col,row);
-	this->_lcd.print(res);
-	this->_lcd.setCursor(this->_cursorCol,this->_cursorRow);
+	_lcd.setCursor(col,row);
+	_lcd.print(res);
+	_lcd.setCursor(_cursorCol,_cursorRow);
 }
 
 /*
 ============================================================
 TITLE : _setCursorPosition
-DESC : Set this->_lcd cursor at given column col and given row row
+DESC : Set _lcd cursor at given column col and given row row
 ============================================================
 */
 void UIRims::_setCursorPosition(byte col, byte row)
 {
-	this->_cursorCol = col;
-	this->_cursorRow = row;
-	this->_lcd.setCursor(col,row);
+	_cursorCol = col;
+	_cursorRow = row;
+	_lcd.setCursor(col,row);
 }
 
 /*
@@ -249,29 +249,29 @@ float UIRims::_celciusToFahrenheit(float celcius)
 ============================================================
 TITLE : setTempSP
 DESC : Set a new set point temperature. If tempScreen is 
-       shown, it will be updated on the lcd this->_lcd else
+       shown, it will be updated on the lcd _lcd else
        it will be memorized for when it will be shown.
        If waitRefresh is true (default is true) it will
        wait LCDREFRESHTIME mSec before updating
-       this->_lcd.
+       _lcd.
 ============================================================
 */
 void UIRims::setTempSP(float tempCelcius, boolean waitRefresh)
 {
-	this->_tempSP = tempCelcius;
-	if(this->_tempScreenShown)
+	_tempSP = tempCelcius;
+	if(_tempScreenShown)
 	{
 		boolean refreshLCD = false;
 		unsigned long currentTime = millis();
 		if(not waitRefresh)	refreshLCD = true;
-		else if(currentTime - this->_lastRefreshSP >= LCDREFRESHTIME) \
+		else if(currentTime - _lastRefreshSP >= LCDREFRESHTIME) \
 				refreshLCD = true;
 		if(refreshLCD)
 		{
-			this->_lastRefreshSP = currentTime;
-			float tempFahren = this->_celciusToFahrenheit(tempCelcius);
-			this->_printFloatLCD(tempCelcius,4,1,3,0);
-			this->_printFloatLCD(tempFahren,3,0,10,0);
+			_lastRefreshSP = currentTime;
+			float tempFahren = _celciusToFahrenheit(tempCelcius);
+			_printFloatLCD(tempCelcius,4,1,3,0);
+			_printFloatLCD(tempFahren,3,0,10,0);
 		}
 	}
 }
@@ -280,29 +280,29 @@ void UIRims::setTempSP(float tempCelcius, boolean waitRefresh)
 ============================================================
 TITLE : setTempPV
 DESC : Set a new process value temperature. If tempScreen is 
-       shown, it will be updated on the lcd this->_lcd else
+       shown, it will be updated on the lcd _lcd else
        it will be memorized for when it will be shown.
        If waitRefresh is true (default is true) it will
        wait LCDREFRESHTIME mSec before updating
-       this->_lcd.
+       _lcd.
 ============================================================
 */
 void UIRims::setTempPV(float tempCelcius, boolean waitRefresh)
 {
-	this->_tempPV = tempCelcius;
-	if(this->_tempScreenShown)
+	_tempPV = tempCelcius;
+	if(_tempScreenShown)
 	{
 		boolean refreshLCD = false;
 		unsigned long currentTime = millis();
 		if(not waitRefresh)	refreshLCD = true;
-		else if(currentTime - this->_lastRefreshPV >= LCDREFRESHTIME) \
+		else if(currentTime - _lastRefreshPV >= LCDREFRESHTIME) \
 				refreshLCD = true;
 		if(refreshLCD)
 		{
-			this->_lastRefreshPV = currentTime;
-			float tempFahren = this->_celciusToFahrenheit(tempCelcius);
-			this->_printFloatLCD(tempCelcius,4,1,3,1);
-			this->_printFloatLCD(tempFahren,3,0,10,1);
+			_lastRefreshPV = currentTime;
+			float tempFahren = _celciusToFahrenheit(tempCelcius);
+			_printFloatLCD(tempCelcius,4,1,3,1);
+			_printFloatLCD(tempFahren,3,0,10,1);
 		}
 	}
 }
@@ -312,30 +312,30 @@ void UIRims::setTempPV(float tempCelcius, boolean waitRefresh)
 ============================================================
 TITLE : setTime
 DESC : Set a new remaining time. If timeFlowScreen is 
-       shown, it will be updated on the lcd this->_lcd else
+       shown, it will be updated on the lcd _lcd else
        it will be memorized for when it will be shown.
        If waitRefresh is true (default is true) it will
        wait LCDREFRESHTIME mSec before updating
-       this->_lcd.
+       _lcd.
 ============================================================
 */
 void UIRims::setTime(unsigned int timeSec, boolean waitRefresh)
 {
-	this->_time = timeSec;
-	if(not this->_tempScreenShown)
+	_time = timeSec;
+	if(not _tempScreenShown)
 	{
 		boolean refreshLCD = false;
 		unsigned long currentTime = millis();
 		if(not waitRefresh)	refreshLCD = true;
-		else if(currentTime - this->_lastRefreshTime >= LCDREFRESHTIME) \
+		else if(currentTime - _lastRefreshTime >= LCDREFRESHTIME) \
 				refreshLCD = true;
 		if(refreshLCD)
 		{
-			this->_lastRefreshTime = currentTime;
+			_lastRefreshTime = currentTime;
 			int minutes = timeSec / 60;
 			int seconds = timeSec % 60;
-			this->_printFloatLCD(minutes,3,0,5,0);
-			this->_printFloatLCD(seconds,2,0,9,0);
+			_printFloatLCD(minutes,3,0,5,0);
+			_printFloatLCD(seconds,2,0,9,0);
 		}
 	}
 }
@@ -344,31 +344,31 @@ void UIRims::setTime(unsigned int timeSec, boolean waitRefresh)
 ============================================================
 TITLE : setFlow
 DESC : Set a new flow value. If timeFlowScreen is 
-       shown, it will be updated on the lcd this->_lcd else
+       shown, it will be updated on the lcd _lcd else
        it will be memorized for when it will be shown.
        If waitRefresh is true (default is true) it will
        wait LCDREFRESHTIME mSec before updating
-       this->_lcd.
+       _lcd.
 ============================================================
 */
 void UIRims::setFlow(float flow, boolean waitRefresh)
 {
-	this->_flow = flow;
-	if(not this->_tempScreenShown)
+	_flow = flow;
+	if(not _tempScreenShown)
 	{
 		boolean refreshLCD = false;
 		unsigned long currentTime = millis();
 		if(not waitRefresh)	refreshLCD = true;
-		else if(currentTime - this->_lastRefreshFlow >= LCDREFRESHTIME) \
+		else if(currentTime - _lastRefreshFlow >= LCDREFRESHTIME) \
 				refreshLCD = true;
 		if(refreshLCD)
 		{
-			this->_lastRefreshFlow = currentTime;
-			this->_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
+			_lastRefreshFlow = currentTime;
+			_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
 			if(flow>=FLOWLOWBOUND and flow<=FLOWUPBOUND) \
-					this->_printStrLCD("\x01",15,1);
-			else if(flow<FLOWLOWBOUND) this->_printStrLCD("\x03",15,1);
-			else this->_printStrLCD("\x02",15,1);
+					_printStrLCD("\x01",15,1);
+			else if(flow<FLOWLOWBOUND) _printStrLCD("\x03",15,1);
+			else _printStrLCD("\x02",15,1);
 		}
 	}
 }
@@ -376,7 +376,7 @@ void UIRims::setFlow(float flow, boolean waitRefresh)
 /*
 ============================================================
 TITLE : _incDecValue
-DESC : Increse or decreasw a floating point value on this->_lcd.
+DESC : Increse or decreasw a floating point value on _lcd.
        dotPosition give the position (column) of the point mark.
        lowerBound and upperBound block is the incresing/decreasing
        limit of the value. timeFormat treats the value (in seconds) as
@@ -389,13 +389,13 @@ float UIRims::_incDecValue(float value,byte dotPosition, boolean increase,
 {
 	float res,constrainedRes;
 	int digitPosition, way = (increase) ? (+1) : (-1);
-	if(this->_cursorCol<dotPosition)
+	if(_cursorCol<dotPosition)
 	{
-		digitPosition = (dotPosition - this->_cursorCol) - 1;
+		digitPosition = (dotPosition - _cursorCol) - 1;
 	}
 	else
 	{
-		digitPosition = (dotPosition - this->_cursorCol);
+		digitPosition = (dotPosition - _cursorCol);
 	}
 	if(not timeFormat)
 	{
@@ -422,29 +422,29 @@ float UIRims::_incDecValue(float value,byte dotPosition, boolean increase,
 /*
 ============================================================
 TITLE : _moveCursorLR
-DESC : Move the cursor left or right on this->_lcd. begin
+DESC : Move the cursor left or right on _lcd. begin
        and end indicate the position (column) of the beginning
        and ending of the cursor bounds. dotPosition is the 
        position (column) of the dot to skip it. row indicate
-       the row of the cursor on this->_lcd
+       the row of the cursor on _lcd
 ============================================================
 */
 void UIRims::_moveCursorLR(byte begin, byte end, byte dotPosition,
 						   byte row,boolean left)
 {
 	int way = (left) ? (-1) : (+1);
-	if((this->_cursorCol > begin and left) or \
-	   (this->_cursorCol < end and not left))
+	if((_cursorCol > begin and left) or \
+	   (_cursorCol < end and not left))
 	{
-		if (this->_cursorCol == dotPosition - (1*way))
+		if (_cursorCol == dotPosition - (1*way))
 		{
-			this->_setCursorPosition(
-				this->_cursorCol + (2*way) , row);
+			_setCursorPosition(
+				_cursorCol + (2*way) , row);
 		}
 		else
 		{
-			this->_setCursorPosition(
-				this->_cursorCol + (1*way) , row);
+			_setCursorPosition(
+				_cursorCol + (1*way) , row);
 		}
 	}
 }
@@ -452,9 +452,9 @@ void UIRims::_moveCursorLR(byte begin, byte end, byte dotPosition,
 /*
 ============================================================
 TITLE : _askValue
-DESC : Ask a value on this->_lcd. begin and end is the cursor
+DESC : Ask a value on _lcd. begin and end is the cursor
        bounds (columns) for the value. dotPosition is 
-       the point mark position. row is the row on this->_lcd.
+       the point mark position. row is the row on _lcd.
        defaultVal is the starting value. lowerBound and upperBound
        is the value's limits. timeFormat treats the value as
        a time with minutes and seconds.
@@ -470,35 +470,35 @@ float UIRims::_askValue(byte begin, byte end,
 	float value = defaultVal;
 	timeFormat ? this->setTime(defaultVal,false) : \
 	             this->setTempSP(defaultVal,false);
-	this->_setCursorPosition(dotPosition-1,row);
-	this->_lcd.blink();
-	this->_waitTime(500);
+	_setCursorPosition(dotPosition-1,row);
+	_lcd.blink();
+	_waitTime(500);
 	while(not valSelected)
 	{
-		switch(this->_waitForKeyChange())
+		switch(_waitForKeyChange())
 		{
 			case KEYNONE :
 				break;
 			case KEYUP :
-				value = this->_incDecValue(value,dotPosition,true,
+				value = _incDecValue(value,dotPosition,true,
 									lowerBound,upperBound,timeFormat);
 				break;
 			case KEYDOWN :
-				value = this->_incDecValue(value,dotPosition,false,
+				value = _incDecValue(value,dotPosition,false,
 									lowerBound,upperBound,timeFormat);
 				break;
 			case KEYLEFT :
-				this->_moveCursorLR(begin,end,dotPosition,
+				_moveCursorLR(begin,end,dotPosition,
 									row,true);
 				break;
 			case KEYRIGHT :
-				this->_moveCursorLR(begin,end,dotPosition,
+				_moveCursorLR(begin,end,dotPosition,
 									row,false);
 				break;
 			case KEYSELECT :
 				valSelected = true;
-				this->_lcd.noBlink();
-				this->_setCursorPosition(0,0);
+				_lcd.noBlink();
+				_setCursorPosition(0,0);
 				break;
 		}
 	}
@@ -515,8 +515,8 @@ float UIRims::askSetPoint(float defaultVal)
 {
 	float res;
 	this->showTempScreen();
-	this->_printStrLCD("                 ",0,1);
-	res = this->_askValue(3,6,5,0,defaultVal,0.0,99.9,false);
+	_printStrLCD("                 ",0,1);
+	res = _askValue(3,6,5,0,defaultVal,0.0,99.9,false);
 	return res;
 }
 
@@ -530,8 +530,8 @@ unsigned int UIRims::askTime(unsigned int defaultVal)
 {
 	unsigned int res;
 	this->showTimeFlowScreen();
-	this->_printStrLCD("                 ",0,1);
-	res = this->_askValue(5,10,8,0,defaultVal,0,59999,true);
+	_printStrLCD("                 ",0,1);
+	res = _askValue(5,10,8,0,defaultVal,0,59999,true);
 	return res;
 }
 
@@ -544,10 +544,10 @@ DESC : Show the ending screen.
 void UIRims::showEnd()
 {
 	unsigned long refTime, currentTime;
-	this->_lcd.clear();
-	this->_printStrLCD("finished!",0,0);
+	_lcd.clear();
+	_printStrLCD("finished!",0,0);
 	refTime = currentTime = millis();
-	this->_waitTime(500);
+	_waitTime(500);
 	boolean lightState = true;
 	while(this->readKeysADC() == KEYNONE)
 	{
@@ -556,10 +556,10 @@ void UIRims::showEnd()
 		{
 			refTime = millis();
 			lightState = not lightState;
-			digitalWrite(this->_pinLight,lightState);
+			digitalWrite(_pinLight,lightState);
 		}
 	}
-	digitalWrite(this->_pinLight,HIGH);
+	digitalWrite(_pinLight,HIGH);
 }
 
 /*
@@ -570,10 +570,10 @@ DESC : Show the pump switching warning.
 */
 void UIRims::showPumpWarning()
 {
-	this->_lcd.clear();
-	this->_printStrLCD("start pump! [OK]",0,0);
-	this->_printStrLCD(String("flow:00.0L/min \x03"),0,1);
-	this->_waitTime(500);
+	_lcd.clear();
+	_printStrLCD("start pump! [OK]",0,0);
+	_printStrLCD(String("flow:00.0L/min \x03"),0,1);
+	_waitTime(500);
 }
 
 /*
@@ -584,29 +584,29 @@ DESC : Show the heater switching warning.
 */
 void UIRims::showHeaterWarning()
 {
-	this->_lcd.clear();
-	this->_printStrLCD("start heater!",0,0);
-	this->_printStrLCD("[OK]",0,1);
-	this->_waitTime(500);
+	_lcd.clear();
+	_printStrLCD("start heater!",0,0);
+	_printStrLCD("[OK]",0,1);
+	_waitTime(500);
 }
 
 /*
 ============================================================
 TITLE : showErrorPV
 DESC : Show error mess (2 chars max) for the
-       process value on this->_lcd.
+       process value on _lcd.
 ============================================================
 */
 void UIRims::showErrorPV(String mess)
 {
-	if(this->_tempScreenShown)
+	if(_tempScreenShown)
 	{
 		if(mess.length() > 2)
 		{
 			mess = String(mess).substring(0,2);
 		}
-		this->_printStrLCD(String(" #")+mess,3,1);
-		this->_printStrLCD(String("#")+mess,10,1);
+		_printStrLCD(String(" #")+mess,3,1);
+		_printStrLCD(String("#")+mess,10,1);
 	}
 }
 
@@ -634,14 +634,14 @@ UIRimsIdent::UIRimsIdent(LiquidCrystal lcd, byte col, byte row,
 /*
 ============================================================
 TITLE : showIdentScreen
-DESC : Show system identification screen on this->_lcd
+DESC : Show system identification screen on _lcd
 ============================================================
 */
 void UIRimsIdent::showIdentScreen()
 {
-	this->_printStrLCD("000% 000m00s    ",0,0);
-	this->_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
-	this->_tempScreenShown = true;
+	_printStrLCD("000% 000m00s    ",0,0);
+	_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
+	_tempScreenShown = true;
 }
 
 /*
@@ -653,23 +653,23 @@ DESC : Set ident CV on identScreen
 void UIRimsIdent::setIdentCV(unsigned long controlValue, 
 							 unsigned long ssrWindow)
 {
-	this->_printFloatLCD(controlValue*100/ssrWindow,3,0,0,0);
+	_printFloatLCD(controlValue*100/ssrWindow,3,0,0,0);
 }
 
 /*
 ============================================================
 TITLE : setTime
 DESC : Set a new remaining time. If timeFlowScreen is 
-       shown, it will be updated on the lcd this->_lcd else
+       shown, it will be updated on the lcd _lcd else
        it will be memorized for when it will be shown.
        If waitRefresh is true (default is true) it will
        wait LCDREFRESHTIME mSec before updating
-       this->_lcd.
+       _lcd.
 ============================================================
 */
 void UIRimsIdent::setTime(unsigned int timeSec, boolean waitRefresh)
 {
-	this->_tempScreenShown = false;
+	_tempScreenShown = false;
 	UIRims::setTime(timeSec,waitRefresh);
-	this->_tempScreenShown = true;
+	_tempScreenShown = true;
 }
