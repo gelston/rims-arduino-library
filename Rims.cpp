@@ -51,7 +51,7 @@ DESC :
 void Rims::setTunningPID(double Kp, double Ki, double Kd, double tauFilter)
 {
 	_myPID.SetTunings(Kp,Ki,Kd);
-	if(tauFilter>=0)
+	if(tauFilter>0)
 	{
 		_PIDFilterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
 	}
@@ -67,7 +67,7 @@ DESC :
 */
 void Rims::setSetPointFilter(double tauFilter)
 {
-	if(tauFilter>=0)
+	if(tauFilter>0)
 	{
 		_setPointFilterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
 	}
@@ -111,8 +111,8 @@ void Rims::start()
 	boolean timerElapsed = false, pidJustCalculated = true;
 	unsigned long lastScreenSwitchTime;
 	// === ASK SETPOINT ===
-	*(_setPointPtr) = 0;
 	double rawSetPoint = _ui->askSetPoint(DEFAULTSP);
+	*(_setPointPtr) = 0;
 	// === ASK TIMER ===
 	_settedTime = (unsigned long)_ui->askTime(DEFAULTTIME)*1000;
 	// === PUMP SWITCHING ===
@@ -124,19 +124,15 @@ void Rims::start()
 	// === HEATER SWITCHING ===
 	_ui->showHeaterWarning();
 	while(_ui->readKeysADC()==KEYNONE) continue;
-	
 	_ui->showTempScreen();
-	_ui->setTempSP(*(_setPointPtr));
 	*(_processValPtr) = this->getTempPV();
+	_ui->setTempSP(rawSetPoint);
 	_ui->setTempPV(*(_processValPtr));
-
 	_sumStoppedTime = true;
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
 	_myPID.SetMode(AUTOMATIC);
 	_windowStartTime = _timerStartTime \
-						   = lastScreenSwitchTime = millis();
-						   
-						  
+						   = lastScreenSwitchTime = millis();  
 	while(not timerElapsed)
 	{	
 		// === READ TEMPERATURE/FLOW ===
