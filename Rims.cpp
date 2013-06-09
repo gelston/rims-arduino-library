@@ -81,10 +81,11 @@ TITLE : setInterruptFlow
 DESC : 
 ============================================================
 */
-void Rims::setInterruptFlow(byte interruptFlow)
+void Rims::setInterruptFlow(byte interruptFlow, float flowFactor)
 {
 	Rims::_rimsPtr = this;
 	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
+	_flowFactor = flowFactor;
 }
 
 /*
@@ -294,7 +295,7 @@ float Rims::getFlow()
 	else if(micros() - _flowCurTime >= 5e06) flow = 0.0;
 	else
 	{
-		flow = (1e06 / (4.8* \ 
+		flow = (1e06 / (_flowFactor* \ 
 		(_flowCurTime - _flowLastTime)));
 	}
 	return flow;
