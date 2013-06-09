@@ -99,24 +99,4 @@ private:
 	
 };
 
-
-// === RimsIdent ==================================
-// === Toolkits for process identification ========
-// === to facilitate PID tunning.          ========
-// ================================================
-class RimsIdent : public Rims
-{
-	
-public:
-	RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm, byte ssrPin, 
-		 double* currentTemp, double* ssrControl, double* settedTemp);
-	
-	void startIdent();
-	
-private :
-	
-	UIRimsIdent* _ui;
-	
-};
-
 #endif

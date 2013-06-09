@@ -1,18 +1,15 @@
-/*
-  Rims.cpp - Rims.h definition
-*/
-
-#include "Arduino.h"
-#include "math.h"
-#include "utility/PID_v1.h"
-#include "Rims.h"
-
 /*************************************************************
  ************************************************************* 
  * Rims
  *     Main library for Rims
  ************************************************************* 
  *************************************************************/
+
+
+#include "Arduino.h"
+#include "math.h"
+#include "utility/PID_v1.h"
+#include "Rims.h"
 
 
 /* 
@@ -138,7 +135,7 @@ void Rims::start()
 	{	
 		// === READ TEMPERATURE/FLOW ===
 		*(_processValPtr) = getTempPV();
-		// === FILTER SETPOINT ===
+		// === SETPOINT FILTERING ===
 		currentTime = millis();
 		if(currentTime-lastTimePID>=PIDSAMPLETIME)
 		{
@@ -309,72 +306,4 @@ void Rims::_isrFlowSensor()
 {
 	Rims::_rimsPtr->_flowLastTime = Rims::_rimsPtr->_flowCurTime;
 	Rims::_rimsPtr->_flowCurTime = micros();
-}
-
-
-
-/*************************************************************
- ************************************************************* 
- * RimsIdent
- *     Identification tools for Rims library 
- ************************************************************* 
- *************************************************************/
-
-
-RimsIdent::RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm, 
-					 byte ssrPin, double* currentTemp, double* ssrControl, 
-					 double* settedTemp)
-: Rims(uiRimsIdent, analogPinTherm, ssrPin, 
-	   currentTemp, ssrControl, settedTemp),
- _ui(uiRimsIdent)
-{
-}
-
-void RimsIdent::startIdent()
-{
-	// === PUMP SWITCHING ===
-	_ui->showPumpWarning();
-	while(_ui->readKeysADC()==KEYNONE)
-	{
-		_ui->setFlow(this->getFlow());
-	}
-	// === HEATER SWITCHING ===
-	_ui->showHeaterWarning();
-	while(_ui->readKeysADC()==KEYNONE) continue;
-	// === IDENTIFICATION TESTS ===
-	_ui->showIdentScreen();
-	Serial.begin(9600);
-	_settedTime = 600000;
-	_totalStoppedTime = _windowStartTime = millis();
-	_runningTime = 0;
-	Serial.println("time,cv,pv");
-	while(_runningTime <= _settedTime) // 15 minutes
-	{
-		*(_processValPtr) = this->getTempPV();
-		_ui->setTempPV(*(_processValPtr));
-		_runningTime = millis() - _totalStoppedTime;
-		_ui->setTime((_settedTime-_runningTime)/1000);
-		if(_runningTime >= 240000)
-		{
-			*(_controlValPtr) = 0;
-			_ui->setIdentCV(0,SSRWINDOWSIZE);
-		}
-		else if(_runningTime >= 120000)
-		{
-			*(_controlValPtr) = SSRWINDOWSIZE;
-			_ui->setIdentCV(SSRWINDOWSIZE,SSRWINDOWSIZE);
-		}
-		else
-		{
-			*(_controlValPtr) = 0.5*SSRWINDOWSIZE;
-			_ui->setIdentCV(0.5 * SSRWINDOWSIZE, SSRWINDOWSIZE);
-		}
-		_refreshSSR();
-		Serial.print((double)_runningTime/1000.0,3);
-		Serial.print(",");
-		Serial.print(*(_controlValPtr),0);
-		Serial.print(",");
-		Serial.println(*(_processValPtr),15);
-	}
-	_ui->showEnd();
 }
