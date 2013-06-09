@@ -1,19 +1,17 @@
-/*
-  UIRims.h
-  
-  Library to menage LCD and keypad for Rims library.
-  
-  Made for :
-  
-  DFRobot LCD Keypad Shield For Arduino
-  http://www.dfrobot.com/index.php?route=product/product&product_id=51#.Ua1dHhXEnXQ
-  
-  If anything else is used, lcd must be 16 cols 2 rows and keypad must be
-  associated to a analog ADC pin with a volage divider for each keys.
-  Needed keys : UP, DOWN, LEFT, RIGHT, SELECT
-  
-  Francis Gagnon
-*/
+// === UIRims =====================================
+// ===  Library to menage LCD and keypad for Rims library.
+// === 
+// ===  Made for :
+// ===  
+// ===  DFRobot LCD Keypad Shield For Arduino
+// ===  http://www.dfrobot.com/index.php?route=product/product&product_id=51#.Ua1dHhXEnXQ
+// ===  
+// ===  If anything else is used, lcd must be 16 cols 2 rows and keypad must be
+// ===  associated to a analog ADC pin with a volage divider for each keys.
+// ===  Needed keys : UP, DOWN, LEFT, RIGHT, SELECT
+// ===  
+// ===  Francis Gagnon
+// ================================================
 
 
 #ifndef UIRims_h
@@ -35,11 +33,6 @@
 #include "Arduino.h"
 #include "LiquidCrystal.h"
 
-
-// === UIRims =====================================
-// === UI class for rims library.          ========
-// === Uses DFRobot LCD Keypad.            ========
-// ================================================
 
 class UIRims
 {
@@ -118,23 +111,5 @@ private:
 	float _flow;
 };
 
-
-// === UIRimsIdent ================================
-// === UI for identification toolkit      =========
-// === IdentRims class                    =========
-// ================================================
-class UIRimsIdent : public UIRims
-{
-	
-public:
-	
-	UIRimsIdent(LiquidCrystal lcd, byte col, byte row, byte pinLight,
-				byte pinKeysAnalog);
-
-	void showIdentScreen();
-	
-	void setIdentCV(unsigned long controlValue, unsigned long ssrWindow);
-	void setTime(unsigned int timeSec, boolean waitRefresh = true);
-};
 
 #endif
