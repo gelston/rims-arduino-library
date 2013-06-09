@@ -46,7 +46,7 @@ public:
 	void setTunningPID(double Kp, double Ki, double Kd, double tauFilter);
 	void setSetPointFilter(double tauFilter);
 	void setPinLED(byte pinLED);
-	void setInterruptFlow(byte interruptFlow);
+	void setInterruptFlow(byte interruptFlow, float flowFactor);
 	
 	void start();
 	
@@ -62,8 +62,6 @@ protected:
 	void _refreshSSR();
 	
 private:
-	
-	static void _isrFlowSensor();
 	
 	static Rims* _rimsPtr;
 	
@@ -92,6 +90,8 @@ private:
 	unsigned long _timerStartTime;			//mSec
 	boolean _sumStoppedTime;
 	
+	static void _isrFlowSensor(); // ISR for hall-effect flow sensor
+	float _flowFactor; // freq[Hz] = flowFactor * flow[L/min]
 	float _flow;
 	
 	volatile unsigned long _flowLastTime;	//µSec
