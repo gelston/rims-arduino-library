@@ -109,7 +109,7 @@ DESC : Routine principale
 void Rims::start()
 {
 	boolean timerElapsed = false, pidJustCalculated = true;
-	unsigned long lastScreenSwitchTime;
+	unsigned long currentTime ,lastScreenSwitchTime, lastTimePID;
 	// === ASK SETPOINT ===
 	double rawSetPoint = _ui->askSetPoint(DEFAULTSP);
 	*(_setPointPtr) = 0;
@@ -131,23 +131,22 @@ void Rims::start()
 	_sumStoppedTime = true;
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
 	_myPID.SetMode(AUTOMATIC);
-	_windowStartTime = _timerStartTime \
-						   = lastScreenSwitchTime = millis();  
+	currentTime =_windowStartTime = _timerStartTime \
+				= lastScreenSwitchTime = millis();
+	lastTimePID = currentTime - PIDSAMPLETIME;
 	while(not timerElapsed)
 	{	
 		// === READ TEMPERATURE/FLOW ===
 		*(_processValPtr) = getTempPV();
 		// === FILTER SETPOINT ===
-		// TODO :
-		// le calcul est décalé d'une loop, i.e. le calcul du
-		// PID se fait avec l'ancienne valeur de la sortie du filtre...
-		if(pidJustCalculated)
+		currentTime = millis();
+		if(currentTime-lastTimePID>=PIDSAMPLETIME)
 		{
 			*(_setPointPtr) = (1-_setPointFilterCst) * rawSetPoint + \
 							   _setPointFilterCst * _lastSetPointFilterOutput;
 			_lastSetPointFilterOutput = *(_setPointPtr);
+			lastTimePID = currentTime;
 		}
-		if(pidJustCalculated) Serial.println(*(_setPointPtr));
 		// === PID COMPUTE ===
 		pidJustCalculated = _myPID.Compute();
 		// === PID FILTERING ===
@@ -157,7 +156,6 @@ void Rims::start()
 								_PIDFilterCst * _lastPIDFilterOutput;
 			_lastPIDFilterOutput = *(_controlValPtr);
 		}
-		//if(pidJustCalculated) Serial.println(*(_controlValPtr));
 		// === SSR CONTROL ===
 		_refreshSSR();
 		// === TIME REMAINING ===
