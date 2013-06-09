@@ -111,7 +111,8 @@ void Rims::start()
 	boolean timerElapsed = false, pidJustCalculated = true;
 	unsigned long lastScreenSwitchTime;
 	// === ASK SETPOINT ===
-	*(_setPointPtr) = _ui->askSetPoint(DEFAULTSP);
+	*(_setPointPtr) = 0;
+	double rawSetPoint = _ui->askSetPoint(DEFAULTSP);
 	// === ASK TIMER ===
 	_settedTime = (unsigned long)_ui->askTime(DEFAULTTIME)*1000;
 	// === PUMP SWITCHING ===
@@ -134,6 +135,8 @@ void Rims::start()
 	_myPID.SetMode(AUTOMATIC);
 	_windowStartTime = _timerStartTime \
 						   = lastScreenSwitchTime = millis();
+						   
+						  
 	while(not timerElapsed)
 	{	
 		// === READ TEMPERATURE/FLOW ===
@@ -142,23 +145,23 @@ void Rims::start()
 		// TODO :
 		// le calcul est décalé d'une loop, i.e. le calcul du
 		// PID se fait avec l'ancienne valeur de la sortie du filtre...
-// 		if(_setPointFilterCst !=0 and pidJustCalculated)
-// 		{
-// 			*(_setPointPtr) = (1-_setPointFilterCst) * (*_setPointPtr) + \
-// 							   _setPointFilterCst * _lastSetPointFilterOutput;
-// 			_lastSetPointFilterOutput = *(_setPointPtr);
-// 		}
-		if(pidJustCalculated) Serial.println(*_setPointPtr);
+		if(pidJustCalculated)
+		{
+			*(_setPointPtr) = (1-_setPointFilterCst) * rawSetPoint + \
+							   _setPointFilterCst * _lastSetPointFilterOutput;
+			_lastSetPointFilterOutput = *(_setPointPtr);
+		}
+		if(pidJustCalculated) Serial.println(*(_setPointPtr));
 		// === PID COMPUTE ===
 		pidJustCalculated = _myPID.Compute();
 		// === PID FILTERING ===
-		if(_PIDFilterCst != 0 and pidJustCalculated)
+		if(pidJustCalculated)
 		{
 			*(_controlValPtr) = (1-_PIDFilterCst) * (*_controlValPtr) + \
 								_PIDFilterCst * _lastPIDFilterOutput;
 			_lastPIDFilterOutput = *(_controlValPtr);
 		}
-		if(pidJustCalculated) Serial.println(*(_controlValPtr));
+		//if(pidJustCalculated) Serial.println(*(_controlValPtr));
 		// === SSR CONTROL ===
 		_refreshSSR();
 		// === TIME REMAINING ===
