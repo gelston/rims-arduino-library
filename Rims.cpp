@@ -287,11 +287,7 @@ float Rims::getFlow()
 	float flow;
 	if(_flowCurTime == 0) flow = 0.0;
 	else if(micros() - _flowCurTime >= 5e06) flow = 0.0;
-	else
-	{
-		flow = (1e06 / (_flowFactor* \ 
-		(_flowCurTime - _flowLastTime)));
-	}
+	else flow = (1e06 / (_flowFactor* (_flowCurTime - _flowLastTime)));
 	return flow;
 }
 
