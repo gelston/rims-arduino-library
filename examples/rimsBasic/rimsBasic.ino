@@ -10,10 +10,10 @@ Rims myRims(&myUI,1,11,&currentTemp,&ssrControl,&settedTemp);
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
   myRims.setPinLED(13);
-  myRims.setInterruptFlow(1);
+  myRims.setInterruptFlow(1,9.0);
   myRims.setTunningPID(2,5,1,0.1);
+  myRims.setSetPointFilter(1);
 }
 void loop() {
   myRims.start();
