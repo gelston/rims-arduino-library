@@ -112,13 +112,13 @@ void Rims::start()
 	*(_setPointPtr) = 0;
 	// === ASK TIMER ===
 	_settedTime = (unsigned long)_ui->askTime(DEFAULTTIME)*1000;
-	// === PUMP SWITCHING ===
+	// === PUMP SWITCHING WARN ===
 	_ui->showPumpWarning();
 	while(_ui->readKeysADC()==KEYNONE)
 	{
 		_ui->setFlow(this->getFlow());
 	}
-	// === HEATER SWITCHING ===
+	// === HEATER SWITCHING WARN ===
 	_ui->showHeaterWarning();
 	while(_ui->readKeysADC()==KEYNONE) continue;
 	_ui->showTempScreen();
