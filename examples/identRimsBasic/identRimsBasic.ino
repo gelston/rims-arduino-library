@@ -1,4 +1,4 @@
-#include "Rims.h"
+#include "RimsIdent.h"
 #include "LiquidCrystal.h"
 
 double currentTemp, ssrControl, settedTemp;
@@ -10,7 +10,7 @@ RimsIdent myIdent(&myUI,1,11,&currentTemp,&ssrControl,&settedTemp);
 void setup() {
   // put your setup code here, to run once:
   myIdent.setPinLED(13);
-  myIdent.setInterruptFlow(1);
+  myIdent.setInterruptFlow(1,9.0);
 }
 void loop() {
   myIdent.startIdent();
