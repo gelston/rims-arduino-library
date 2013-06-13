@@ -18,10 +18,11 @@ TITLE : UIRims (constructor)
 DESC : UIRims constructor
 ============================================================
 */
-UIRims::UIRims(LiquidCrystal lcd,byte col,byte row, byte pinLight,
-		       byte pinKeysAnalog)
+UIRims::UIRims(LiquidCrystal lcd,byte col,byte row, byte pinKeysAnalog,
+			   byte pinLight, byte pinSpeaker)
 : _lcd(lcd), _pinKeysAnalog(pinKeysAnalog),_waitNone(true),
-  _cursorCol(0), _cursorRow(0), _pinLight(pinLight),
+  _cursorCol(0), _cursorRow(0), _pinLight(pinLight), 
+  _pinSpeaker(pinSpeaker),
   _lastRefreshSP(0), _lastRefreshPV(0), 
   _lastRefreshTime(0), _lastRefreshFlow(0),
   _tempSP(0), _tempPV(0), _time(0), _flow(0)
@@ -546,16 +547,21 @@ void UIRims::showEnd()
 	unsigned long refTime, currentTime;
 	_lcd.clear();
 	_printStrLCD("finished!",0,0);
-	refTime = currentTime = millis();
 	_waitTime(500);
+	refTime = currentTime = millis();
 	boolean lightState = true;
+	if(_pinSpeaker != -1) tone(_pinSpeaker,1000,500);
 	while(this->readKeysADC() == KEYNONE)
 	{
 		currentTime = millis();
 		if(currentTime-refTime>=500)
 		{
-			refTime = millis();
+			refTime = currentTime;
 			lightState = not lightState;
+			if(_pinSpeaker != -1 and lightState) 
+			{
+				tone(_pinSpeaker,1000,500);
+			}
 			digitalWrite(_pinLight,lightState);
 		}
 	}
