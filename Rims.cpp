@@ -34,9 +34,26 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
   _pinLED(13), _PIDFilterCst(0),
   _flowLastTime(0), _flowCurTime(0)
 {
+	_steinhartCoefs[0] = 0.001; _steinhartCoefs[1] = 0.0002;
+	_steinhartCoefs[2] = -4e-7; _steinhartCoefs[3] = 1e-7;
+	_res1 = 10000;
+	_fineTuneTemp = 0;
 	_myPID.SetSampleTime(PIDSAMPLETIME);
 	_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
 	pinMode(13,OUTPUT);
+}
+
+/*
+============================================================
+TITLE : setThermistor
+DESC : 
+============================================================
+*/
+void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
+{
+	for(int i=0;i<=4;i++) _steinhartCoefs[i] = steinhartCoefs[i];
+	_res1 = res1;
+	_fineTuneTemp = fineTuneTemp;
 }
 
 /*
@@ -246,7 +263,7 @@ void Rims::_refreshSSR()
 TITLE : getTempPV
 DESC : Get process value temperature from _analogPinPV.
        It uses Steinhart-hart thermistor equation with a voltage
-       divider with RES1
+       divider with _res1
 ============================================================
 */
 double Rims::getTempPV()
@@ -265,13 +282,13 @@ double Rims::getTempPV()
 	{
 		if(_myPID.GetMode()==MANUAL) _myPID.SetMode(AUTOMATIC);
 		double vin = ((double)curTempADC*VALIM)/1024.0;
-		double resTherm = (RES1*vin)/(VALIM-vin);
+		double resTherm = (_res1*vin)/(VALIM-vin);
 		double logResTherm = log(resTherm);
-		double invKelvin = STEINHART0+\
-						STEINHART1*logResTherm+\
-						STEINHART2*pow(logResTherm,2)+\
-						STEINHART3*pow(logResTherm,3);
-		tempPV = (1/invKelvin)-273.15+FINETUNETEMP;
+		double invKelvin = _steinhartCoefs[0]+\
+						_steinhartCoefs[1]*logResTherm+\
+						_steinhartCoefs[2]*pow(logResTherm,2)+\
+						_steinhartCoefs[3]*pow(logResTherm,3);
+		tempPV = (1/invKelvin)-273.15+_fineTuneTemp;
 	}
 	return tempPV;
 }

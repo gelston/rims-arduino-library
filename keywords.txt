@@ -18,6 +18,7 @@ UIRimsIdent	KEYWORD1
 
 ### Rims ###
 
+setThermistor	KEYWORD2
 setTunningPID	KEYWORD2
 setSetPointFilter	KEYWORD2
 setPinLED	KEYWORD2
