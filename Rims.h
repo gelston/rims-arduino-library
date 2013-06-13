@@ -10,15 +10,9 @@
 #ifndef Rims_h
 #define Rims_h
 
-#define VALIM 5 // volts
-#define RES1 10010.0 // ohms
-#define STEINHART0 0.000480541720259488
-#define STEINHART1 0.000287458436095242
-#define STEINHART2 -3.07840710605727e-06
-#define STEINHART3 8.65973846884587e-08
-#define FINETUNETEMP -0.3 // celsius
+#define VALIM 5 // ADC max value [volts]
 
-#define PIDSAMPLETIME 1000 // mSec 
+#define PIDSAMPLETIME 1000 // mSec
 #define SSRWINDOWSIZE 5000 // mSec
 
 #define DEFAULTSP 68 // celsius
@@ -43,6 +37,7 @@ public:
 	Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin, 
 		 double* currentTemp, double* ssrControl, double* settedTemp);
 
+	void setThermistor(float steinhartCoefs[],float res1, float fineTune = 0);
 	void setTunningPID(double Kp, double Ki, double Kd, double tauFilter);
 	void setSetPointFilter(double tauFilter);
 	void setPinLED(byte pinLED);
@@ -74,6 +69,10 @@ private:
 	double* _setPointPtr;
 	double* _processValPtr;
 	double* _controlValPtr; // [0,SSRWINDOWSIZE]
+	
+	float _steinhartCoefs[4];
+	float _res1;
+	float _fineTuneTemp;
 	
 	double _PIDFilterCst;
 	double _lastPIDFilterOutput;
