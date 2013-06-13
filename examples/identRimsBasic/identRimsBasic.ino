@@ -4,7 +4,7 @@
 double currentTemp, ssrControl, settedTemp;
 
 LiquidCrystal lcd(8,9,4,5,6,7);
-UIRimsIdent myUI(lcd,16,2,10,0);
+UIRimsIdent myUI(lcd,16,2,0,10);
 RimsIdent myIdent(&myUI,1,11,&currentTemp,&ssrControl,&settedTemp);
 
 void setup() {

@@ -5,7 +5,7 @@
 double currentTemp, ssrControl, settedTemp;
 
 LiquidCrystal lcd(8,9,4,5,6,7);
-UIRims myUI(lcd,16,2,10,0);
+UIRims myUI(lcd,16,2,0,10);
 Rims myRims(&myUI,1,11,&currentTemp,&ssrControl,&settedTemp);
 
 void setup() {
