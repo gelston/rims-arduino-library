@@ -31,6 +31,7 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 : _ui(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
   _processValPtr(currentTemp), _controlValPtr(ssrControl), _setPointPtr(settedTemp),
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
+  _rimsInitialized(false),
   _pinLED(13), _PIDFilterCst(0),
   _flowLastTime(0), _flowCurTime(0)
 {
@@ -121,13 +122,34 @@ TITLE : start
 DESC : Routine principale
 ============================================================
 */
-void Rims::start()
+void Rims::run()
 {
-	//TODO : pas bloquant (i.e. passe par la main loop)
-	boolean timerElapsed = false, pidJustCalculated = true;
-	unsigned long currentTime ,lastScreenSwitchTime, lastTimePID;
+	if(not _rimsInitialized) this->_initialize();
+	else
+	{
+		if(not _timerElapsed) this->_iterate();
+		else
+		{
+			_myPID.SetMode(MANUAL);
+			*(_controlValPtr) = 0;
+			_refreshSSR();
+			_rimsInitialized = false;
+			_ui->showEnd();
+		}
+	}
+}
+
+/*
+============================================================
+TITLE : _initialize
+DESC : 
+============================================================
+*/
+void Rims::_initialize()
+{
+	_timerElapsed = false, _pidJustCalculated = true;
 	// === ASK SETPOINT ===
-	double rawSetPoint = _ui->askSetPoint(DEFAULTSP);
+	_rawSetPoint = _ui->askSetPoint(DEFAULTSP);
 	*(_setPointPtr) = 0;
 	// === ASK TIMER ===
 	_settedTime = (unsigned long)_ui->askTime(DEFAULTTIME)*1000;
@@ -142,55 +164,60 @@ void Rims::start()
 	while(_ui->readKeysADC()==KEYNONE) continue;
 	_ui->showTempScreen();
 	*(_processValPtr) = this->getTempPV();
-	_ui->setTempSP(rawSetPoint);
+	_ui->setTempSP(_rawSetPoint);
 	_ui->setTempPV(*(_processValPtr));
 	_sumStoppedTime = true;
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
 	_myPID.SetMode(AUTOMATIC);
-	currentTime =_windowStartTime = _timerStartTime \
-				= lastScreenSwitchTime = millis();
-	lastTimePID = currentTime - PIDSAMPLETIME;
-	while(not timerElapsed)
-	{	
-		// === READ TEMPERATURE/FLOW ===
-		*(_processValPtr) = getTempPV();
-		// === SETPOINT FILTERING ===
-		currentTime = millis();
-		if(currentTime-lastTimePID>=PIDSAMPLETIME)
-		{
-			*(_setPointPtr) = (1-_setPointFilterCst) * rawSetPoint + \
-							   _setPointFilterCst * _lastSetPointFilterOutput;
-			_lastSetPointFilterOutput = *(_setPointPtr);
-			lastTimePID = currentTime;
-		}
-		// === PID COMPUTE ===
-		pidJustCalculated = _myPID.Compute();
-		// === PID FILTERING ===
-		if(pidJustCalculated)
-		{
-			*(_controlValPtr) = (1-_PIDFilterCst) * (*_controlValPtr) + \
-								_PIDFilterCst * _lastPIDFilterOutput;
-			_lastPIDFilterOutput = *(_controlValPtr);
-		}
-		// === SSR CONTROL ===
-		_refreshSSR();
-		// === TIME REMAINING ===
-		_refreshTimer();
-		// === REFRESH DISPLAY ===
-		_refreshDisplay();
-		// === KEY CHECK ===
-		if(_ui->readKeysADC() != KEYNONE and \
-		   millis() - lastScreenSwitchTime >= 500)
-		{
-			_ui->switchScreen();
-			lastScreenSwitchTime = millis();
-		}
-		if(_runningTime >= _settedTime) timerElapsed = true;
+	_rimsInitialized = true;
+	_windowStartTime = _timerStartTime \
+					 = _lastScreenSwitchTime = millis();
+	_lastTimePID = _timerStartTime - PIDSAMPLETIME;
+}
+
+/*
+============================================================
+TITLE : _iterate
+DESC : 
+============================================================
+*/
+void Rims::_iterate()
+{
+	unsigned long currentTime = millis();
+	// === READ TEMPERATURE/FLOW ===
+	*(_processValPtr) = getTempPV();
+	// === SETPOINT FILTERING ===
+	currentTime = millis();
+	if(currentTime-_lastTimePID>=PIDSAMPLETIME)
+	{
+		*(_setPointPtr) = (1-_setPointFilterCst) * _rawSetPoint + \
+						_setPointFilterCst * _lastSetPointFilterOutput;
+		_lastSetPointFilterOutput = *(_setPointPtr);
+		_lastTimePID = currentTime;
 	}
-	_myPID.SetMode(MANUAL);
-	*(_controlValPtr) = 0;
+	// === PID COMPUTE ===
+	_pidJustCalculated = _myPID.Compute();
+	// === PID FILTERING ===
+	if(_pidJustCalculated)
+	{
+		*(_controlValPtr) = (1-_PIDFilterCst) * (*_controlValPtr) + \
+							_PIDFilterCst * _lastPIDFilterOutput;
+		_lastPIDFilterOutput = *(_controlValPtr);
+	}
+	// === SSR CONTROL ===
 	_refreshSSR();
-	_ui->showEnd();
+	// === TIME REMAINING ===
+	_refreshTimer();
+	// === REFRESH DISPLAY ===
+	_refreshDisplay();
+	// === KEY CHECK ===
+	if(_ui->readKeysADC() != KEYNONE and \
+	millis() - _lastScreenSwitchTime >= 500)
+	{
+		_ui->switchScreen();
+		_lastScreenSwitchTime = millis();
+	}
+	if(_runningTime >= _settedTime) _timerElapsed = true;
 }
 
 /*

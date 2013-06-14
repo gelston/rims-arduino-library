@@ -43,7 +43,7 @@ public:
 	void setPinLED(byte pinLED);
 	void setInterruptFlow(byte interruptFlow, float flowFactor);
 	
-	void start();
+	void run();
 	
 	double analogInToCelcius(int analogIn);
 	
@@ -51,6 +51,9 @@ public:
 	float getFlow();
 	
 protected:
+	
+	void _initialize();
+	void _iterate();
 	
 	void _refreshTimer();
 	void _refreshDisplay();
@@ -65,6 +68,11 @@ private:
 	byte _analogPinPV;
 	byte _pinCV;
 	byte _pinLED;
+	
+	boolean _rimsInitialized;
+	boolean _pidJustCalculated;
+	
+	double _rawSetPoint;
 	
 	double* _setPointPtr;
 	double* _processValPtr;
@@ -87,7 +95,10 @@ private:
 	unsigned long _totalStoppedTime;		//mSec
 	unsigned long _timerStopTime;			//mSec
 	unsigned long _timerStartTime;			//mSec
+	unsigned long _lastScreenSwitchTime;
+	unsigned long _lastTimePID;
 	boolean _sumStoppedTime;
+	boolean _timerElapsed;
 	
 	static void _isrFlowSensor(); // ISR for hall-effect flow sensor
 	float _flowFactor; // freq[Hz] = flowFactor * flow[L/min]

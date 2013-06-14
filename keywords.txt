@@ -23,7 +23,7 @@ setTunningPID	KEYWORD2
 setSetPointFilter	KEYWORD2
 setPinLED	KEYWORD2
 setInterruptFlow	KEYWORD2
-start	KEYWORD2
+run	KEYWORD2
 analogInToCelcius	KEYWORD2
 getFlow	KEYWORD2
 
