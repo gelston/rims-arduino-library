@@ -40,6 +40,7 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 	_fineTuneTemp = 0;
 	_myPID.SetSampleTime(PIDSAMPLETIME);
 	_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
+	pinMode(ssrPin,OUTPUT);
 	pinMode(13,OUTPUT);
 }
 
@@ -122,6 +123,7 @@ DESC : Routine principale
 */
 void Rims::start()
 {
+	//TODO : pas bloquant (i.e. passe par la main loop)
 	boolean timerElapsed = false, pidJustCalculated = true;
 	unsigned long currentTime ,lastScreenSwitchTime, lastTimePID;
 	// === ASK SETPOINT ===
