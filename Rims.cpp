@@ -230,7 +230,8 @@ DESC :
 void Rims::_refreshTimer()
 {
 	unsigned long currentTime = millis();
-	if(abs(*(_setPointPtr) - *(_processValPtr)) <= MAXTEMPVAR)
+	Serial.println(abs(_rawSetPoint - *(_processValPtr)));
+	if(abs(_rawSetPoint - *(_processValPtr)) <= MAXTEMPVAR)
 	{
 		if(_sumStoppedTime)
 		{
