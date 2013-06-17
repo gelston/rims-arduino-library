@@ -35,9 +35,11 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
   _pinLED(13), _PIDFilterCst(0),
   _flowLastTime(0), _flowCurTime(0)
 {
-	_steinhartCoefs[0] = 0.001; _steinhartCoefs[1] = 0.0002;
-	_steinhartCoefs[2] = -4e-7; _steinhartCoefs[3] = 1e-7;
-	_res1 = 10000;
+	_steinhartCoefs[0] = DEFAULTSTEINHART0;
+	_steinhartCoefs[1] = DEFAULTSTEINHART1;
+	_steinhartCoefs[2] = DEFAULTSTEINHART2; 
+	_steinhartCoefs[3] = DEFAULTSTEINHART3;
+	_res1 = DEFAULTRES1;
 	_fineTuneTemp = 0;
 	_myPID.SetSampleTime(PIDSAMPLETIME);
 	_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
@@ -230,7 +232,6 @@ DESC :
 void Rims::_refreshTimer()
 {
 	unsigned long currentTime = millis();
-	Serial.println(abs(_rawSetPoint - *(_processValPtr)));
 	if(abs(_rawSetPoint - *(_processValPtr)) <= MAXTEMPVAR)
 	{
 		if(_sumStoppedTime)
