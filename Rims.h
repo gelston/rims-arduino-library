@@ -18,6 +18,12 @@
 #define DEFAULTSP 68 // celsius
 #define DEFAULTTIME 5400 // seconds
 
+#define DEFAULTSTEINHART0 0.001
+#define DEFAULTSTEINHART1 0.0002
+#define DEFAULTSTEINHART2 -4e-7
+#define DEFAULTSTEINHART3 1e-7
+#define DEFAULTRES1 10000
+
 #define MAXTEMPVAR 2.0 // celsius
 
 #include "Arduino.h"

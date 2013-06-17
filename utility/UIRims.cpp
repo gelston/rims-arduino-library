@@ -18,8 +18,8 @@ TITLE : UIRims (constructor)
 DESC : UIRims constructor
 ============================================================
 */
-UIRims::UIRims(LiquidCrystal lcd,byte col,byte row, byte pinKeysAnalog,
-			   byte pinLight, byte pinSpeaker)
+UIRims::UIRims(LiquidCrystal* lcd, byte col, byte row, byte pinKeysAnalog,
+			   byte pinLight,int pinSpeaker)
 : _lcd(lcd), _pinKeysAnalog(pinKeysAnalog),_waitNone(true),
   _cursorCol(0), _cursorRow(0), _pinLight(pinLight), 
   _pinSpeaker(pinSpeaker),
@@ -28,9 +28,10 @@ UIRims::UIRims(LiquidCrystal lcd,byte col,byte row, byte pinKeysAnalog,
   _tempSP(0), _tempPV(0), _time(0), _flow(0)
 {
 	pinMode(pinLight,OUTPUT);
+	if(pinSpeaker != -1) pinMode(pinSpeaker,OUTPUT);
 	digitalWrite(pinLight,HIGH);
-	_lcd.begin(col,row);
-	_lcd.clear();
+	_lcd->begin(col,row);
+	_lcd->clear();
 	byte okChar[8] = {
 		B01110,
 		B10001,
@@ -61,9 +62,9 @@ UIRims::UIRims(LiquidCrystal lcd,byte col,byte row, byte pinKeysAnalog,
 		B00100,
 		B00000
 	};
-	_lcd.createChar(1,okChar);
-	_lcd.createChar(2,upChar);
-	_lcd.createChar(3,downChar);
+	_lcd->createChar(1,okChar);
+	_lcd->createChar(2,upChar);
+	_lcd->createChar(3,downChar);
 }
 
 /*
@@ -76,7 +77,7 @@ DESC : Show temperature (set point and process value) screen
 void UIRims::showTempScreen()
 {
 	_tempScreenShown = true;
-	_lcd.clear();
+	_lcd->clear();
 	_printStrLCD("SP:00.0\xdf""C(000\xdf""F)",0,0);
 	_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
 	this->setTempSP(_tempSP,false);
@@ -92,7 +93,7 @@ DESC : Show remaining time and flow screen on _lcd
 void UIRims::showTimeFlowScreen()
 {
 	_tempScreenShown = false;
-	_lcd.clear();
+	_lcd->clear();
 	_printStrLCD("time:000m00s    ",0 ,0);
 	_printStrLCD(String("flow:00.0L/min \x03"),0,1);
 	this->setTime(_time,false);
@@ -193,9 +194,9 @@ DESC : Show mess at column col and row row on _lcd
 */
 void UIRims::_printStrLCD(String mess, byte col, byte row)
 {
-	_lcd.setCursor(col,row);
-	_lcd.print(mess);
-	_lcd.setCursor(_cursorCol,_cursorRow);
+	_lcd->setCursor(col,row);
+	_lcd->print(mess);
+	_lcd->setCursor(_cursorCol,_cursorRow);
 }
 
 
@@ -203,7 +204,7 @@ void UIRims::_printStrLCD(String mess, byte col, byte row)
 ============================================================
 TITLE : _printFloatLCD
 DESC : Show a floating number at column col and row row
-       on _lcd. Width and prec indicate minimum width
+       on _lcd-> Width and prec indicate minimum width
        (including the dot) and digit after point respectively.
 ============================================================
 */
@@ -217,9 +218,9 @@ void UIRims::_printFloatLCD(float val, int width, int prec,
 	{
 		res = String(dtostrf(val,width,0,myFloatStr));
 	}
-	_lcd.setCursor(col,row);
-	_lcd.print(res);
-	_lcd.setCursor(_cursorCol,_cursorRow);
+	_lcd->setCursor(col,row);
+	_lcd->print(res);
+	_lcd->setCursor(_cursorCol,_cursorRow);
 }
 
 /*
@@ -232,7 +233,7 @@ void UIRims::_setCursorPosition(byte col, byte row)
 {
 	_cursorCol = col;
 	_cursorRow = row;
-	_lcd.setCursor(col,row);
+	_lcd->setCursor(col,row);
 }
 
 /*
@@ -254,7 +255,7 @@ DESC : Set a new set point temperature. If tempScreen is
        it will be memorized for when it will be shown.
        If waitRefresh is true (default is true) it will
        wait LCDREFRESHTIME mSec before updating
-       _lcd.
+       _lcd->
 ============================================================
 */
 void UIRims::setTempSP(float tempCelcius, boolean waitRefresh)
@@ -285,7 +286,7 @@ DESC : Set a new process value temperature. If tempScreen is
        it will be memorized for when it will be shown.
        If waitRefresh is true (default is true) it will
        wait LCDREFRESHTIME mSec before updating
-       _lcd.
+       _lcd->
 ============================================================
 */
 void UIRims::setTempPV(float tempCelcius, boolean waitRefresh)
@@ -317,7 +318,7 @@ DESC : Set a new remaining time. If timeFlowScreen is
        it will be memorized for when it will be shown.
        If waitRefresh is true (default is true) it will
        wait LCDREFRESHTIME mSec before updating
-       _lcd.
+       _lcd->
 ============================================================
 */
 void UIRims::setTime(unsigned int timeSec, boolean waitRefresh)
@@ -349,7 +350,7 @@ DESC : Set a new flow value. If timeFlowScreen is
        it will be memorized for when it will be shown.
        If waitRefresh is true (default is true) it will
        wait LCDREFRESHTIME mSec before updating
-       _lcd.
+       _lcd->
 ============================================================
 */
 void UIRims::setFlow(float flow, boolean waitRefresh)
@@ -377,7 +378,7 @@ void UIRims::setFlow(float flow, boolean waitRefresh)
 /*
 ============================================================
 TITLE : _incDecValue
-DESC : Increse or decreasw a floating point value on _lcd.
+DESC : Increse or decreasw a floating point value on _lcd->
        dotPosition give the position (column) of the point mark.
        lowerBound and upperBound block is the incresing/decreasing
        limit of the value. timeFormat treats the value (in seconds) as
@@ -423,7 +424,7 @@ float UIRims::_incDecValue(float value,byte dotPosition, boolean increase,
 /*
 ============================================================
 TITLE : _moveCursorLR
-DESC : Move the cursor left or right on _lcd. begin
+DESC : Move the cursor left or right on _lcd-> begin
        and end indicate the position (column) of the beginning
        and ending of the cursor bounds. dotPosition is the 
        position (column) of the dot to skip it. row indicate
@@ -453,9 +454,9 @@ void UIRims::_moveCursorLR(byte begin, byte end, byte dotPosition,
 /*
 ============================================================
 TITLE : _askValue
-DESC : Ask a value on _lcd. begin and end is the cursor
+DESC : Ask a value on _lcd-> begin and end is the cursor
        bounds (columns) for the value. dotPosition is 
-       the point mark position. row is the row on _lcd.
+       the point mark position. row is the row on _lcd->
        defaultVal is the starting value. lowerBound and upperBound
        is the value's limits. timeFormat treats the value as
        a time with minutes and seconds.
@@ -472,7 +473,7 @@ float UIRims::_askValue(byte begin, byte end,
 	timeFormat ? this->setTime(defaultVal,false) : \
 	             this->setTempSP(defaultVal,false);
 	_setCursorPosition(dotPosition-1,row);
-	_lcd.blink();
+	_lcd->blink();
 	_waitTime(500);
 	while(not valSelected)
 	{
@@ -498,7 +499,7 @@ float UIRims::_askValue(byte begin, byte end,
 				break;
 			case KEYSELECT :
 				valSelected = true;
-				_lcd.noBlink();
+				_lcd->noBlink();
 				_setCursorPosition(0,0);
 				break;
 		}
@@ -545,12 +546,12 @@ DESC : Show the ending screen.
 void UIRims::showEnd()
 {
 	unsigned long refTime, currentTime;
-	_lcd.clear();
+	_lcd->clear();
 	_printStrLCD("finished!",0,0);
 	_waitTime(500);
-	refTime = currentTime = millis();
 	boolean lightState = true;
 	if(_pinSpeaker != -1) tone(_pinSpeaker,1000,500);
+	refTime = currentTime = millis();
 	while(this->readKeysADC() == KEYNONE)
 	{
 		currentTime = millis();
@@ -576,7 +577,7 @@ DESC : Show the pump switching warning.
 */
 void UIRims::showPumpWarning()
 {
-	_lcd.clear();
+	_lcd->clear();
 	_printStrLCD("start pump! [OK]",0,0);
 	_printStrLCD(String("flow:00.0L/min \x03"),0,1);
 	_waitTime(500);
@@ -590,7 +591,7 @@ DESC : Show the heater switching warning.
 */
 void UIRims::showHeaterWarning()
 {
-	_lcd.clear();
+	_lcd->clear();
 	_printStrLCD("start heater!",0,0);
 	_printStrLCD("[OK]",0,1);
 	_waitTime(500);
@@ -600,7 +601,7 @@ void UIRims::showHeaterWarning()
 ============================================================
 TITLE : showErrorPV
 DESC : Show error mess (2 chars max) for the
-       process value on _lcd.
+       process value on _lcd->
 ============================================================
 */
 void UIRims::showErrorPV(String mess)

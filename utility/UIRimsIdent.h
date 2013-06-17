@@ -17,8 +17,8 @@ class UIRimsIdent : public UIRims
 	
 public:
 	
-	UIRimsIdent(LiquidCrystal lcd, byte col, byte row, byte pinLight,
-				byte pinKeysAnalog);
+	UIRimsIdent(LiquidCrystal* lcd, byte col, byte row, byte pinKeysAnalog,
+			    byte pinLight=13,int pinSpeaker=-1);
 
 	void showIdentScreen();
 	
