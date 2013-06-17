@@ -18,9 +18,9 @@ TITLE : UIRimsIdent
 DESC : Constructor
 ============================================================
 */
-UIRimsIdent::UIRimsIdent(LiquidCrystal* lcd, byte col, byte row, 
+UIRimsIdent::UIRimsIdent(LiquidCrystal* lcd, 
 						 byte pinKeysAnalog,byte pinLight,int pinSpeaker)
-: UIRims(lcd,col,row,pinKeysAnalog,pinLight,pinSpeaker)
+: UIRims(lcd,pinKeysAnalog,pinLight,pinSpeaker)
 {
 }
 /*

@@ -18,7 +18,7 @@ TITLE : UIRims (constructor)
 DESC : UIRims constructor
 ============================================================
 */
-UIRims::UIRims(LiquidCrystal* lcd, byte col, byte row, byte pinKeysAnalog,
+UIRims::UIRims(LiquidCrystal* lcd, byte pinKeysAnalog,
 			   byte pinLight,int pinSpeaker)
 : _lcd(lcd), _pinKeysAnalog(pinKeysAnalog),_waitNone(true),
   _cursorCol(0), _cursorRow(0), _pinLight(pinLight), 
@@ -30,7 +30,7 @@ UIRims::UIRims(LiquidCrystal* lcd, byte col, byte row, byte pinKeysAnalog,
 	pinMode(pinLight,OUTPUT);
 	if(pinSpeaker != -1) pinMode(pinSpeaker,OUTPUT);
 	digitalWrite(pinLight,HIGH);
-	_lcd->begin(col,row);
+	_lcd->begin(LCDCOLUMNS,LCDROWS);
 	_lcd->clear();
 	byte okChar[8] = {
 		B01110,
