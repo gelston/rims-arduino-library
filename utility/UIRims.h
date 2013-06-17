@@ -24,6 +24,9 @@
 #define KEYRIGHT 4
 #define KEYSELECT 5
 
+#define LCDCOLUMNS 16
+#define LCDROWS 2
+
 #define LCDREFRESHTIME 500 // mSec
 #define KEYDEBOUNCETIME 15 // mSec
 
@@ -40,8 +43,8 @@ class UIRims
 	
 public:
 	
-	UIRims(LiquidCrystal* lcd, byte col, byte row, byte pinKeysAnalog,
-		   byte pinLight=13,int pinSpeaker=-1);
+	UIRims(LiquidCrystal* lcd, byte pinKeysAnalog,
+           byte pinLight=13,int pinSpeaker=-1);
 	
 	// === STD DIALOGS METHOD ===
 	void showPumpWarning();
