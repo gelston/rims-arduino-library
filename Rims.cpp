@@ -126,7 +126,6 @@ DESC : Routine principale
 */
 void Rims::run()
 {
-	//TODO : if 2 runs, lcd show freeze with stranges chars (somethimes)
 	if(not _rimsInitialized) this->_initialize();
 	else
 	{
