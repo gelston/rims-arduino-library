@@ -3,7 +3,9 @@
  * 
  * Recirculation infusion mash system (RIMS) library for Arduino
  * 
- * Francis Gagnon * This Library is licensed under a GPLv3 License
+ * Francis Gagnon 
+ * 
+ * This Library is licensed under a GPLv3 License
  *****************************************************************/
 
 
