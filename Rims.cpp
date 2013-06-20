@@ -188,6 +188,7 @@ void Rims::_iterate()
 	unsigned long currentTime = millis();
 	// === READ TEMPERATURE/FLOW ===
 	*(_processValPtr) = getTempPV();
+	_flow = this->getFlow();
 	// === SETPOINT FILTERING ===
 	currentTime = millis();
 	if(currentTime-_lastTimePID>=PIDSAMPLETIME)
