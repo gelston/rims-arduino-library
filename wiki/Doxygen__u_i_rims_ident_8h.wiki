@@ -1,0 +1,13 @@
+#summary Documentation for the UIRimsIdent.h file
+
+= UIRimsIdent.h =
+
+
+
+== Detailed Description ==
+
+
+
+
+---
+|| [Doxygen Main Page] || [Doxygen_files Files] ||
