@@ -1,0 +1,13 @@
+#summary Documentation for the RimsIdent.h file
+
+= RimsIdent.h =
+
+
+
+== Detailed Description ==
+
+
+
+
+---
+|| [Doxygen Main Page] || [Doxygen_files Files] ||
