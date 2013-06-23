@@ -27,6 +27,7 @@
 #define DEFAULTRES1 10000
 
 #define MAXTEMPVAR 2.0 // celsius
+#define SCREENSWITCHTIME 10000 // mSec
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
@@ -97,7 +98,6 @@ private:
 	double _lastSetPointFilterOutput;
 	
 	unsigned long _windowStartTime;			//mSec
-	
 	unsigned long _settedTime;				//mSec
 	unsigned long _runningTime;				//mSec
 	unsigned long _totalStoppedTime;		//mSec
