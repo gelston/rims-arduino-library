@@ -214,8 +214,9 @@ void Rims::_iterate()
 	// === REFRESH DISPLAY ===
 	_refreshDisplay();
 	// === KEY CHECK ===
-	if(_ui->readKeysADC() != KEYNONE and \
-	millis() - _lastScreenSwitchTime >= 500)
+	currentTime = millis();
+	if((_ui->readKeysADC()!=KEYNONE and currentTime-_lastScreenSwitchTime>=500)\
+	    or currentTime-_lastScreenSwitchTime >= SCREENSWITCHTIME)
 	{
 		_ui->switchScreen();
 		_lastScreenSwitchTime = millis();
