@@ -1,3 +1,8 @@
+/*!
+ * \file UIRims.h
+ * \brief UIRims class declaration
+ */
+
 #ifndef UIRims_h
 #define UIRims_h
 
@@ -11,10 +16,14 @@
 #define LCDCOLUMNS 16
 #define LCDROWS 2
 
+/// \brief Minimal time before refreshing LCD text [mSec]
 #define LCDREFRESHTIME 500 // mSec
-#define KEYDEBOUNCETIME 15 // mSec
+/// \brief Software key debounce time [mSec]
+#define KEYDEBOUNCETIME 15
 
+/// \brief Lower bound for accepted flow rate [L/min]
 #define FLOWLOWBOUND 2.0
+/// \brief Upper bound for accepted flow rate [L/min]
 #define FLOWUPBOUND 4.0
 
 #include "Arduino.h"

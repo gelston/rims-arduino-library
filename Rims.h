@@ -1,12 +1,17 @@
-/*! 
- * \mainpage Recirculation infusion mash system library for arduino
+/*******************************************************************
+ * \mainpage Recirculation infusion mash system library for Arduino
  * 
  * - Rims main class
  *
  * Francis Gagnon
+ *
  * This Library is licensed under a GPLv3 License
  *
- */
+ *******************************************************************/
+ 
+/*!
+ * \file Rims.h
+ * \brief Rims class declaration
  */
 
 Rims* Rims::_rimsPtr = 0;
@@ -14,21 +19,31 @@ Rims* Rims::_rimsPtr = 0;
 #ifndef Rims_h
 #define Rims_h
 
-#define VALIM 5 /// ADC max value [volts]
+///\brief ADC max value [volts]
+#define VALIM 5 
 
-#define PIDSAMPLETIME 1000 /// mSec
-#define SSRWINDOWSIZE 5000 /// mSec
+///\brief [mSec]
+#define PIDSAMPLETIME 1000
+///\brief solid state relay window size [mSec]
+#define SSRWINDOWSIZE 5000
 
-#define DEFAULTSP 68 /// celsius
-#define DEFAULTTIME 5400 /// seconds
+///\brief Default set point on UIRims [celcius]
+#define DEFAULTSP 68
+///\brief Default timer time on UIRims [sec]
+#define DEFAULTTIME 5400
 
 #define DEFAULTSTEINHART0 0.001
 #define DEFAULTSTEINHART1 0.0002
 #define DEFAULTSTEINHART2 -4e-7
 #define DEFAULTSTEINHART3 1e-7
+///\brief [ohm]
 #define DEFAULTRES1 10000
 
+///\brief Max temperature variation from set 
+///       point before stopping timer count down [celcius]
 #define MAXTEMPVAR 2.0 /// celsius
+///\brief Time before tempScreen/timeFlowScreen 
+///       is automatically shown[mSec]
 #define SCREENSWITCHTIME 10000 /// mSec
 
 #include "Arduino.h"

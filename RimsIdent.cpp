@@ -1,3 +1,8 @@
+/*!
+ * \file RimsIdent.cpp
+ * \brief RimsIdent class definition
+ */
+
 #include "Arduino.h"
 #include "RimsIdent.h"
 

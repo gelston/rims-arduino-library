@@ -1,6 +1,10 @@
+/*!
+ * \file UIRimsIdent.cpp
+ * \brief UIRimsIdent class definition
+ */
+
 #include "Arduino.h"
 #include "UIRimsIdent.h"
-
 
 /*!
  * \brief Constructor

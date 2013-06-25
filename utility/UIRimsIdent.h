@@ -1,6 +1,10 @@
+/*!
+ * \file UIRimsIdent.h
+ * \brief UIRimsIdent class declaration
+ */
+
 #ifndef UIRimsIdent_h
 #define UIRimsIdent_h
-
 
 #include "Arduino.h"
 #include "UIRims.h"
