@@ -14,8 +14,6 @@
  * \brief Rims class declaration
  */
 
-Rims* Rims::_rimsPtr = 0;
-
 #ifndef Rims_h
 #define Rims_h
 
