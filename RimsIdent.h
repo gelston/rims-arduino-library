@@ -1,10 +1,7 @@
-/*****************************************************************
- * Rims.h
- * 
- * Recirculation infusion mash system (RIMS) library for Arduino
- * 
- * Francis Gagnon * This Library is licensed under a GPLv3 License
- *****************************************************************/
+/*!
+ * \file RimsIdent.h
+ * \brief RimsIdent class declaration
+ */
 
 
 #ifndef RimsIdent_h
