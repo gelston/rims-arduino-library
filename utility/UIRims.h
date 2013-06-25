@@ -1,19 +1,3 @@
-// === UIRims =====================================
-// ===  Library to menage LCD and keypad for Rims library.
-// === 
-// ===  Made for :
-// ===  
-// ===  DFRobot LCD Keypad Shield For Arduino
-// ===  http://www.dfrobot.com/index.php?route=product/product&product_id=51#.Ua1dHhXEnXQ
-// ===  
-// ===  If anything else is used, lcd must be 16 cols 2 rows and keypad must be
-// ===  associated to a analog ADC pin with a volage divider for each keys.
-// ===  Needed keys : UP, DOWN, LEFT, RIGHT, SELECT
-// ===  
-// ===  Francis Gagnon
-// ================================================
-
-
 #ifndef UIRims_h
 #define UIRims_h
 
@@ -37,6 +21,19 @@
 #include "LiquidCrystal.h"
 
 
+/*!
+ * \brief Library to menage LCD and keypad for Rims library
+ *
+ * Made for :  
+ * DFRobot LCD Keypad Shield For Arduino
+ * http://www.dfrobot.com/index.php?route=product/product&product_id=51#.Ua1dHhXEnXQ
+ *  
+ * If anything else is used, lcd must be 16 cols 2 rows and keypad must be
+ * associated to a analog ADC pin with a volage divider for each keys.
+ * Needed keys : UP, DOWN, LEFT, RIGHT, SELECT
+ *
+ * \author Francis Gagnon
+ */ 
 class UIRims
 {
 	friend class UIRimsIdent;
@@ -66,6 +63,7 @@ public:
 	// === SETUP DIALOGS ===
 	float askSetPoint(float defaultVal); // Celsius
 	unsigned int askTime(unsigned int defaultVal); // seconds
+	byte askBatchSize();
 
 	// === ERROR HANDLING ===
 	void showErrorPV(String mess);

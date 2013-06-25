@@ -15,10 +15,10 @@
 #include "utility/UIRimsIdent.h"
 
 
-// === RimsIdent ==================================
-// === Toolkits for process identification ========
-// === to facilitate PID tunning.          ========
-// ================================================
+/*! 
+ * \brief Toolkits for process identification  to facilitate PID tunning.
+ * \author Francis Gagnon
+ */
 class RimsIdent : public Rims
 {
 	

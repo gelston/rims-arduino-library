@@ -1,24 +1,26 @@
-/*****************************************************************
- * Rims.h
+/*! 
+ * \mainpage Recirculation infusion mash system library for arduino
  * 
- * Recirculation infusion mash system (RIMS) library for Arduino
- * 
- * Francis Gagnon 
- * 
+ * - Rims main class
+ *
+ * Francis Gagnon
  * This Library is licensed under a GPLv3 License
- *****************************************************************/
+ *
+ */
+ */
 
+Rims* Rims::_rimsPtr = 0;
 
 #ifndef Rims_h
 #define Rims_h
 
-#define VALIM 5 // ADC max value [volts]
+#define VALIM 5 /// ADC max value [volts]
 
-#define PIDSAMPLETIME 1000 // mSec
-#define SSRWINDOWSIZE 5000 // mSec
+#define PIDSAMPLETIME 1000 /// mSec
+#define SSRWINDOWSIZE 5000 /// mSec
 
-#define DEFAULTSP 68 // celsius
-#define DEFAULTTIME 5400 // seconds
+#define DEFAULTSP 68 /// celsius
+#define DEFAULTTIME 5400 /// seconds
 
 #define DEFAULTSTEINHART0 0.001
 #define DEFAULTSTEINHART1 0.0002
@@ -26,8 +28,8 @@
 #define DEFAULTSTEINHART3 1e-7
 #define DEFAULTRES1 10000
 
-#define MAXTEMPVAR 2.0 // celsius
-#define SCREENSWITCHTIME 10000 // mSec
+#define MAXTEMPVAR 2.0 /// celsius
+#define SCREENSWITCHTIME 10000 /// mSec
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
@@ -35,9 +37,14 @@
 
 
 
-// === Rims =======================================
-// === Main class for Rims library ================
-// ================================================
+/*!
+ * \brief Recirculation infusion mash system (RIMS) library for Arduino
+ * \author Francis Gagnon 
+ *
+ * \bug Only one Rims (or child) instance is allowed with flow sensor
+        because of static method _isrFlowSensor()
+ */
+
 class Rims
 {
 	friend class RimsIdent;
@@ -53,8 +60,6 @@ public:
 	void setInterruptFlow(byte interruptFlow, float flowFactor);
 	
 	void run();
-	
-	double analogInToCelcius(int analogIn);
 	
 	double getTempPV();
 	float getFlow();
@@ -85,7 +90,7 @@ private:
 	
 	double* _setPointPtr;
 	double* _processValPtr;
-	double* _controlValPtr; // [0,SSRWINDOWSIZE]
+	double* _controlValPtr; /// [0,SSRWINDOWSIZE]
 	
 	float _steinhartCoefs[4];
 	float _res1;
@@ -97,23 +102,23 @@ private:
 	double _setPointFilterCst;
 	double _lastSetPointFilterOutput;
 	
-	unsigned long _windowStartTime;			//mSec
-	unsigned long _settedTime;				//mSec
-	unsigned long _runningTime;				//mSec
-	unsigned long _totalStoppedTime;		//mSec
-	unsigned long _timerStopTime;			//mSec
-	unsigned long _timerStartTime;			//mSec
+	unsigned long _windowStartTime;			///mSec
+	unsigned long _settedTime;				///mSec
+	unsigned long _runningTime;				///mSec
+	unsigned long _totalStoppedTime;		///mSec
+	unsigned long _timerStopTime;			///mSec
+	unsigned long _timerStartTime;			///mSec
 	unsigned long _lastScreenSwitchTime;
 	unsigned long _lastTimePID;
 	boolean _sumStoppedTime;
 	boolean _timerElapsed;
 	
-	static void _isrFlowSensor(); // ISR for hall-effect flow sensor
-	float _flowFactor; // freq[Hz] = flowFactor * flow[L/min]
+	static void _isrFlowSensor(); ///mSec ISR for hall-effect flow sensor
+	float _flowFactor; /// freq[Hz] = flowFactor * flow[L/min]
 	float _flow;
 	
-	volatile unsigned long _flowLastTime;	//µSec
-	volatile unsigned long _flowCurTime;	//µSec
+	volatile unsigned long _flowLastTime;	///µSec
+	volatile unsigned long _flowCurTime;	///µSec
 	
 };
 

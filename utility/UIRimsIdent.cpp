@@ -1,23 +1,15 @@
-/*************************************************************
- ************************************************************* 
- * UIRimsIdent
- *     UI library for RimsIdent class
- ************************************************************* 
- *************************************************************/
-
-
 #include "Arduino.h"
 #include "UIRimsIdent.h"
 
 
-
-
-/*
-============================================================
-TITLE : UIRimsIdent
-DESC : Constructor
-============================================================
-*/
+/*!
+ * \brief Constructor
+ * \param lcd : LiquidCrystal* (16x2 characters) that will be used during
+                identification.
+ * \param pinKeysAnalog : byte analog pin for thermistor reading
+ * \param pinLight : byte pin used for heater LED indicator
+ * \param pinSpeaker : byte pin used for buzzer alarm
+ */
 UIRimsIdent::UIRimsIdent(LiquidCrystal* lcd, 
 						 byte pinKeysAnalog,byte pinLight,int pinSpeaker)
 : UIRims(lcd,pinKeysAnalog,pinLight,pinSpeaker)
