@@ -1,3 +1,4 @@
+
 #include "Arduino.h"
 #include "UIRims.h"
 
@@ -12,7 +13,7 @@
  * \brief Constructor
  * \param lcd : LiquidCrystal* (16x2 characters) that will be used during
                 identification.
- * \param pinKeysAnalog : byte. Analog pin for thermistor reading
+ * \param pinKeysAnalog : byte. Analog pin for keypad
  * \param pinLight : byte. Pin used for heater LED indicator
  * \param pinSpeaker : byte. Pin used for buzzer alarm
  */
@@ -362,7 +363,7 @@ void UIRims::setFlow(float flow, boolean waitRefresh)
  * \param dotPosition : byte. position (column) of the point mark
  * \param increase : boolean. If true, increment else, decrement.
  * \param lowerBound : float. decreasing limit of the value
- * \param uppedBound : float. increasing limit of the value
+ * \param upperBound : float. increasing limit of the value
  * \param timeFormat : boolean. treats the value (in sec) as a time
  *                     with minutes and secondes.
  * \return float : result of increment/decrement
