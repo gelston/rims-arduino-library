@@ -15,12 +15,10 @@ UIRimsIdent::UIRimsIdent(LiquidCrystal* lcd,
 : UIRims(lcd,pinKeysAnalog,pinLight,pinSpeaker)
 {
 }
-/*
-============================================================
-TITLE : showIdentScreen
-DESC : Show system identification screen on _lcd
-============================================================
-*/
+
+/*!
+ * \brief Show system identification screen on _lcd
+ */
 void UIRimsIdent::showIdentScreen()
 {
 	_printStrLCD("000% 000m00s    ",0,0);
@@ -28,29 +26,29 @@ void UIRimsIdent::showIdentScreen()
 	_tempScreenShown = true;
 }
 
-/*
-============================================================
-TITLE : setIdentCV
-DESC : Set ident CV on identScreen
-============================================================
-*/
+/*!
+ * \brief Set ident CV on identScreen
+ * \param controlValue : unsigned long. current CV between 0 to ssrWindow
+ * \param ssrWindow : unsigned long. ssrWindow size in mSec.
+ */
 void UIRimsIdent::setIdentCV(unsigned long controlValue, 
 							 unsigned long ssrWindow)
 {
 	_printFloatLCD(controlValue*100/ssrWindow,3,0,0,0);
 }
 
-/*
-============================================================
-TITLE : setTime
-DESC : Set a new remaining time. If timeFlowScreen is 
-       shown, it will be updated on the lcd _lcd else
-       it will be memorized for when it will be shown.
-       If waitRefresh is true (default is true) it will
-       wait LCDREFRESHTIME mSec before updating
-       _lcd.
-============================================================
-*/
+/*!
+ * \brief Set a new remaining time.
+ *
+ * If timeFlowScreen is 
+ * shown, it will be updated on the lcd _lcd else
+ * it will be memorized for when it will be shown.
+ * If waitRefresh is true (default is true) it will
+ * wait LCDREFRESHTIME mSec before updating _lcd.
+ *
+ * \param timeSec : unsigned int. current CV between 0 to ssrWindow
+ * \param waitRefresh : boolean. ssrWindow size in mSec.
+ */
 void UIRimsIdent::setTime(unsigned int timeSec, boolean waitRefresh)
 {
 	_tempScreenShown = false;
