@@ -1,13 +1,16 @@
-/*******************************************************************
- * \mainpage Recirculation infusion mash system library for Arduino
+//=====================================================
+/*!
+ * \mainpage Quick Links
  * 
  * - Rims main class
+ * - UIRims user interface class
  *
  * Francis Gagnon
  *
- * This Library is licensed under a GPLv3 License
- *
- *******************************************************************/
+ * This Library is licensed under a 
+ * <a href="http://www.gnu.org/licenses/licenses.en.html">GPLv3 License</a>.
+ */
+//=====================================================
  
 /*!
  * \file Rims.h
