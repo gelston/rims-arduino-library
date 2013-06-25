@@ -12,20 +12,18 @@
 #include "Rims.h"
 
 
-/* 
-============================================================
-static member _rimsPtr definition
-============================================================
-*/
-
-Rims* Rims::_rimsPtr = 0;
-
-/*
-============================================================
-TITLE : Rims (constructor)
-DESC : Rims constructor
-============================================================
-*/
+/*!
+ * \brief Constructor
+ * \param uiRims : UIRims*. Pointer to UIRims instance
+ * \param analogPinTherm : byte. Analog pin to thermistor
+ * \param ssrPin : byte. Pin to control heater's solid state relay.
+ * \param currentTemp : double*. Pointer to a double that 
+ *                      will be used for current temparature
+ * \param ssrControl : double*. Pointer to a double that 
+ *                     will use to control SSR
+ * \param settedTemp : double*. Pointer to a double that 
+ *                     will be use to store setted temperature
+ */
 Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin, 
 	       double* currentTemp, double* ssrControl, double* settedTemp)
 : _ui(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
@@ -47,12 +45,21 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 	pinMode(13,OUTPUT);
 }
 
-/*
-============================================================
-TITLE : setThermistor
-DESC : 
-============================================================
-*/
+/*!
+ * \brief Set thermistor parameters.
+ *
+ * @image html thermistor_circuit.png "Thermistor voltage divider circuit" 
+ * \param steinhartCoefs : float[4]. Steinhart-hart equation coefficients in order
+ *        of increasing power, i.e :
+ *    	  \f[
+ *	      \frac{1}{T[kelvin]}=C_{0}+C_{1}\ln(R)+C_{2}\ln(R)^2+C_{3}\ln(R)^3
+ *   	  \f]
+ *        for more information : http://en.wikipedia.org/wiki/Steinhart%E2%80%93Hart_equation
+ *
+ * \param res1 : float. In ohm.
+ * \param fineTuneTemp : float. optional (default=0). if you want to add a fine tune factor
+          after the steinhart-hart temperature calculation.
+ */
 void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
 {
 	for(int i=0;i<=4;i++) _steinhartCoefs[i] = steinhartCoefs[i];
@@ -60,12 +67,23 @@ void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
 	_fineTuneTemp = fineTuneTemp;
 }
 
-/*
-============================================================
-TITLE : setTunningPID
-DESC : 
-============================================================
-*/
+
+/*!
+ * \brief Set tunning for PID object.
+ *
+ * Algorithm is in parallel form i.e. :
+ * \f[ 
+ * G_{c}(s) = [K_{p}+\frac{K_{i}}{s}+K_{d}s]\times\frac{1}{Ts+1}
+ * \f]
+ * Where \f$T=tauFilter[sec]\f$
+ * For more information : 
+ * http://playground.arduino.cc/Code/PIDLibrary
+ *
+ * \param Kp : float. Propotionnal gain
+ * \param Ki : float. Integral gain.
+ * \param Kd : float. Derivative gain.
+ * \param tauFilter : float. PID output filter time constant in sec.
+ */
 void Rims::setTunningPID(double Kp, double Ki, double Kd, double tauFilter)
 {
 	_myPID.SetTunings(Kp,Ki,Kd);
@@ -77,12 +95,18 @@ void Rims::setTunningPID(double Kp, double Ki, double Kd, double tauFilter)
 	_lastPIDFilterOutput = 0;
 }
 
-/*
-============================================================
-TITLE : setFilterSetPoint
-DESC : 
-============================================================
-*/
+
+/*!
+ * \brief Set Set Point filter. 
+ *
+ * A set point filter allow you to cancel overshoot (for integretor plant).
+ * Normally : 
+ * \f[
+ * tauFilter=\frac{K_{c}}{K_{i}}
+ * \f]
+ *
+ * \param tauFilter : float. set point filter time constant in sec.
+ */
 void Rims::setSetPointFilter(double tauFilter)
 {
 	if(tauFilter>0)
@@ -93,12 +117,15 @@ void Rims::setSetPointFilter(double tauFilter)
 	_lastSetPointFilterOutput = 0;
 }
 
-/*
-============================================================
-TITLE : setInterruptFlow
-DESC : 
-============================================================
-*/
+/*!
+ * \brief Set interrupt function for flow sensor.
+ * \param interruptFlow : byte
+ * \param flowFactor : float. Factor used to calculate flow from the
+                       input frequency, i.e. :
+					   \f[
+					   freq[Hz] = flowFactor * flow[L/min]
+					   \f]
+ */
 void Rims::setInterruptFlow(byte interruptFlow, float flowFactor)
 {
 	Rims::_rimsPtr = this;
@@ -106,24 +133,23 @@ void Rims::setInterruptFlow(byte interruptFlow, float flowFactor)
 	_flowFactor = flowFactor;
 }
 
-/*
-============================================================
-TITLE : setInterruptFlow
-DESC : 
-============================================================
-*/
+/*!
+ * \brief Set pin for heater LED indicator
+ * \param pinLED : byte
+ */
 void Rims::setPinLED(byte pinLED)
 {
 	pinMode(pinLED,OUTPUT);
 	_pinLED = pinLED;
 }
 
-/*
-============================================================
-TITLE : start
-DESC : Routine principale
-============================================================
-*/
+/*!
+ * \brief Start and run Rims instance. 
+ *
+ * Should be called in the loop() function of your sketchbook
+ * First time : _initialize() is called
+ * Remaining time : _iterate() is called
+ */
 void Rims::run()
 {
 	if(not _rimsInitialized) this->_initialize();
@@ -141,12 +167,16 @@ void Rims::run()
 	}
 }
 
-/*
-============================================================
-TITLE : _initialize
-DESC : 
-============================================================
-*/
+/*!
+ * \brief Initialize a Rims instance before starting temperature regulation.
+ *
+ * Initialization procedure :
+ * -# Ask Temperature set point
+ * -# Ask Timer time
+ * -# Ask Batch size (if setted)
+ * -# Show pump switching warning
+ * -# Show heater switching warning
+ */
 void Rims::_initialize()
 {
 	_timerElapsed = false, _pidJustCalculated = true;
@@ -177,12 +207,9 @@ void Rims::_initialize()
 	_lastTimePID = _timerStartTime - PIDSAMPLETIME;
 }
 
-/*
-============================================================
-TITLE : _iterate
-DESC : 
-============================================================
-*/
+/*!
+ * \brief Main method called for temperature regulation at each iteration
+ */
 void Rims::_iterate()
 {
 	unsigned long currentTime = millis();
@@ -224,12 +251,11 @@ void Rims::_iterate()
 	if(_runningTime >= _settedTime) _timerElapsed = true;
 }
 
-/*
-============================================================
-TITLE : _refreshTimer
-DESC : 
-============================================================
-*/
+/*!
+ * \brief Refresh timer value.
+ *
+ * If error on temperature >= MAXTEMPVAR, timer will not count down.
+ */
 void Rims::_refreshTimer()
 {
 	unsigned long currentTime = millis();
@@ -251,12 +277,9 @@ void Rims::_refreshTimer()
 	}
 }
 
-/*
-============================================================
-TITLE : _refreshDisplay
-DESC : 
-============================================================
-*/
+/*!
+ * \brief Refresh display used by UIRims instance
+ */
 void Rims::_refreshDisplay()
 {
 	if(analogRead(_analogPinPV) >= 1023) _ui->showErrorPV("NC");
@@ -266,12 +289,10 @@ void Rims::_refreshDisplay()
 		
 }
 
-/*
-============================================================
-TITLE : _refreshSSR
-DESC : 
-============================================================
-*/
+/*!
+ * \brief Refresh solid state relay
+ * SSR will be refreshed in function of _controlValPtr value. 
+ */
 void Rims::_refreshSSR()
 {
 	unsigned long currentTime = millis();
@@ -291,14 +312,13 @@ void Rims::_refreshSSR()
 	}
 }
 
-/*
-============================================================
-TITLE : getTempPV
-DESC : Get process value temperature from _analogPinPV.
-       It uses Steinhart-hart thermistor equation with a voltage
-       divider with _res1
-============================================================
-*/
+/*!
+ * \brief Get temperature from thermistor
+ *
+ * Steinhart-hart equation will be applied here. If voltage is maximal
+ * (i.e. 5V) it means that the thermistor is not connected and 
+ * regulation and heating is stopped until reconnection.
+ */
 double Rims::getTempPV()
 {
 	double tempPV = 0;
@@ -326,12 +346,9 @@ double Rims::getTempPV()
 	return tempPV;
 }
 
-/*
-============================================================
-TITLE : getFlow
-DESC : 
-============================================================
-*/
+/*!
+ * \brief Get flow from hall-effect flow sensor.
+ */
 float Rims::getFlow()
 {
 	float flow;
@@ -344,10 +361,12 @@ float Rims::getFlow()
 
 /*
 ============================================================
-TITLE : _isrFlowSensor
-DESC : 
+static members definition for flow sensor
 ============================================================
 */
+
+Rims* Rims::_rimsPtr = 0;
+
 void Rims::_isrFlowSensor()
 {
 	Rims::_rimsPtr->_flowLastTime = Rims::_rimsPtr->_flowCurTime;

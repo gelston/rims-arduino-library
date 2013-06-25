@@ -1,9 +1,3 @@
-// === UIRimsIdent ================================
-// === UI for identification toolkit      =========
-// === IdentRims class                    =========
-// ================================================
-
-
 #ifndef UIRimsIdent_h
 #define UIRimsIdent_h
 
@@ -11,7 +5,10 @@
 #include "Arduino.h"
 #include "UIRims.h"
 
-
+/*!
+ * \brief UIRims specialized for identification toolkit
+ * \author Francis Gagnon
+ */
 class UIRimsIdent : public UIRims
 {
 	
