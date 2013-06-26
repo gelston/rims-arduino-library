@@ -64,7 +64,6 @@ void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
 	_fineTuneTemp = fineTuneTemp;
 }
 
-
 /*!
  * \brief Set tunning for PID object.
  *
@@ -91,7 +90,6 @@ void Rims::setTunningPID(double Kp, double Ki, double Kd, double tauFilter)
 	else _PIDFilterCst = 0;	
 	_lastPIDFilterOutput = 0;
 }
-
 
 /*!
  * \brief Set Set Point filter. 
@@ -354,7 +352,6 @@ float Rims::getFlow()
 	else flow = (1e06 / (_flowFactor* (_flowCurTime - _flowLastTime)));
 	return flow;
 }
-
 
 /*
 ============================================================

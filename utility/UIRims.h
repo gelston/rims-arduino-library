@@ -69,6 +69,9 @@ public:
 	// === KEYS READER ===
 	byte readKeysADC(boolean waitNone = true);
 	
+	// === BUZZER RINGING ===
+	void ring(boolean state = true);
+	
 	// === SETUP DIALOGS ===
 	float askSetPoint(float defaultVal); // Celsius
 	unsigned int askTime(unsigned int defaultVal); // seconds

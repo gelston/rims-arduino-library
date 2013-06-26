@@ -70,10 +70,11 @@ public:
 		 double* currentTemp, double* ssrControl, double* settedTemp);
 
 	void setThermistor(float steinhartCoefs[],float res1, float fineTune = 0);
-	void setTunningPID(double Kp, double Ki, double Kd, double tauFilter);
-	void setSetPointFilter(double tauFilter);
 	void setPinLED(byte pinLED);
 	void setInterruptFlow(byte interruptFlow, float flowFactor);
+	
+	void setTunningPID(double Kp, double Ki, double Kd, double tauFilter);
+	void setSetPointFilter(double tauFilter);
 	
 	void run();
 	
