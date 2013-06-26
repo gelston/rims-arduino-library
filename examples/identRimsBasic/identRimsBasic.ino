@@ -4,13 +4,11 @@
 double currentTemp, ssrControl, settedTemp;
 
 LiquidCrystal lcd(8,9,4,5,6,7);
-UIRimsIdent myUI(lcd,16,2,0,10);
+UIRimsIdent myUI(&lcd,0,10);
 RimsIdent myIdent(&myUI,1,11,&currentTemp,&ssrControl,&settedTemp);
 
 void setup() {
   // put your setup code here, to run once:
-  myIdent.setPinLED(13);
-  myIdent.setInterruptFlow(1,9.0);
 }
 void loop() {
   myIdent.startIdent();
