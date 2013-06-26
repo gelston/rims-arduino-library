@@ -70,7 +70,7 @@ void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
 }
 
 /*!
- * \brief Set tunning for PID object.
+ * \brief Set tuning for PID object.
  *
  * Algorithm is in parallel form i.e. :
  * \f[ 
@@ -87,7 +87,7 @@ void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
  * \param batchSize : byte (default=0). 
  *                    Specify which of the 2 regulators to setup, if needed.
  */
-void Rims::setTunningPID(double Kp, double Ki, double Kd, double tauFilter,
+void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
                          byte batchSize)
 {
 	_kps[batchSize] = Kp; _kis[batchSize] = Ki; _kds[batchSize] = Kd;
