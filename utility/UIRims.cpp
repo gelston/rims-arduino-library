@@ -63,7 +63,6 @@ UIRims::UIRims(LiquidCrystal* lcd, byte pinKeysAnalog,
 	_lcd->createChar(3,downChar);
 }
 
-
 /*!
  * \brief Show temperature (set point and process value) screen on _lcd
  */
@@ -153,6 +152,18 @@ byte UIRims::_waitForKeyChange()
 		}
 	}
 	return currentKey;
+}
+
+/*!
+ * \brief Ring with given speaker setted with the Constructor
+ * \param state : boolean. If true, start buzz, if false stop buzz.
+ */
+void UIRims::ring(boolean state)
+{
+	if(_pinSpeaker != -1)
+	{
+		(state == true) ? tone(_pinSpeaker,1000) : noTone(_pinSpeaker);
+	}
 }
 
 /*!
@@ -520,10 +531,26 @@ unsigned int UIRims::askTime(unsigned int defaultVal)
 
 /*!
  * \brief Ask batch size.
- * \return byte : 0 small batch, 1 double batch.
+ * \return byte : 0 simple batch, 1 double batch.
  */
 byte UIRims::askBatchSize()
 {
+	boolean batchSelected = false, batchSize = 0;
+	byte keyPressed = KEYNONE;
+	_printStrLCD("\x7e""simple batch",0,0);
+	_printStrLCD(" double batch",0,1);
+	while(not batchSelected)
+	{
+		keyPressed = _waitForKeyChange();
+		if(keyPressed == KEYSELECT) batchSelected = true;
+		else if(keyPressed != KEYNONE)
+		{
+			batchSize = not batchSize;
+			_printStrLCD("\x7e",0,batchSize);
+			_printStrLCD(" ",   0,!batchSize);
+		}
+	}
+	return batchSize;
 }
 
 /*!
