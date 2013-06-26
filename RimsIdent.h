@@ -14,6 +14,12 @@
 
 /*! 
  * \brief Toolkits for process identification  to facilitate PID tunning.
+ *
+ * It sends differents values to the SSR (0%->50%->100%->0%) and monitors
+ * the resulting temperature on the
+ * <a href=http://arduino.cc/en/reference/serial>serial monitor</a>.
+ * Open the monitor before stating identification.
+ *
  * \author Francis Gagnon
  */
 class RimsIdent : public Rims

@@ -80,7 +80,7 @@ public:
 	void setPinLED(byte pinLED);
 	void setInterruptFlow(byte interruptFlow, float flowFactor);
 	
-	void setTunningPID(double Kp, double Ki, double Kd, double tauFilter,
+	void setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 	                   byte batchSize=SIMPLEBATCH);
 	void setSetPointFilter(double tauFilter,
 						   byte batchSize=SIMPLEBATCH);
