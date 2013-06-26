@@ -32,9 +32,9 @@ RimsIdent::RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm,
  *
  * It will last 10 minutes. Step order is :
  * -# 0-50% at t = 0 sec
- * -# 50%-100% at t = 2 min
- * -# 100%-0% at t = 4 min
- * -# end at t = 10 min
+ * -# 50%-100% at t = 5 min
+ * -# 100%-0% at t = 10 min
+ * -# end at t = 15 min
  *
  * All information for process identification 
  * is printed in Serial monitor on Arduino IDE.
@@ -58,22 +58,22 @@ void RimsIdent::startIdent()
 	// === IDENTIFICATION TESTS ===
 	_ui->showIdentScreen();
 	Serial.begin(9600);
-	_settedTime = 600000;
+	_settedTime = 900000;
 	_totalStoppedTime = _windowStartTime = millis();
 	_runningTime = 0;
 	Serial.println("time,cv,pv");
-	while(_runningTime <= _settedTime) // 10 minutes
+	while(_runningTime <= _settedTime) // 15 minutes
 	{
 		*(_processValPtr) = this->getTempPV();
 		_ui->setTempPV(*(_processValPtr));
 		_runningTime = millis() - _totalStoppedTime;
 		_ui->setTime((_settedTime-_runningTime)/1000);
-		if(_runningTime >= 240000)
+		if(_runningTime >= 600000)
 		{
 			*(_controlValPtr) = 0;
 			_ui->setIdentCV(0,SSRWINDOWSIZE);
 		}
-		else if(_runningTime >= 120000)
+		else if(_runningTime >= 300000)
 		{
 			*(_controlValPtr) = SSRWINDOWSIZE;
 			_ui->setIdentCV(SSRWINDOWSIZE,SSRWINDOWSIZE);

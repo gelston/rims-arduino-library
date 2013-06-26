@@ -18,7 +18,7 @@
  * It sends differents values to the SSR (0%->50%->100%->0%) and monitors
  * the resulting temperature on the
  * <a href=http://arduino.cc/en/reference/serial>serial monitor</a>.
- * Open the monitor before stating identification.
+ * Open the monitor before stating identification. It last 15 min.
  *
  * \author Francis Gagnon
  */
