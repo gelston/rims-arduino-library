@@ -26,8 +26,8 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 : _ui(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
   _processValPtr(currentTemp), _controlValPtr(ssrControl), _setPointPtr(settedTemp),
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
-  _rimsInitialized(false),
-  _pinLED(13), _PIDFilterCst(0),
+  _secondPIDSetted(false), _rimsInitialized(false),
+  _pinLED(13),
   _flowLastTime(0), _flowCurTime(0)
 {
 	_steinhartCoefs[0] = DEFAULTSTEINHART0;
@@ -36,6 +36,11 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 	_steinhartCoefs[3] = DEFAULTSTEINHART3;
 	_res1 = DEFAULTRES1;
 	_fineTuneTemp = 0;
+	for(int i=0;i<=1;i++)
+	{
+		_PIDFilterCsts[i] = 0; _setPointFilterCsts[i] = 0;
+		_kps[i] = 0; _kis[i] = 0; _kds[i] = 0;
+	}
 	_myPID.SetSampleTime(PIDSAMPLETIME);
 	_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
 	pinMode(ssrPin,OUTPUT);
@@ -79,16 +84,20 @@ void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
  * \param Ki : float. Integral gain.
  * \param Kd : float. Derivative gain.
  * \param tauFilter : float. PID output filter time constant in sec.
+ * \param batchSize : byte (default=0). 
+ *                    Specify which of the 2 regulators to setup, if needed.
  */
-void Rims::setTunningPID(double Kp, double Ki, double Kd, double tauFilter)
+void Rims::setTunningPID(double Kp, double Ki, double Kd, double tauFilter,
+                         byte batchSize)
 {
-	_myPID.SetTunings(Kp,Ki,Kd);
+	_kps[batchSize] = Kp; _kis[batchSize] = Ki; _kds[batchSize] = Kd;
 	if(tauFilter>0)
 	{
-		_PIDFilterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
+		_PIDFilterCsts[batchSize] = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
 	}
-	else _PIDFilterCst = 0;	
+	else _PIDFilterCsts[batchSize] = 0;
 	_lastPIDFilterOutput = 0;
+	_secondPIDSetted = (batchSize!=0);
 }
 
 /*!
@@ -101,14 +110,17 @@ void Rims::setTunningPID(double Kp, double Ki, double Kd, double tauFilter)
  * \f]
  *
  * \param tauFilter : float. set point filter time constant in sec.
+ * \param batchSize : byte. (default=0).
+ *                    Specify which of the 2 regulators to setup, if needed.
  */
-void Rims::setSetPointFilter(double tauFilter)
+void Rims::setSetPointFilter(double tauFilter,byte batchSize)
 {
 	if(tauFilter>0)
 	{
-		_setPointFilterCst = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
+		_setPointFilterCsts[batchSize] = \
+					exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
 	}
-	else _setPointFilterCst = 0;
+	else _setPointFilterCsts[batchSize] = 0;
 	_lastSetPointFilterOutput = 0;
 }
 
@@ -180,6 +192,8 @@ void Rims::_initialize()
 	*(_setPointPtr) = 0;
 	// === ASK TIMER ===
 	_settedTime = (unsigned long)_ui->askTime(DEFAULTTIME)*1000;
+	// === ASK BATCH SIZE ===
+    _batchSize = (_secondPIDSetted) ? _ui->askBatchSize() : 0;
 	// === PUMP SWITCHING WARN ===
 	_ui->showPumpWarning();
 	while(_ui->readKeysADC()==KEYNONE)
@@ -195,6 +209,7 @@ void Rims::_initialize()
 	_ui->setTempPV(*(_processValPtr));
 	_sumStoppedTime = true;
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
+	_myPID.SetTunings(_kps[_batchSize],_kis[_batchSize],_kds[_batchSize]);
 	_myPID.SetMode(AUTOMATIC);
 	_rimsInitialized = true;
 	_windowStartTime = _timerStartTime \
@@ -215,8 +230,8 @@ void Rims::_iterate()
 	currentTime = millis();
 	if(currentTime-_lastTimePID>=PIDSAMPLETIME)
 	{
-		*(_setPointPtr) = (1-_setPointFilterCst) * _rawSetPoint + \
-						_setPointFilterCst * _lastSetPointFilterOutput;
+		*(_setPointPtr) = (1-_setPointFilterCsts[_batchSize]) * _rawSetPoint + \
+				_setPointFilterCsts[_batchSize] * _lastSetPointFilterOutput;
 		_lastSetPointFilterOutput = *(_setPointPtr);
 		_lastTimePID = currentTime;
 	}
@@ -225,8 +240,8 @@ void Rims::_iterate()
 	// === PID FILTERING ===
 	if(_pidJustCalculated)
 	{
-		*(_controlValPtr) = (1-_PIDFilterCst) * (*_controlValPtr) + \
-							_PIDFilterCst * _lastPIDFilterOutput;
+		*(_controlValPtr) = (1-_PIDFilterCsts[_batchSize]) * (*_controlValPtr) + \
+							_PIDFilterCsts[_batchSize] * _lastPIDFilterOutput;
 		_lastPIDFilterOutput = *(_controlValPtr);
 	}
 	// === SSR CONTROL ===

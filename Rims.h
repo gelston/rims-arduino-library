@@ -47,6 +47,13 @@
 ///       is automatically shown[mSec]
 #define SCREENSWITCHTIME 10000 /// mSec
 
+///\brief Call setTunnningPID and setSetPointFilter with this keywords as
+///       final parameter for set parameters for the first regulator
+#define SIMPLEBATCH 0
+///\brief Call setTunnningPID and setSetPointFilter with this keywords as
+///       final parameter for set parameters for the second regulator
+#define	DOUBLEBATCH 1
+
 #include "Arduino.h"
 #include "utility/UIRims.h"
 #include "utility/PID_v1.h"
@@ -73,8 +80,10 @@ public:
 	void setPinLED(byte pinLED);
 	void setInterruptFlow(byte interruptFlow, float flowFactor);
 	
-	void setTunningPID(double Kp, double Ki, double Kd, double tauFilter);
-	void setSetPointFilter(double tauFilter);
+	void setTunningPID(double Kp, double Ki, double Kd, double tauFilter,
+	                   byte batchSize=SIMPLEBATCH);
+	void setSetPointFilter(double tauFilter,
+						   byte batchSize=SIMPLEBATCH);
 	
 	void run();
 	
@@ -92,48 +101,60 @@ protected:
 	
 private:
 	
-	static Rims* _rimsPtr;
-	
+	// ===GENERAL===
 	UIRims* _ui;
 	PID _myPID;
 	byte _analogPinPV;
 	byte _pinCV;
 	byte _pinLED;
 	
+	// ===STATE DATAS===
+	byte _batchSize;
+	boolean _secondPIDSetted;
 	boolean _rimsInitialized;
 	boolean _pidJustCalculated;
 	
-	double _rawSetPoint;
-	
-	double* _setPointPtr;
-	double* _processValPtr;
-	double* _controlValPtr; /// [0,SSRWINDOWSIZE]
-	
+	// ===THERMISTOR===
 	float _steinhartCoefs[4];
 	float _res1;
 	float _fineTuneTemp;
 	
-	double _PIDFilterCst;
+	// ===PID I/O===
+	double _rawSetPoint;
+	double* _setPointPtr;
+	double* _processValPtr;
+	double* _controlValPtr; /// [0,SSRWINDOWSIZE]
+	
+	// ===PID PARAMS===
+	double _kps[2];
+	double _kis[2];
+	double _kds[2];
+	
+	// ===PID FILTER===
+	double _PIDFilterCsts[2];
 	double _lastPIDFilterOutput;
 	
-	double _setPointFilterCst;
+	// ===SET POINT FILTER===
+	double _setPointFilterCsts[2];
 	double _lastSetPointFilterOutput;
 	
+	// ===TIMER===
 	unsigned long _windowStartTime;			///mSec
 	unsigned long _settedTime;				///mSec
 	unsigned long _runningTime;				///mSec
 	unsigned long _totalStoppedTime;		///mSec
 	unsigned long _timerStopTime;			///mSec
 	unsigned long _timerStartTime;			///mSec
-	unsigned long _lastScreenSwitchTime;
-	unsigned long _lastTimePID;
+	unsigned long _lastScreenSwitchTime;    ///mSec
+	unsigned long _lastTimePID;             ///mSec
 	boolean _sumStoppedTime;
 	boolean _timerElapsed;
 	
-	static void _isrFlowSensor(); ///mSec ISR for hall-effect flow sensor
+	// ===FLOW SENSOR===
+	static Rims* _rimsPtr;
+	static void _isrFlowSensor(); /// ISR for hall-effect flow sensor
 	float _flowFactor; /// freq[Hz] = flowFactor * flow[L/min]
 	float _flow;
-	
 	volatile unsigned long _flowLastTime;	///µSec
 	volatile unsigned long _flowCurTime;	///µSec
 	
