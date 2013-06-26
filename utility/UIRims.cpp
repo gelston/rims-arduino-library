@@ -295,6 +295,7 @@ void UIRims::setTempPV(float tempCelcius, boolean waitRefresh)
 			float tempFahren = _celciusToFahrenheit(tempCelcius);
 			_printFloatLCD(tempCelcius,4,1,3,1);
 			_printFloatLCD(tempFahren,3,0,10,1);
+			ring(false);
 		}
 	}
 }
@@ -360,6 +361,7 @@ void UIRims::setFlow(float flow, boolean waitRefresh)
 					_printStrLCD("\x01",15,1);
 			else if(flow<FLOWLOWBOUND) _printStrLCD("\x03",15,1);
 			else _printStrLCD("\x02",15,1);
+			ring(not((flow >= FLOWLOWBOUND) and (flow <= FLOWUPBOUND)));
 		}
 	}
 }
@@ -610,6 +612,7 @@ void UIRims::showHeaterWarning()
  */
 void UIRims::showErrorPV(String mess)
 {
+	ring(true);
 	if(_tempScreenShown)
 	{
 		if(mess.length() > 2)
