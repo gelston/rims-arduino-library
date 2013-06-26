@@ -126,7 +126,9 @@ void Rims::setSetPointFilter(double tauFilter,byte batchSize)
 
 /*!
  * \brief Set interrupt function for flow sensor.
- * \param interruptFlow : byte
+ * \param interruptFlow : byte. Interrupt pin number connected to the
+ *                        flow sensor. For more info :
+ *                        http://arduino.cc/en/Reference/attachInterrupt
  * \param flowFactor : float. Factor used to calculate flow from the
                        input frequency, i.e. :
 					   \f[
