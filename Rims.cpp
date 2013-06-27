@@ -109,6 +109,11 @@ void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
  * tauFilter=\frac{K_{c}}{K_{i}}
  * \f]
  *
+ * With this value, overshoot will be totally canceled. If you found that
+ * that with this time constant, your RIMS is too slow, my advice would be to try
+ * from 0.1 to 1 times this value. You will be able to find a good comprimise
+ * between overshoot and rapidity.
+ *
  * \param tauFilter : float. set point filter time constant in sec.
  * \param batchSize : byte. (default=0).
  *                    Specify which of the 2 regulators to setup, if needed.
