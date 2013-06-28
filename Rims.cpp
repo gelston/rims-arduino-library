@@ -354,8 +354,8 @@ double Rims::getTempPV()
 	else
 	{
 		if(_myPID.GetMode()==MANUAL) _myPID.SetMode(AUTOMATIC);
-		double vin = ((double)curTempADC*VALIM)/1024.0;
-		double resTherm = (_res1*vin)/(VALIM-vin);
+		double vin = ((double)curTempADC)/1024.0;
+		double resTherm = (_res1*vin)/(1.0-vin);
 		double logResTherm = log(resTherm);
 		double invKelvin = _steinhartCoefs[0]+\
 						_steinhartCoefs[1]*logResTherm+\

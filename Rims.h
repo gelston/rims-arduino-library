@@ -20,9 +20,6 @@
 #ifndef Rims_h
 #define Rims_h
 
-///\brief ADC max value [volts]
-#define VALIM 5 
-
 ///\brief [mSec]
 #define PIDSAMPLETIME 1000
 ///\brief solid state relay window size [mSec]
