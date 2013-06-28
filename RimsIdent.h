@@ -7,6 +7,21 @@
 #ifndef RimsIdent_h
 #define RimsIdent_h
 
+///\brief Sample time for identification [mSec]
+#define IDENTSAMPLETIME 1000
+
+///\brief Total length of the identification procedure [mSec]
+#define IDENTLENGTH 1800000
+
+#define STEP1TIME 0
+#define STEP1VALUE 0.5*SSRWINDOWSIZE
+
+#define STEP2TIME 600000
+#define STEP2VALUE SSRWINDOWSIZE
+
+#define STEP3TIME 1200000
+#define STEP3VALUE 0
+
 #include "Arduino.h"
 #include "Rims.h"
 #include "utility/UIRimsIdent.h"
@@ -34,6 +49,8 @@ public:
 private :
 	
 	UIRimsIdent* _ui;
+	
+	unsigned long _lastTimeSerial;
 	
 };
 

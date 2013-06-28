@@ -229,6 +229,9 @@ void Rims::_initialize()
  */
 void Rims::_iterate()
 {
+	// !!!!!!!!!!!!! TODO !!!!!!!!!!!!!!
+	// better timing like identRimsBasic (not always refresh *(_processValPtr))
+	// (not always update Flow)
 	unsigned long currentTime = millis();
 	// === READ TEMPERATURE/FLOW ===
 	*(_processValPtr) = getTempPV();

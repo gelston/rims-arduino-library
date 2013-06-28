@@ -46,6 +46,7 @@ RimsIdent::RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm,
  */
 void RimsIdent::startIdent()
 {
+	unsigned long currentTime;
 	// === PUMP SWITCHING ===
 	_ui->showPumpWarning();
 	while(_ui->readKeysADC()==KEYNONE)
@@ -56,39 +57,36 @@ void RimsIdent::startIdent()
 	_ui->showHeaterWarning();
 	while(_ui->readKeysADC()==KEYNONE) continue;
 	// === IDENTIFICATION TESTS ===
-	_ui->showIdentScreen();
 	Serial.begin(9600);
-	_settedTime = 1800000;
-	_totalStoppedTime = _windowStartTime = millis();
-	_runningTime = 0;
 	Serial.println("time,cv,pv");
-	while(_runningTime <= _settedTime) // 15 minutes
+	_ui->showIdentScreen();
+	_settedTime = IDENTLENGTH; // 15 minutes
+	currentTime = millis();
+	_totalStoppedTime = _windowStartTime = currentTime;
+	_runningTime = 0;
+	_lastTimeSerial = currentTime - IDENTSAMPLETIME;
+	while(_runningTime <= _settedTime)
 	{
-		*(_processValPtr) = this->getTempPV();
-		_ui->setTempPV(*(_processValPtr));
-		_runningTime = millis() - _totalStoppedTime;
-		_ui->setTime((_settedTime-_runningTime)/1000);
-		if(_runningTime >= 1200000)
-		{
-			*(_controlValPtr) = 0;
-			_ui->setIdentCV(0,SSRWINDOWSIZE);
-		}
-		else if(_runningTime >= 600000)
-		{
-			*(_controlValPtr) = SSRWINDOWSIZE;
-			_ui->setIdentCV(SSRWINDOWSIZE,SSRWINDOWSIZE);
-		}
-		else
-		{
-			*(_controlValPtr) = 0.5*SSRWINDOWSIZE;
-			_ui->setIdentCV(0.5 * SSRWINDOWSIZE, SSRWINDOWSIZE);
-		}
+		currentTime = millis();
+		_runningTime = currentTime - _totalStoppedTime;
+		if(_runningTime >= STEP3TIME) *(_controlValPtr) = STEP3VALUE;
+		else if(_runningTime >= STEP2TIME) *(_controlValPtr) = STEP2VALUE;
+		else if(_runningTime >= STEP1TIME) *(_controlValPtr) = STEP1VALUE;
 		_refreshSSR();
-		Serial.print((double)_runningTime/1000.0,3);
-		Serial.print(",");
-		Serial.print(*(_controlValPtr),0);
-		Serial.print(",");
-		Serial.println(*(_processValPtr),15);
+		if(currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
+		{
+			///\bug 00% lcd sometimes when PV changes ?!?!
+			*(_processValPtr) = this->getTempPV();
+			Serial.print((double)_runningTime/1000.0,3);
+			Serial.print(",");
+			Serial.print(*(_controlValPtr),0);
+			Serial.print(",");
+			Serial.println(*(_processValPtr),15);
+			_ui->setIdentCV(*(_controlValPtr),SSRWINDOWSIZE);
+			_ui->setTempPV(*(_processValPtr));
+			_ui->setTime((_settedTime-_runningTime)/1000);
+			_lastTimeSerial = currentTime;
+		}
 	}
 	_ui->showEnd();
 }
