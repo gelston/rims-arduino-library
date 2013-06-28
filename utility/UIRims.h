@@ -17,6 +17,7 @@
 #define LCDROWS 2
 
 /// \brief Minimal time before refreshing LCD text [mSec]
+/// \bug sometimes, seconds refresh is skipped
 #define LCDREFRESHTIME 1000 // mSec
 /// \brief Software key debounce time [mSec]
 #define KEYDEBOUNCETIME 15
@@ -63,7 +64,7 @@ public:
 	// === VARIABLE SETTER ===
 	void setTempSP(float tempCelcius, boolean waitRefresh = true);
 	void setTempPV(float tempCelcius, boolean waitRefresh = true);
-	void setTime(unsigned int timeSec, boolean waitRefresh = true);
+	virtual void setTime(unsigned int timeSec, boolean waitRefresh = true);
 	void setFlow(float flow, boolean waitRefresh = true); //liter/min
 	
 	// === KEYS READER ===

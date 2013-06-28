@@ -92,7 +92,7 @@ protected:
 	virtual void _initialize();
 	virtual void _iterate();
 	
-	void _refreshTimer();
+	void _refreshTimer(boolean verifyTemp = true);
 	void _refreshDisplay();
 	void _refreshSSR();
 	
@@ -136,6 +136,7 @@ private:
 	double _lastSetPointFilterOutput;
 	
 	// ===TIMER===
+	unsigned long _currentTime ;            ///mSec
 	unsigned long _windowStartTime;			///mSec
 	unsigned long _settedTime;				///mSec
 	unsigned long _runningTime;				///mSec

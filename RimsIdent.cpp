@@ -70,6 +70,7 @@ void RimsIdent::_initialize()
 	Serial.println("time,cv,pv");
 	_ui->showIdentScreen();
 	_settedTime = IDENTLENGTH; // 15 minutes
+	_sumStoppedTime = false;
 	currentTime = millis();
 	_totalStoppedTime = _windowStartTime = currentTime;
 	_runningTime = 0;
@@ -81,15 +82,15 @@ void RimsIdent::_initialize()
  */
 void RimsIdent::_iterate()
 {
-	unsigned long currentTime = millis();
-	_runningTime = currentTime - _totalStoppedTime;
+	_refreshTimer(false);
 	if(_runningTime >= STEP3TIME) *(_controlValPtr) = STEP3VALUE;
 	else if(_runningTime >= STEP2TIME) *(_controlValPtr) = STEP2VALUE;
 	else if(_runningTime >= STEP1TIME) *(_controlValPtr) = STEP1VALUE;
 	_refreshSSR();
-	if(currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
+	if(_currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
 	{
-		///  \todo : better handling of unconncted thermistor
+		///  \todo : better handling of unconnected thermistor
+		///  \todo : use std screen of UIRims
 		*(_processValPtr) = this->getTempPV();
 		Serial.print((double)_runningTime/1000.0,3);
 		Serial.print(",");
@@ -97,8 +98,7 @@ void RimsIdent::_iterate()
 		Serial.print(",");
 		Serial.println(*(_processValPtr),15);
 		_ui->setIdentCV(*(_controlValPtr),SSRWINDOWSIZE);
-		_ui->setTempPV(*(_processValPtr));
-		_ui->setTime((_settedTime-_runningTime)/1000);
-		_lastTimeSerial = currentTime;
+		_refreshDisplay();
+		_lastTimeSerial = _currentTime;
 	}
 }
