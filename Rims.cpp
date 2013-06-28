@@ -166,10 +166,10 @@ void Rims::setPinLED(byte pinLED)
  */
 void Rims::run()
 {
-	if(not _rimsInitialized) this->_initialize();
+	if(not _rimsInitialized) _initialize();
 	else
 	{
-		if(not _timerElapsed) this->_iterate();
+		if(not _timerElapsed) _iterate();
 		else
 		{
 			_myPID.SetMode(MANUAL);
@@ -229,9 +229,9 @@ void Rims::_initialize()
  */
 void Rims::_iterate()
 {
-	// !!!!!!!!!!!!! TODO !!!!!!!!!!!!!!
-	// better timing like identRimsBasic (not always refresh *(_processValPtr))
-	// (not always update Flow)
+	/// \todo better timing like identRimsBasic 
+	///      (not always refresh *(_processValPtr))
+	///      (not always update Flow)
 	unsigned long currentTime = millis();
 	// === READ TEMPERATURE/FLOW ===
 	*(_processValPtr) = getTempPV();
@@ -345,11 +345,8 @@ double Rims::getTempPV()
 	int curTempADC = analogRead(_analogPinPV);
 	if(curTempADC >= 1023)
 	{
-		if(_myPID.GetMode()==AUTOMATIC)
-		{
-			_myPID.SetMode(MANUAL);
-			*(_controlValPtr) = 0;
-		}
+		if(_myPID.GetMode()==AUTOMATIC) _myPID.SetMode(MANUAL);
+		*(_controlValPtr) = 0;
 	}
 	else
 	{

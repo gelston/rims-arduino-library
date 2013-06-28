@@ -27,10 +27,6 @@ run	KEYWORD2
 analogInToCelcius	KEYWORD2
 getFlow	KEYWORD2
 
-### IdentRims ###
-
-startIdent	KEYWORD2
-
 ### UIRims ###
 
 showTempScreen	KEYWORD2

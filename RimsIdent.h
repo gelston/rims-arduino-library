@@ -44,7 +44,12 @@ public:
 	RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm, byte ssrPin, 
 		 double* currentTemp, double* ssrControl, double* settedTemp);
 	
-	void startIdent();
+	void run();
+	
+protected : 
+
+	void _initialize();
+	void _iterate();
 	
 private :
 	
