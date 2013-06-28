@@ -89,8 +89,8 @@ public:
 	
 protected:
 	
-	void _initialize();
-	void _iterate();
+	virtual void _initialize();
+	virtual void _iterate();
 	
 	void _refreshTimer();
 	void _refreshDisplay();

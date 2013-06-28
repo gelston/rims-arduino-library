@@ -31,7 +31,7 @@ RimsIdent::RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm,
  * \brief Start identification procedure
  *
  * It will last 30 minutes. Step order is :
- * -# 0-50% at t = 0 sec
+ * -# 0-STEP1VALUE% at t = STEP1TIME sec
  * -# 50%-100% at t = 10 min
  * -# 100%-0% at t = 20 min
  * -# end at t = 30 min
@@ -44,7 +44,15 @@ RimsIdent::RimsIdent(UIRimsIdent* uiRimsIdent, byte analogPinTherm,
  * http://www.controlguru.com/wp/p87.html
  *
  */
-void RimsIdent::startIdent()
+void RimsIdent::run()
+{
+	Rims::run();
+}
+
+/*!
+ * \brief Initialize RimsIdent before iteration
+ */
+void RimsIdent::_initialize()
 {
 	unsigned long currentTime;
 	// === PUMP SWITCHING ===
@@ -56,6 +64,7 @@ void RimsIdent::startIdent()
 	// === HEATER SWITCHING ===
 	_ui->showHeaterWarning();
 	while(_ui->readKeysADC()==KEYNONE) continue;
+	_rimsInitialized = true;
 	// === IDENTIFICATION TESTS ===
 	Serial.begin(9600);
 	Serial.println("time,cv,pv");
@@ -65,28 +74,31 @@ void RimsIdent::startIdent()
 	_totalStoppedTime = _windowStartTime = currentTime;
 	_runningTime = 0;
 	_lastTimeSerial = currentTime - IDENTSAMPLETIME;
-	while(_runningTime <= _settedTime)
+}
+
+/*!
+ * \brief Iteration for RimsIdent instance
+ */
+void RimsIdent::_iterate()
+{
+	unsigned long currentTime = millis();
+	_runningTime = currentTime - _totalStoppedTime;
+	if(_runningTime >= STEP3TIME) *(_controlValPtr) = STEP3VALUE;
+	else if(_runningTime >= STEP2TIME) *(_controlValPtr) = STEP2VALUE;
+	else if(_runningTime >= STEP1TIME) *(_controlValPtr) = STEP1VALUE;
+	_refreshSSR();
+	if(currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
 	{
-		currentTime = millis();
-		_runningTime = currentTime - _totalStoppedTime;
-		if(_runningTime >= STEP3TIME) *(_controlValPtr) = STEP3VALUE;
-		else if(_runningTime >= STEP2TIME) *(_controlValPtr) = STEP2VALUE;
-		else if(_runningTime >= STEP1TIME) *(_controlValPtr) = STEP1VALUE;
-		_refreshSSR();
-		if(currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
-		{
-			///\bug 00% lcd sometimes when PV changes ?!?!
-			*(_processValPtr) = this->getTempPV();
-			Serial.print((double)_runningTime/1000.0,3);
-			Serial.print(",");
-			Serial.print(*(_controlValPtr),0);
-			Serial.print(",");
-			Serial.println(*(_processValPtr),15);
-			_ui->setIdentCV(*(_controlValPtr),SSRWINDOWSIZE);
-			_ui->setTempPV(*(_processValPtr));
-			_ui->setTime((_settedTime-_runningTime)/1000);
-			_lastTimeSerial = currentTime;
-		}
+		///  \todo : better handling of unconncted thermistor
+		*(_processValPtr) = this->getTempPV();
+		Serial.print((double)_runningTime/1000.0,3);
+		Serial.print(",");
+		Serial.print(*(_controlValPtr),0);
+		Serial.print(",");
+		Serial.println(*(_processValPtr),15);
+		_ui->setIdentCV(*(_controlValPtr),SSRWINDOWSIZE);
+		_ui->setTempPV(*(_processValPtr));
+		_ui->setTime((_settedTime-_runningTime)/1000);
+		_lastTimeSerial = currentTime;
 	}
-	_ui->showEnd();
 }
