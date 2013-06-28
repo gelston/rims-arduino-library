@@ -17,7 +17,7 @@
 #define LCDROWS 2
 
 /// \brief Minimal time before refreshing LCD text [mSec]
-#define LCDREFRESHTIME 500 // mSec
+#define LCDREFRESHTIME 1000 // mSec
 /// \brief Software key debounce time [mSec]
 #define KEYDEBOUNCETIME 15
 
