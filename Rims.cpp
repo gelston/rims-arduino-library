@@ -219,7 +219,7 @@ void Rims::_initialize()
 	_myPID.SetTunings(_kps[_batchSize],_kis[_batchSize],_kds[_batchSize]);
 	_myPID.SetMode(AUTOMATIC);
 	_rimsInitialized = true;
-	_windowStartTime = _timerStartTime \
+	_windowStartTime = _timerStartTime = _currentTime \
 					 = _lastScreenSwitchTime = millis();
 	_lastTimePID = _timerStartTime - PIDSAMPLETIME;
 }
@@ -232,18 +232,18 @@ void Rims::_iterate()
 	/// \todo better timing like identRimsBasic 
 	///      (not always refresh *(_processValPtr))
 	///      (not always update Flow)
-	unsigned long currentTime = millis();
+	_currentTime = millis();
 	// === READ TEMPERATURE/FLOW ===
 	*(_processValPtr) = getTempPV();
 	_flow = this->getFlow();
 	// === SETPOINT FILTERING ===
-	currentTime = millis();
-	if(currentTime-_lastTimePID>=PIDSAMPLETIME)
+	_currentTime = millis();
+	if(_currentTime-_lastTimePID>=PIDSAMPLETIME)
 	{
 		*(_setPointPtr) = (1-_setPointFilterCsts[_batchSize]) * _rawSetPoint + \
 				_setPointFilterCsts[_batchSize] * _lastSetPointFilterOutput;
 		_lastSetPointFilterOutput = *(_setPointPtr);
-		_lastTimePID = currentTime;
+		_lastTimePID = _currentTime;
 	}
 	// === PID COMPUTE ===
 	_pidJustCalculated = _myPID.Compute();
@@ -261,9 +261,9 @@ void Rims::_iterate()
 	// === REFRESH DISPLAY ===
 	_refreshDisplay();
 	// === KEY CHECK ===
-	currentTime = millis();
-	if((_ui->readKeysADC()!=KEYNONE and currentTime-_lastScreenSwitchTime>=500)\
-	    or currentTime-_lastScreenSwitchTime >= SCREENSWITCHTIME)
+	_currentTime = millis();
+	if((_ui->readKeysADC()!=KEYNONE and _currentTime-_lastScreenSwitchTime>=500)\
+	    or _currentTime-_lastScreenSwitchTime >= SCREENSWITCHTIME)
 	{
 		_ui->switchScreen();
 		_lastScreenSwitchTime = millis();
@@ -276,10 +276,10 @@ void Rims::_iterate()
  *
  * If error on temperature >= MAXTEMPVAR, timer will not count down.
  */
-void Rims::_refreshTimer()
+void Rims::_refreshTimer(boolean verifyTemp)
 {
-	unsigned long currentTime = millis();
-	if(abs(_rawSetPoint - *(_processValPtr)) <= MAXTEMPVAR)
+	_currentTime = millis();
+	if(abs(_rawSetPoint - *(_processValPtr)) <= MAXTEMPVAR or not verifyTemp)
 	{
 		if(_sumStoppedTime)
 		{
@@ -287,12 +287,12 @@ void Rims::_refreshTimer()
 			_totalStoppedTime += (_timerStartTime - 
 										_timerStopTime);
 		}
-		_runningTime = currentTime - _totalStoppedTime;
-		_timerStopTime = currentTime;
+		_runningTime = _currentTime - _totalStoppedTime;
+		_timerStopTime = _currentTime;
 	}
 	else
 	{
-		_timerStartTime = currentTime;
+		_timerStartTime = _currentTime;
 		if(not _sumStoppedTime) _sumStoppedTime = true;
 	}
 }
