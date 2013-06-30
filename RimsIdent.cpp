@@ -104,4 +104,5 @@ void RimsIdent::_iterate()
 		_refreshDisplay();
 		_lastTimeSerial = _currentTime;
 	}
+	if(_runningTime >= _settedTime) _timerElapsed = true;
 }
