@@ -67,7 +67,7 @@ void RimsIdent::_initialize()
 	_rimsInitialized = true;
 	// === IDENTIFICATION TESTS ===
 	Serial.begin(9600);
-	Serial.println("time,cv,pv");
+	Serial.println("time,cv,pv,flow");
 	_ui->showIdentScreen();
 	_settedTime = IDENTLENGTH; // 15 minutes
 	_sumStoppedTime = false;
@@ -92,11 +92,14 @@ void RimsIdent::_iterate()
 		///  \todo : better handling of unconnected thermistor
 		///  \todo : use std screen of UIRims
 		*(_processValPtr) = this->getTempPV();
+		_flow = this->getFlow();
 		Serial.print((double)_runningTime/1000.0,3);
 		Serial.print(",");
 		Serial.print(*(_controlValPtr),0);
 		Serial.print(",");
-		Serial.println(*(_processValPtr),15);
+		Serial.print(*(_processValPtr),15);
+		Serial.print(",");
+		Serial.println(_flow,2);
 		_ui->setIdentCV(*(_controlValPtr),SSRWINDOWSIZE);
 		_refreshDisplay();
 		_lastTimeSerial = _currentTime;
