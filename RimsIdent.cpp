@@ -89,7 +89,6 @@ void RimsIdent::_iterate()
 	_refreshSSR();
 	if(_currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
 	{
-		///  \todo : better handling of unconnected thermistor
 		///  \todo : use std screen of UIRims
 		*(_processValPtr) = this->getTempPV();
 		_flow = this->getFlow();

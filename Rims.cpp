@@ -26,7 +26,7 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 : _ui(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
   _processValPtr(currentTemp), _controlValPtr(ssrControl), _setPointPtr(settedTemp),
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
-  _secondPIDSetted(false), _rimsInitialized(false),
+  _secondPIDSetted(false), _stopOnCriticalFlow(false), _rimsInitialized(false),
   _pinLED(13),
   _flowLastTime(0), _flowCurTime(0)
 {
@@ -139,12 +139,19 @@ void Rims::setSetPointFilter(double tauFilter,byte batchSize)
 					   \f[
 					   freq[Hz] = flowFactor * flow[L/min]
 					   \f]
+ * \param stopOnCriticalFlow : boolean (default=true). If true, on getFlow() call,
+                               flow is <= CRITICALFLOW, heater is turn off. Else
+							   flow mesurment doesn't influence heater action.
+							   
+ *                             
  */
-void Rims::setInterruptFlow(byte interruptFlow, float flowFactor)
+void Rims::setInterruptFlow(byte interruptFlow, float flowFactor,
+							boolean stopOnCriticalFlow)
 {
 	Rims::_rimsPtr = this;
 	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
 	_flowFactor = flowFactor;
+	_stopOnCriticalFlow = stopOnCriticalFlow;
 }
 
 /*!
@@ -381,6 +388,15 @@ float Rims::getFlow()
 	if(_flowCurTime == 0) flow = 0.0;
 	else if(micros() - _flowCurTime >= 5e06) flow = 0.0;
 	else flow = (1e06 / (_flowFactor* (_flowCurTime - _flowLastTime)));
+	if(_stopOnCriticalFlow)
+	{
+		if(flow <= CRITICALFLOW)
+		{
+			if(_myPID.GetMode()==AUTOMATIC) _myPID.SetMode(MANUAL);
+			*(_controlValPtr) = 0;
+		}
+		else if(_myPID.GetMode()==MANUAL) _myPID.SetMode(AUTOMATIC);
+	}
 	return flow;
 }
 
