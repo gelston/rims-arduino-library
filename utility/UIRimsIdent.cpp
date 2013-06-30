@@ -51,11 +51,10 @@ void UIRimsIdent::setIdentCV(unsigned long controlValue,
  * wait LCDREFRESHTIME mSec before updating _lcd.
  *
  * \param timeSec : unsigned int. current CV between 0 to ssrWindow
- * \param waitRefresh : boolean. ssrWindow size in mSec.
  */
-void UIRimsIdent::setTime(unsigned int timeSec, boolean waitRefresh)
+void UIRimsIdent::setTime(unsigned int timeSec)
 {
 	_tempScreenShown = false;
-	UIRims::setTime(timeSec,waitRefresh);
+	UIRims::setTime(timeSec);
 	_tempScreenShown = true;
 }

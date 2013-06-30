@@ -24,7 +24,7 @@ public:
 	void showIdentScreen();
 	
 	void setIdentCV(unsigned long controlValue, unsigned long ssrWindow);
-	void setTime(unsigned int timeSec, boolean waitRefresh = true);
+	void setTime(unsigned int timeSec);
 };
 
 #endif
