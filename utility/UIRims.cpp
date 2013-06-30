@@ -72,8 +72,8 @@ void UIRims::showTempScreen()
 	_lcd->clear();
 	_printStrLCD("SP:00.0\xdf""C(000\xdf""F)",0,0);
 	_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
-	this->setTempSP(_tempSP,false);
-	this->setTempPV(_tempPV,false);
+	this->setTempSP(_tempSP);
+	this->setTempPV(_tempPV);
 }
 
 /*!
@@ -85,8 +85,8 @@ void UIRims::showTimeFlowScreen()
 	_lcd->clear();
 	_printStrLCD("time:000m00s    ",0 ,0);
 	_printStrLCD(String("flow:00.0L/min \x03"),0,1);
-	this->setTime(_time,false);
-	this->setFlow(_flow,false);
+	this->setTime(_time);
+	this->setFlow(_flow);
 }
 
 /*!
@@ -245,26 +245,15 @@ float UIRims::_celciusToFahrenheit(float celcius)
  * it will be memorized for when it will be shown.
  *
  * \param tempCelcius : float.
- * \param waitRefresh : boolean. If true (default),
- *        it will wait LCDREFRESHTIME mSec before updating _lcd
  */
-void UIRims::setTempSP(float tempCelcius, boolean waitRefresh)
+void UIRims::setTempSP(float tempCelcius)
 {
 	_tempSP = tempCelcius;
 	if(_tempScreenShown)
 	{
-		boolean refreshLCD = false;
-		unsigned long currentTime = millis();
-		if(not waitRefresh)	refreshLCD = true;
-		else if(currentTime - _lastRefreshSP >= LCDREFRESHTIME) \
-				refreshLCD = true;
-		if(refreshLCD)
-		{
-			_lastRefreshSP = currentTime;
-			float tempFahren = _celciusToFahrenheit(tempCelcius);
-			_printFloatLCD(tempCelcius,4,1,3,0);
-			_printFloatLCD(tempFahren,3,0,10,0);
-		}
+		float tempFahren = _celciusToFahrenheit(tempCelcius);
+		_printFloatLCD(tempCelcius,4,1,3,0);
+		_printFloatLCD(tempFahren,3,0,10,0);
 	}
 }
 
@@ -276,27 +265,16 @@ void UIRims::setTempSP(float tempCelcius, boolean waitRefresh)
  * it will be memorized for when it will be shown.
  *
  * \param tempCelcius : float.
- * \param waitRefresh : boolean. If true (default),
- *        it will wait LCDREFRESHTIME mSec before updating _lcd
  */
-void UIRims::setTempPV(float tempCelcius, boolean waitRefresh)
+void UIRims::setTempPV(float tempCelcius)
 {
 	_tempPV = tempCelcius;
 	if(_tempScreenShown)
 	{
-		boolean refreshLCD = false;
-		unsigned long currentTime = millis();
-		if(not waitRefresh)	refreshLCD = true;
-		else if(currentTime - _lastRefreshPV >= LCDREFRESHTIME) \
-				refreshLCD = true;
-		if(refreshLCD)
-		{
-			_lastRefreshPV = currentTime;
-			float tempFahren = _celciusToFahrenheit(tempCelcius);
-			_printFloatLCD(tempCelcius,4,1,3,1);
-			_printFloatLCD(tempFahren,3,0,10,1);
-			ring(false);
-		}
+		float tempFahren = _celciusToFahrenheit(tempCelcius);
+		_printFloatLCD(tempCelcius,4,1,3,1);
+		_printFloatLCD(tempFahren,3,0,10,1);
+		ring(false);
 	}
 }
 
@@ -308,27 +286,16 @@ void UIRims::setTempPV(float tempCelcius, boolean waitRefresh)
  * it will be memorized for when it will be shown.
  *
  * \param timeSec : unsigned int.
- * \param waitRefresh : boolean. If true (default),
- *        it will wait LCDREFRESHTIME mSec before updating _lcd
  */
-void UIRims::setTime(unsigned int timeSec, boolean waitRefresh)
+void UIRims::setTime(unsigned int timeSec)
 {
 	_time = timeSec;
 	if(not _tempScreenShown)
 	{
-		boolean refreshLCD = false;
-		unsigned long currentTime = millis();
-		if(not waitRefresh)	refreshLCD = true;
-		else if(currentTime - _lastRefreshTime >= LCDREFRESHTIME) \
-				refreshLCD = true;
-		if(refreshLCD)
-		{
-			_lastRefreshTime = currentTime;
-			int minutes = timeSec / 60;
-			int seconds = timeSec % 60;
-			_printFloatLCD(minutes,3,0,5,0);
-			_printFloatLCD(seconds,2,0,9,0);
-		}
+		int minutes = timeSec / 60;
+		int seconds = timeSec % 60;
+		_printFloatLCD(minutes,3,0,5,0);
+		_printFloatLCD(seconds,2,0,9,0);
 	}
 }
 
@@ -340,29 +307,18 @@ void UIRims::setTime(unsigned int timeSec, boolean waitRefresh)
  * it will be memorized for when it will be shown.
  *
  * \param flow : float.
- * \param waitRefresh : boolean. If true (default),
- *        it will wait LCDREFRESHTIME mSec before updating _lcd
  */
-void UIRims::setFlow(float flow, boolean waitRefresh)
+void UIRims::setFlow(float flow)
 {
 	_flow = flow;
 	if(not _tempScreenShown)
 	{
-		boolean refreshLCD = false;
-		unsigned long currentTime = millis();
-		if(not waitRefresh)	refreshLCD = true;
-		else if(currentTime - _lastRefreshFlow >= LCDREFRESHTIME) \
-				refreshLCD = true;
-		if(refreshLCD)
-		{
-			_lastRefreshFlow = currentTime;
-			_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
-			if(flow>=FLOWLOWBOUND and flow<=FLOWUPBOUND) \
-					_printStrLCD("\x01",15,1);
-			else if(flow<FLOWLOWBOUND) _printStrLCD("\x03",15,1);
-			else _printStrLCD("\x02",15,1);
-			ring(not((flow >= FLOWLOWBOUND) and (flow <= FLOWUPBOUND)));
-		}
+		_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
+		if(flow>=FLOWLOWBOUND and flow<=FLOWUPBOUND) \
+				_printStrLCD("\x01",15,1);
+		else if(flow<FLOWLOWBOUND) _printStrLCD("\x03",15,1);
+		else _printStrLCD("\x02",15,1);
+		ring(not((flow >= FLOWLOWBOUND) and (flow <= FLOWUPBOUND)));
 	}
 }
 
@@ -409,8 +365,8 @@ float UIRims::_incDecValue(float value,byte dotPosition, boolean increase,
 	}
 	constrainedRes = (constrain(res,lowerBound,upperBound)!= res) ? \
 	                 (value) : (res);
-	if(not timeFormat) this->setTempSP(constrainedRes,false);
-	else this->setTime(constrainedRes,false);
+	if(not timeFormat) this->setTempSP(constrainedRes);
+	else this->setTime(constrainedRes);
 	return constrainedRes;
 }
 
@@ -465,8 +421,8 @@ float UIRims::_askValue(byte begin, byte end,
 {
 	boolean valSelected = false;
 	float value = defaultVal;
-	timeFormat ? this->setTime(defaultVal,false) : \
-	             this->setTempSP(defaultVal,false);
+	timeFormat ? this->setTime(defaultVal) : \
+	             this->setTempSP(defaultVal);
 	_setCursorPosition(dotPosition-1,row);
 	_lcd->blink();
 	_waitTime(500);

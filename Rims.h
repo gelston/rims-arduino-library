@@ -20,7 +20,8 @@
 #ifndef Rims_h
 #define Rims_h
 
-///\brief [mSec]
+///\brief Sample time for PID. Same time used
+///       for LCD refresh rate and data log rate [mSec]
 #define PIDSAMPLETIME 1000
 ///\brief solid state relay window size [mSec]
 #define SSRWINDOWSIZE 5000
@@ -109,7 +110,6 @@ private:
 	byte _batchSize;
 	boolean _secondPIDSetted;
 	boolean _rimsInitialized;
-	boolean _pidJustCalculated;
 	
 	// ===THERMISTOR===
 	float _steinhartCoefs[4];
@@ -136,9 +136,10 @@ private:
 	double _lastSetPointFilterOutput;
 	
 	// ===TIMER===
-	unsigned long _currentTime ;            ///mSec
-	unsigned long _windowStartTime;			///mSec
+	unsigned long _currentTime;             ///mSec
 	unsigned long _settedTime;				///mSec
+	unsigned long _rimsStartTime;           ///mSec
+	unsigned long _windowStartTime;			///mSec
 	unsigned long _runningTime;				///mSec
 	unsigned long _totalStoppedTime;		///mSec
 	unsigned long _timerStopTime;			///mSec

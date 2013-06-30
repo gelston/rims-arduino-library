@@ -193,7 +193,7 @@ void Rims::run()
  */
 void Rims::_initialize()
 {
-	_timerElapsed = false, _pidJustCalculated = true;
+	_timerElapsed = false;
 	// === ASK SETPOINT ===
 	_rawSetPoint = _ui->askSetPoint(DEFAULTSP);
 	*(_setPointPtr) = 0;
@@ -216,12 +216,14 @@ void Rims::_initialize()
 	_ui->setTempPV(*(_processValPtr));
 	_sumStoppedTime = true;
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
+	Serial.begin(9600);
+	Serial.println("time,sp,cv,pv,flow");
 	_myPID.SetTunings(_kps[_batchSize],_kis[_batchSize],_kds[_batchSize]);
 	_myPID.SetMode(AUTOMATIC);
 	_rimsInitialized = true;
-	_windowStartTime = _timerStartTime = _currentTime \
-					 = _lastScreenSwitchTime = millis();
-	_lastTimePID = _timerStartTime - PIDSAMPLETIME;
+	_currentTime = _windowStartTime = _timerStartTime = _rimsStartTime \
+				 = _lastScreenSwitchTime = millis();
+	_lastTimePID = _currentTime - PIDSAMPLETIME;
 }
 
 /*!
@@ -229,44 +231,51 @@ void Rims::_initialize()
  */
 void Rims::_iterate()
 {
-	/// \todo better timing like identRimsBasic 
-	///      (not always refresh *(_processValPtr))
-	///      (not always update Flow)
-	_currentTime = millis();
-	// === READ TEMPERATURE/FLOW ===
-	*(_processValPtr) = getTempPV();
-	_flow = this->getFlow();
-	// === SETPOINT FILTERING ===
+	/// \todo better timing like identRimsBasic :
+	///       # not always refresh *(_processValPtr)
+	///       # not always update Flow
+	///       # refresh LCD here and not in UIRims
 	_currentTime = millis();
 	if(_currentTime-_lastTimePID>=PIDSAMPLETIME)
 	{
+		// === READ TEMPERATURE/FLOW ===
+		*(_processValPtr) = getTempPV();
+		_flow = this->getFlow();
+		// === SETPOINT FILTERING ===
 		*(_setPointPtr) = (1-_setPointFilterCsts[_batchSize]) * _rawSetPoint + \
 				_setPointFilterCsts[_batchSize] * _lastSetPointFilterOutput;
 		_lastSetPointFilterOutput = *(_setPointPtr);
-		_lastTimePID = _currentTime;
-	}
-	// === PID COMPUTE ===
-	_pidJustCalculated = _myPID.Compute();
-	// === PID FILTERING ===
-	if(_pidJustCalculated)
-	{
+		// === PID COMPUTE ===
+		_myPID.Compute();
+		// === PID FILTERING ===
 		*(_controlValPtr) = (1-_PIDFilterCsts[_batchSize]) * (*_controlValPtr) + \
 							_PIDFilterCsts[_batchSize] * _lastPIDFilterOutput;
 		_lastPIDFilterOutput = *(_controlValPtr);
+		// === SSR CONTROL ===
+		_refreshSSR();
+		// === TIME REMAINING ===
+		_refreshTimer();
+		// === REFRESH DISPLAY ===
+		_refreshDisplay();
+		// === DATA LOG ===
+		Serial.print((double)(_currentTime-_rimsStartTime)/1000.0,3);
+		Serial.print(",");
+		Serial.print(_rawSetPoint);
+		Serial.print(",");
+		Serial.print(*(_controlValPtr),0);
+		Serial.print(",");
+		Serial.print(*(_processValPtr),15);
+		Serial.print(",");
+		Serial.println(_flow,2);
+		_lastTimePID = _currentTime;
 	}
-	// === SSR CONTROL ===
-	_refreshSSR();
-	// === TIME REMAINING ===
-	_refreshTimer();
-	// === REFRESH DISPLAY ===
-	_refreshDisplay();
 	// === KEY CHECK ===
 	_currentTime = millis();
 	if((_ui->readKeysADC()!=KEYNONE and _currentTime-_lastScreenSwitchTime>=500)\
 	    or _currentTime-_lastScreenSwitchTime >= SCREENSWITCHTIME)
 	{
 		_ui->switchScreen();
-		_lastScreenSwitchTime = millis();
+		_lastScreenSwitchTime = _currentTime;
 	}
 	if(_runningTime >= _settedTime) _timerElapsed = true;
 }
