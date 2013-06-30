@@ -51,6 +51,9 @@
 ///\brief Call setTunnningPID and setSetPointFilter with this keywords as
 ///       final parameter for set parameters for the second regulator
 #define	DOUBLEBATCH 1
+///\brief If _stopOnCriticalFlow is activited, heater will be turn off
+///       if flow is <= than this value.
+#define CRITICALFLOW 0.5
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
@@ -76,7 +79,8 @@ public:
 
 	void setThermistor(float steinhartCoefs[],float res1, float fineTune = 0);
 	void setPinLED(byte pinLED);
-	void setInterruptFlow(byte interruptFlow, float flowFactor);
+	void setInterruptFlow(byte interruptFlow, float flowFactor, 
+					      boolean stopOnCriticalFlow = true);
 	
 	void setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 	                   byte batchSize=SIMPLEBATCH);
@@ -109,6 +113,7 @@ private:
 	// ===STATE DATAS===
 	byte _batchSize;
 	boolean _secondPIDSetted;
+	boolean _stopOnCriticalFlow;
 	boolean _rimsInitialized;
 	
 	// ===THERMISTOR===
