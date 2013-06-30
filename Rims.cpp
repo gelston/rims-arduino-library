@@ -228,13 +228,13 @@ void Rims::_initialize()
 
 /*!
  * \brief Main method called for temperature regulation at each iteration
+ * 
+ * At each PID calculation (at each PIDSAMPLETIME sec), datas is
+ * sent over Serial communication for logging purpose.
+ *
  */
 void Rims::_iterate()
 {
-	/// \todo better timing like identRimsBasic :
-	///       # not always refresh *(_processValPtr)
-	///       # not always update Flow
-	///       # refresh LCD here and not in UIRims
 	_currentTime = millis();
 	if(_currentTime-_lastTimePID>=PIDSAMPLETIME)
 	{
