@@ -120,6 +120,7 @@ void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
  */
 void Rims::setSetPointFilter(double tauFilter,byte batchSize)
 {
+	///\bug Verify filter output with simulink
 	if(tauFilter>0)
 	{
 		_setPointFilterCsts[batchSize] = \
@@ -135,14 +136,13 @@ void Rims::setSetPointFilter(double tauFilter,byte batchSize)
  *                        flow sensor. For more info :
  *                        http://arduino.cc/en/Reference/attachInterrupt
  * \param flowFactor : float. Factor used to calculate flow from the
-                       input frequency, i.e. :
-					   \f[
-					   freq[Hz] = flowFactor * flow[L/min]
-					   \f]
+ *                     input frequency, i.e. :
+ *   				   \f[
+ *  				   freq[Hz] = flowFactor * flow[L/min]
+ *  				   \f]
  * \param stopOnCriticalFlow : boolean (default=true). If true, on getFlow() call,
-                               flow is <= CRITICALFLOW, heater is turn off. Else
-							   flow mesurment doesn't influence heater action.
-							   
+ *                             flow is <= CRITICALFLOW, heater is turn off. Else
+ *  						   flow mesurment doesn't influence heater action.						   
  *                             
  */
 void Rims::setInterruptFlow(byte interruptFlow, float flowFactor,
@@ -221,6 +221,8 @@ void Rims::_initialize()
 	*(_processValPtr) = this->getTempPV();
 	_ui->setTempSP(_rawSetPoint);
 	_ui->setTempPV(*(_processValPtr));
+	// first value = operating points = set point filter initial condition :
+	_lastSetPointFilterOutput = *(_processValPtr);
 	_sumStoppedTime = true;
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
 	Serial.begin(9600);
@@ -255,13 +257,10 @@ void Rims::_iterate()
 		// === PID COMPUTE ===
 		_myPID.Compute();
 		// === PID FILTERING ===
-		*(_controlValPtr) = (1-_PIDFilterCsts[_batchSize]) * (*_controlValPtr) + \
-							_PIDFilterCsts[_batchSize] * _lastPIDFilterOutput;
-		_lastPIDFilterOutput = *(_controlValPtr);
-		// === SSR CONTROL ===
-		_refreshSSR();
-		// === TIME REMAINING ===
-		_refreshTimer();
+		Serial.println(*_controlValPtr);
+		(*_controlValPtr) = (1-_PIDFilterCsts[_batchSize])*(*_controlValPtr) + \
+							  _PIDFilterCsts[_batchSize] * _lastPIDFilterOutput;
+		_lastPIDFilterOutput = (*_controlValPtr);
 		// === REFRESH DISPLAY ===
 		_refreshDisplay();
 		// === DATA LOG ===
@@ -276,6 +275,10 @@ void Rims::_iterate()
 		Serial.println(_flow,2);
 		_lastTimePID = _currentTime;
 	}
+	// === SSR CONTROL ===
+	_refreshSSR();
+	// === TIME REMAINING ===
+	_refreshTimer();
 	// === KEY CHECK ===
 	_currentTime = millis();
 	if((_ui->readKeysADC()!=KEYNONE and _currentTime-_lastScreenSwitchTime>=500)\
@@ -331,12 +334,12 @@ void Rims::_refreshDisplay()
  */
 void Rims::_refreshSSR()
 {
-	unsigned long currentTime = millis();
-	if(currentTime - _windowStartTime > SSRWINDOWSIZE)
+	_currentTime = millis();
+	if(_currentTime - _windowStartTime > SSRWINDOWSIZE)
 	{
 		_windowStartTime += SSRWINDOWSIZE;
 	}
-	if(currentTime - _windowStartTime <= *(_controlValPtr))
+	if(_currentTime - _windowStartTime <= *(_controlValPtr))
 	{
 		digitalWrite(_pinCV,HIGH);
 		digitalWrite(_pinLED,HIGH);
@@ -390,6 +393,7 @@ float Rims::getFlow()
 	else flow = (1e06 / (_flowFactor* (_flowCurTime - _flowLastTime)));
 	if(_stopOnCriticalFlow)
 	{
+		Serial.println("YYYOO");
 		if(flow <= CRITICALFLOW)
 		{
 			if(_myPID.GetMode()==AUTOMATIC) _myPID.SetMode(MANUAL);
