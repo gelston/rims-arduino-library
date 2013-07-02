@@ -83,10 +83,6 @@ void RimsIdent::_initialize()
 void RimsIdent::_iterate()
 {
 	_refreshTimer(false);
-	if(_runningTime >= STEP3TIME) *(_controlValPtr) = STEP3VALUE;
-	else if(_runningTime >= STEP2TIME) *(_controlValPtr) = STEP2VALUE;
-	else if(_runningTime >= STEP1TIME) *(_controlValPtr) = STEP1VALUE;
-	_refreshSSR();
 	if(_currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
 	{
 		///  \todo : use std screen of UIRims
@@ -101,7 +97,21 @@ void RimsIdent::_iterate()
 		Serial.println(_flow,2);
 		_ui->setIdentCV(*(_controlValPtr),SSRWINDOWSIZE);
 		_refreshDisplay();
-		_lastTimeSerial = _currentTime;
+		_lastTimeSerial += IDENTSAMPLETIME;
 	}
+	if(_runningTime >= STEP3TIME) *(_controlValPtr) = STEP3VALUE;
+	else if(_runningTime >= STEP2TIME) *(_controlValPtr) = STEP2VALUE;
+	else if(_runningTime >= STEP1TIME) *(_controlValPtr) = STEP1VALUE;
+	_refreshSSR();
 	if(_runningTime >= _settedTime) _timerElapsed = true;
+}
+
+/*!
+ * \brief Same as Rims::setInterruptFlow. Redefinied to change
+ *        stopOnCriticalFlow default value to false.
+ */
+void RimsIdent::setInterruptFlow(byte interruptFlow, float flowFactor, 
+					             boolean stopOnCriticalFlow)
+{
+	Rims::setInterruptFlow(interruptFlow,flowFactor,stopOnCriticalFlow);
 }
