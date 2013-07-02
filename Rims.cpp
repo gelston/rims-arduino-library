@@ -84,7 +84,7 @@ void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
  * \param Ki : float. Integral gain.
  * \param Kd : float. Derivative gain.
  * \param tauFilter : float. PID output filter time constant in sec.
- * \param batchSize : byte (default=0). 
+ * \param batchSize : byte (default=SIMPLEBATCH). SIMPLEBATCH or DOUBLEBATCH.
  *                    Specify which of the 2 regulators to setup, if needed.
  */
 void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
@@ -207,7 +207,7 @@ void Rims::_initialize()
 	// === ASK TIMER ===
 	_settedTime = (unsigned long)_ui->askTime(DEFAULTTIME)*1000;
 	// === ASK BATCH SIZE ===
-    _batchSize = (_secondPIDSetted) ? _ui->askBatchSize() : 0;
+    _batchSize = (_secondPIDSetted) ? _ui->askBatchSize() : SIMPLEBATCH;
 	// === PUMP SWITCHING WARN ===
 	_ui->showPumpWarning();
 	while(_ui->readKeysADC()==KEYNONE)
@@ -273,7 +273,7 @@ void Rims::_iterate()
 		Serial.print(*(_processValPtr),15);
 		Serial.print(",");
 		Serial.println(_flow,2);
-		_lastTimePID = _currentTime;
+		_lastTimePID += PIDSAMPLETIME;
 	}
 	// === SSR CONTROL ===
 	_refreshSSR();
@@ -294,6 +294,9 @@ void Rims::_iterate()
  * \brief Refresh timer value.
  *
  * If error on temperature >= MAXTEMPVAR, timer will not count down.
+ * \param verifyTemp : boolean. If true, error on current temperature 
+ *					   should not be greater than MAXTEMPVAR to count down.
+ *                     Else, current temperature is ignored.
  */
 void Rims::_refreshTimer(boolean verifyTemp)
 {

@@ -46,6 +46,9 @@ public:
 	
 	void run();
 	
+	void setInterruptFlow(byte interruptFlow, float flowFactor, 
+					      boolean stopOnCriticalFlow = false);
+	
 protected : 
 
 	void _initialize();
