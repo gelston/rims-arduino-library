@@ -114,7 +114,7 @@ void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
  * from 0.1 to 1 times this value. You will be able to find a good comprimise
  * between overshoot and rapidity.
  *
- * \param tauFilter : float. set point filter time constant in sec.
+< * \param tauFilter : float. set point filter time constant in sec.
  * \param batchSize : byte. (default=0).
  *                    Specify which of the 2 regulators to setup, if needed.
  */
@@ -210,9 +210,16 @@ void Rims::_initialize()
     _batchSize = (_secondPIDSetted) ? _ui->askBatchSize() : SIMPLEBATCH;
 	// === PUMP SWITCHING WARN ===
 	_ui->showPumpWarning();
+	_currentTime = millis();
+	unsigned long lastFlowRefresh = _currentTime - PIDSAMPLETIME;
 	while(_ui->readKeysADC()==KEYNONE)
 	{
-		_ui->setFlow(this->getFlow());
+		_currentTime = millis();
+		if(_currentTime - lastFlowRefresh >= PIDSAMPLETIME)
+		{
+			_ui->setFlow(this->getFlow());
+			lastFlowRefresh = _currentTime;
+		}
 	}
 	// === HEATER SWITCHING WARN ===
 	_ui->showHeaterWarning();
@@ -257,7 +264,6 @@ void Rims::_iterate()
 		// === PID COMPUTE ===
 		_myPID.Compute();
 		// === PID FILTERING ===
-		Serial.println(*_controlValPtr);
 		(*_controlValPtr) = (1-_PIDFilterCsts[_batchSize])*(*_controlValPtr) + \
 							  _PIDFilterCsts[_batchSize] * _lastPIDFilterOutput;
 		_lastPIDFilterOutput = (*_controlValPtr);
