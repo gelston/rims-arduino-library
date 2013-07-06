@@ -68,7 +68,7 @@ bool PID::Compute()
 	  
       /*Remember some variables for next time*/
       lastInput = input;
-      lastTime = now;
+      lastTime += SampleTime;
 	  return true;
    }
    else return false;
