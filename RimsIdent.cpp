@@ -57,9 +57,16 @@ void RimsIdent::_initialize()
 	unsigned long currentTime;
 	// === PUMP SWITCHING ===
 	_ui->showPumpWarning();
+	_currentTime = millis();
+	unsigned long lastFlowRefresh = _currentTime - PIDSAMPLETIME;
 	while(_ui->readKeysADC()==KEYNONE)
 	{
-		_ui->setFlow(this->getFlow());
+		_currentTime = millis();
+		if(_currentTime - lastFlowRefresh >= PIDSAMPLETIME)
+		{
+			_ui->setFlow(this->getFlow());
+			lastFlowRefresh = _currentTime;
+		}
 	}
 	// === HEATER SWITCHING ===
 	_ui->showHeaterWarning();
