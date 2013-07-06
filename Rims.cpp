@@ -402,7 +402,6 @@ float Rims::getFlow()
 	else flow = (1e06 / (_flowFactor* (_flowCurTime - _flowLastTime)));
 	if(_stopOnCriticalFlow)
 	{
-		Serial.println("YYYOO");
 		if(flow <= CRITICALFLOW)
 		{
 			if(_myPID.GetMode()==AUTOMATIC) _myPID.SetMode(MANUAL);
