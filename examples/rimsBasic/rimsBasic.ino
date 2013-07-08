@@ -10,7 +10,7 @@ Rims myRims(&myUI,1,11,&currentTemp,&ssrControl,&settedTemp);
 
 void setup() {
   // put your setup code here, to run once:
-  myRims.setTunningPID(2,5,1,0.1);
+  myRims.setTuningPID(2,5,1,0.1);
   myRims.setSetPointFilter(1);
 }
 void loop() {
