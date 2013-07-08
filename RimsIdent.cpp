@@ -62,7 +62,7 @@ void RimsIdent::_initialize()
 	while(_ui->readKeysADC()==KEYNONE)
 	{
 		_currentTime = millis();
-		if(_currentTime - lastFlowRefresh >= PIDSAMPLETIME)
+		if(_currentTime - lastFlowRefresh >= IDENTSAMPLETIME)
 		{
 			_ui->setFlow(this->getFlow());
 			lastFlowRefresh = _currentTime;
