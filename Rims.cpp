@@ -365,7 +365,7 @@ void Rims::_refreshSSR()
  * \brief Get temperature from thermistor
  *
  * Steinhart-hart equation will be applied here. If voltage is maximal
- * (i.e. 5V) it means that the thermistor is not connected and 
+ * (i.e. ~=5V) it means that the thermistor is not connected and 
  * regulation and heating is stopped until reconnection.
  */
 double Rims::getTempPV()
