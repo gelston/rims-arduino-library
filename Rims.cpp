@@ -291,6 +291,7 @@ void Rims::_iterate()
 	    or _currentTime-_lastScreenSwitchTime >= SCREENSWITCHTIME)
 	{
 		_ui->switchScreen();
+		_refreshDisplay();
 		_lastScreenSwitchTime = _currentTime;
 	}
 	if(_runningTime >= _settedTime) _timerElapsed = true;
@@ -330,7 +331,7 @@ void Rims::_refreshTimer(boolean verifyTemp)
  */
 void Rims::_refreshDisplay()
 {
-	if(analogRead(_analogPinPV) >= 1023) _ui->showErrorPV("NC");
+	if(analogRead(_analogPinPV) >= 1021) _ui->showErrorPV("NC");
 	else _ui->setTempPV(*(_processValPtr));
 	_ui->setTime((_settedTime-_runningTime)/1000);
 	_ui->setFlow(_flow);
@@ -371,7 +372,7 @@ double Rims::getTempPV()
 {
 	double tempPV = 0;
 	int curTempADC = analogRead(_analogPinPV);
-	if(curTempADC >= 1023)
+	if(curTempADC >= 1021)
 	{
 		if(_myPID.GetMode()==AUTOMATIC) _myPID.SetMode(MANUAL);
 		*(_controlValPtr) = 0;
