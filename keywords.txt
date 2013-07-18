@@ -41,6 +41,7 @@ setFlow	KEYWORD2
 readKeysADC	KEYWORD2
 askSetPoint	KEYWORD2
 askTime	KEYWORD2
+askMashWater	KEYWORD2
 showErrorPV	KEYWORD2
 
 ### UIRimsIdent ###
