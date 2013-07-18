@@ -26,7 +26,7 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 : _ui(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
   _processValPtr(currentTemp), _controlValPtr(ssrControl), _setPointPtr(settedTemp),
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
-  _secondPIDSetted(false), _stopOnCriticalFlow(false), _rimsInitialized(false),
+  _pidQty(0), _stopOnCriticalFlow(false), _rimsInitialized(false),
   _pinLED(13),
   _flowLastTime(0), _flowCurTime(0)
 {
@@ -36,10 +36,11 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 	_steinhartCoefs[3] = DEFAULTSTEINHART3;
 	_res1 = DEFAULTRES1;
 	_fineTuneTemp = 0;
-	for(int i=0;i<=1;i++)
+	for(int i=0;i<=3;i++)
 	{
 		_PIDFilterCsts[i] = 0; _setPointFilterCsts[i] = 0;
 		_kps[i] = 0; _kis[i] = 0; _kds[i] = 0;
+		_mashWaterValues[i] = -1;
 	}
 	_myPID.SetSampleTime(PIDSAMPLETIME);
 	_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
@@ -84,20 +85,27 @@ void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
  * \param Ki : float. Integral gain.
  * \param Kd : float. Derivative gain.
  * \param tauFilter : float. PID output filter time constant in sec.
- * \param batchSize : byte (default=SIMPLEBATCH). SIMPLEBATCH or DOUBLEBATCH.
- *                    Specify which of the 2 regulators to setup, if needed.
+ * \param mashWaterQty : int (default=-1). If multiple regulators is needed,
+ *                       set this parameter to mash water volume in liter.
+ *                       This mash water volume will be associated to this PID.
+ *                       Total of 4 regulators is allowed (with different
+ *                       mash water volume).
  */
 void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
-                         byte batchSize)
+                        int mashWaterQty)
 {
-	_kps[batchSize] = Kp; _kis[batchSize] = Ki; _kds[batchSize] = Kd;
+	if(mashWaterQty != -1) _currentPID = _pidQty;
+	else _currentPID = 0;
+	_kps[_currentPID] = Kp; _kis[_currentPID] = Ki; _kds[_currentPID] = Kd;
 	if(tauFilter>0)
 	{
-		_PIDFilterCsts[batchSize] = exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
+		_PIDFilterCsts[_currentPID] = exp((-1.0)*PIDSAMPLETIME/   \
+		                            (tauFilter*1000.0));
 	}
-	else _PIDFilterCsts[batchSize] = 0;
+	else _PIDFilterCsts[_currentPID] = 0;
 	_lastPIDFilterOutput = 0;
-	_secondPIDSetted = (batchSize!=0);
+	_mashWaterValues[_currentPID] = mashWaterQty;
+	_pidQty++;
 }
 
 /*!
@@ -114,19 +122,32 @@ void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
  * from 0.1 to 1 times this value. You will be able to find a good comprimise
  * between overshoot and rapidity.
  *
-< * \param tauFilter : float. set point filter time constant in sec.
- * \param batchSize : byte. (default=0).
- *                    Specify which of the 2 regulators to setup, if needed.
+ * \param tauFilter : float. set point filter time constant in sec.
+ * \param mashWaterQty : int (default=-1). If multiple regulators is needed,
+ *                       set this parameter to mash water volume in liter.
+ *                       This mash water volume will be associated to this
+ *                       set point filter. Rims::setTunningPID must
+ *                       be called with current mashWaterQty value before
+ *                       calling this method.
+ *                       Total of 4 regulators is allowed (with different
+ *                       mash water volume).
  */
-void Rims::setSetPointFilter(double tauFilter,byte batchSize)
+void Rims::setSetPointFilter(double tauFilter,int mashWaterQty)
 {
-	///\bug Verify filter output with simulink
+	_currentPID = 0;
+	if(mashWaterQty != -1)
+	{
+		for(int i=0;i<=3;i++)
+		{
+			if(_mashWaterValues[i] == mashWaterQty) _currentPID = i;
+		}
+	}
 	if(tauFilter>0)
 	{
-		_setPointFilterCsts[batchSize] = \
+		_setPointFilterCsts[_currentPID] = \
 					exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
 	}
-	else _setPointFilterCsts[batchSize] = 0;
+	else _setPointFilterCsts[_currentPID] = 0;
 	_lastSetPointFilterOutput = 0;
 }
 
@@ -194,7 +215,7 @@ void Rims::run()
  * Initialization procedure :
  * -# Ask Temperature set point
  * -# Ask Timer time
- * -# Ask Batch size (if setted)
+ * -# Ask Mash water qty (if setted)
  * -# Show pump switching warning
  * -# Show heater switching warning
  */
@@ -206,8 +227,8 @@ void Rims::_initialize()
 	*(_setPointPtr) = 0;
 	// === ASK TIMER ===
 	_settedTime = (unsigned long)_ui->askTime(DEFAULTTIME)*1000;
-	// === ASK BATCH SIZE ===
-    _batchSize = (_secondPIDSetted) ? _ui->askBatchSize() : SIMPLEBATCH;
+	// === ASK MASH WATER ===
+    _currentPID = (_pidQty != 1) ? _ui->askMashWater(_mashWaterValues) : 0;
 	// === PUMP SWITCHING WARN ===
 	_ui->showPumpWarning();
 	_currentTime = millis();
@@ -234,7 +255,7 @@ void Rims::_initialize()
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
 	Serial.begin(9600);
 	Serial.println("time,sp,cv,pv,flow");
-	_myPID.SetTunings(_kps[_batchSize],_kis[_batchSize],_kds[_batchSize]);
+	_myPID.SetTunings(_kps[_currentPID],_kis[_currentPID],_kds[_currentPID]);
 	_myPID.SetMode(AUTOMATIC);
 	_rimsInitialized = true;
 	_currentTime = _windowStartTime = _timerStartTime = _rimsStartTime \
@@ -258,14 +279,14 @@ void Rims::_iterate()
 		*(_processValPtr) = getTempPV();
 		_flow = this->getFlow();
 		// === SETPOINT FILTERING ===
-		*(_setPointPtr) = (1-_setPointFilterCsts[_batchSize]) * _rawSetPoint + \
-				_setPointFilterCsts[_batchSize] * _lastSetPointFilterOutput;
+		*(_setPointPtr) = (1-_setPointFilterCsts[_currentPID]) * _rawSetPoint + \
+				_setPointFilterCsts[_currentPID] * _lastSetPointFilterOutput;
 		_lastSetPointFilterOutput = *(_setPointPtr);
 		// === PID COMPUTE ===
 		_myPID.Compute();
 		// === PID FILTERING ===
-		(*_controlValPtr) = (1-_PIDFilterCsts[_batchSize])*(*_controlValPtr) + \
-							  _PIDFilterCsts[_batchSize] * _lastPIDFilterOutput;
+		(*_controlValPtr) = (1-_PIDFilterCsts[_currentPID])*(*_controlValPtr) + \
+							  _PIDFilterCsts[_currentPID] * _lastPIDFilterOutput;
 		_lastPIDFilterOutput = (*_controlValPtr);
 		// === REFRESH DISPLAY ===
 		_refreshDisplay();

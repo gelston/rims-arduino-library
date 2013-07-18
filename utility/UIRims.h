@@ -73,7 +73,7 @@ public:
 	// === SETUP DIALOGS ===
 	float askSetPoint(float defaultVal); // Celsius
 	unsigned int askTime(unsigned int defaultVal); // seconds
-	byte askBatchSize();
+	byte askMashWater(int mashWaterValues[]);
 
 	// === ERROR HANDLING ===
 	void showErrorPV(String mess);
