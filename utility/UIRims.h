@@ -22,7 +22,7 @@
 /// \brief Lower bound for accepted flow rate [L/min]
 #define FLOWLOWBOUND 2.0
 /// \brief Upper bound for accepted flow rate [L/min]
-#define FLOWUPBOUND 4.0
+#define FLOWUPBOUND 5.0
 
 #include "Arduino.h"
 #include "LiquidCrystal.h"
