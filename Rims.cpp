@@ -410,7 +410,7 @@ float Rims::getFlow()
 		}
 		else if(_myPID.GetMode()==MANUAL) _myPID.SetMode(AUTOMATIC);
 	}
-	return flow;
+	return constrain(flow,0,99.99);
 }
 
 /*

@@ -9,6 +9,9 @@
  *
  * This Library is licensed under a 
  * <a href="http://www.gnu.org/licenses/licenses.en.html">GPLv3 License</a>.
+ *
+ * <a href="http://code.google.com/p/rims-arduino-library/">
+ * Return to Google Code page</a>
  */
 //=====================================================
  
@@ -46,14 +49,14 @@
 #define SCREENSWITCHTIME 10000 /// mSec
 
 ///\brief Call setTunnningPID and setSetPointFilter with this keywords as
-///       final parameter for set parameters for the first regulator
+///       final parameter to set parameters for the first regulator
 #define SIMPLEBATCH 0
 ///\brief Call setTunnningPID and setSetPointFilter with this keywords as
-///       final parameter for set parameters for the second regulator
+///       final parameter to set parameters for the second regulator
 #define	DOUBLEBATCH 1
 ///\brief If _stopOnCriticalFlow is activited, heater will be turn off
 ///       if flow is <= than this value.
-#define CRITICALFLOW 0.5
+#define CRITICALFLOW 1.0
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
