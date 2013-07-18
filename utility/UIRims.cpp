@@ -532,7 +532,6 @@ byte UIRims::askMashWater(int mashWaterValues[])
 			_printStrLCD("\x7e",mashWaterIndex*4,1);
 		}
 	}
-	Serial.println(mashWaterIndex);
 	return mashWaterIndex;
 }
 
