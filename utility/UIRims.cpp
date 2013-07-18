@@ -488,27 +488,52 @@ unsigned int UIRims::askTime(unsigned int defaultVal)
 
 
 /*!
- * \brief Ask batch size.
- * \return byte : 0 simple batch, 1 double batch.
+ * \brief Ask mash water quantity (4 choices max).
+ * \param mashWaterValues : int[4]. Array that contain different
+ *                          choices for mash water quantity. If
+ *                          less than 4 is needed, the rest should be
+ *                          setted to -1. All values should be between
+ *                          0 L and 99 L.
+ * \return byte : 0 to 4. Index of the selected mash water quantity.
  */
-byte UIRims::askBatchSize()
+byte UIRims::askMashWater(int mashWaterValues[])
 {
-	boolean batchSelected = false, batchSize = 0;
+	boolean mashWaterSelected = false;
+	byte mashWaterIndex = 0, mashChoices = 0;
 	byte keyPressed = KEYNONE;
-	_printStrLCD("\x7e""simple batch",0,0);
-	_printStrLCD(" double batch",0,1);
-	while(not batchSelected)
+	_printStrLCD("Mash water qty:",0,0);
+	//_printStrLCD("\x7e"" 00L 00L 00L 00L",0,1);
+	for(int i=0;i<=3;i++)
 	{
-		keyPressed = _waitForKeyChange();
-		if(keyPressed == KEYSELECT) batchSelected = true;
-		else if(keyPressed != KEYNONE)
+		if(mashWaterValues[i] != - 1)
 		{
-			batchSize = not batchSize;
-			_printStrLCD("\x7e",0,batchSize);
-			_printStrLCD(" ",   0,!batchSize);
+			_printStrLCD(" ",0,1);
+			_printFloatLCD(mashWaterValues[i],2,0,(4*i)+1,1);
+			_printStrLCD("L",(4*i)+3,1);
+			mashChoices++;
 		}
 	}
-	return batchSize;
+	_printStrLCD("\x7e",0,1);
+	while(not mashWaterSelected)
+	{
+		keyPressed = _waitForKeyChange();
+		if(keyPressed == KEYSELECT) mashWaterSelected = true;
+		else
+		{
+			_printStrLCD(" ",mashWaterIndex*4,1);
+			if(keyPressed == KEYUP or keyPressed == KEYRIGHT)
+			{
+				mashWaterIndex = constrain(mashWaterIndex+1,0,mashChoices-1);
+			}
+			else if(keyPressed == KEYDOWN or keyPressed == KEYLEFT)
+			{
+				mashWaterIndex = constrain(mashWaterIndex-1,0,mashChoices-1);
+			}
+			_printStrLCD("\x7e",mashWaterIndex*4,1);
+		}
+	}
+	Serial.println(mashWaterIndex);
+	return mashWaterIndex;
 }
 
 /*!

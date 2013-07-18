@@ -48,12 +48,6 @@
 ///       is automatically shown[mSec]
 #define SCREENSWITCHTIME 10000 /// mSec
 
-///\brief Call setTunnningPID and setSetPointFilter with this keywords as
-///       final parameter to set parameters for the first regulator
-#define SIMPLEBATCH 0
-///\brief Call setTunnningPID and setSetPointFilter with this keywords as
-///       final parameter to set parameters for the second regulator
-#define	DOUBLEBATCH 1
 ///\brief If _stopOnCriticalFlow is activited, heater will be turn off
 ///       if flow is <= than this value.
 #define CRITICALFLOW 1.0
@@ -86,9 +80,9 @@ public:
 					      boolean stopOnCriticalFlow = true);
 	
 	void setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
-	                   byte batchSize=SIMPLEBATCH);
+	                  int mashWaterQty = -1);
 	void setSetPointFilter(double tauFilter,
-						   byte batchSize=SIMPLEBATCH);
+						   int mashWaterQty = -1);
 	
 	void run();
 	
@@ -114,10 +108,13 @@ private:
 	byte _pinLED;
 	
 	// ===STATE DATAS===
-	byte _batchSize;
-	boolean _secondPIDSetted;
-	boolean _stopOnCriticalFlow;
 	boolean _rimsInitialized;
+	boolean _stopOnCriticalFlow;
+	
+	// ===MULTIPLE PIDs===
+	byte _pidQty;
+	byte _currentPID;
+	int _mashWaterValues[4];
 	
 	// ===THERMISTOR===
 	float _steinhartCoefs[4];
@@ -131,16 +128,16 @@ private:
 	double* _controlValPtr; /// [0,SSRWINDOWSIZE]
 	
 	// ===PID PARAMS===
-	double _kps[2];
-	double _kis[2];
-	double _kds[2];
+	double _kps[4];
+	double _kis[4];
+	double _kds[4];
 	
 	// ===PID FILTER===
-	double _PIDFilterCsts[2];
+	double _PIDFilterCsts[4];
 	double _lastPIDFilterOutput;
 	
 	// ===SET POINT FILTER===
-	double _setPointFilterCsts[2];
+	double _setPointFilterCsts[4];
 	double _lastSetPointFilterOutput;
 	
 	// ===TIMER===
