@@ -52,6 +52,10 @@
 ///       if flow is <= than this value.
 #define CRITICALFLOW 1.0
 
+///\brief If true, heating will be stopped if the time is elapsed.
+///       Else, temperature will be maintained.
+#define STOPONELAPSEDTIME true
+
 #include "Arduino.h"
 #include "utility/UIRims.h"
 #include "utility/PID_v1.h"

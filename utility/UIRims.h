@@ -20,9 +20,9 @@
 #define KEYDEBOUNCETIME 15
 
 /// \brief Lower bound for accepted flow rate [L/min]
-#define FLOWLOWBOUND 2.0
+#define FLOWLOWBOUND 5.0
 /// \brief Upper bound for accepted flow rate [L/min]
-#define FLOWUPBOUND 5.0
+#define FLOWUPBOUND 7.0
 
 #include "Arduino.h"
 #include "LiquidCrystal.h"

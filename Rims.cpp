@@ -26,7 +26,8 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 : _ui(uiRims), _analogPinPV(analogPinTherm), _pinCV(ssrPin),
   _processValPtr(currentTemp), _controlValPtr(ssrControl), _setPointPtr(settedTemp),
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
-  _pidQty(0), _stopOnCriticalFlow(false), _rimsInitialized(false),
+  _pidQty(0), 
+  _stopOnCriticalFlow(false), _rimsInitialized(false),
   _pinLED(13),
   _flowLastTime(0), _flowCurTime(0)
 {
@@ -151,6 +152,7 @@ void Rims::setSetPointFilter(double tauFilter,int mashWaterQty)
 	_lastSetPointFilterOutput = 0;
 }
 
+
 /*!
  * \brief Set interrupt function for flow sensor.
  * \param interruptFlow : byte. Interrupt pin number connected to the
@@ -200,11 +202,18 @@ void Rims::run()
 		if(not _timerElapsed) _iterate();
 		else
 		{
-			_myPID.SetMode(MANUAL);
-			*(_controlValPtr) = 0;
-			_refreshSSR();
-			_rimsInitialized = false;
-			_ui->showEnd();
+			if(STOPONELASPEDTIME)
+			{
+				_myPID.SetMode(MANUAL);
+				*(_controlValPtr) = 0;
+				_refreshSSR();
+				_rimsInitialized = false;
+				_ui->showEnd();
+			}
+			else
+			{
+				
+			}
 		}
 	}
 }
