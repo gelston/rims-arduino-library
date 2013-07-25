@@ -1,0 +1,69 @@
+#######################################
+# Syntax Coloring Map For Rims
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Rims	KEYWORD1
+RimsIdent	KEYWORD1
+UIRims	KEYWORD1
+UIRimsIdent	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+
+### Rims ###
+
+setThermistor	KEYWORD2
+setTuningPID	KEYWORD2
+setSetPointFilter	KEYWORD2
+setPinLED	KEYWORD2
+setInterruptFlow	KEYWORD2
+run	KEYWORD2
+analogInToCelcius	KEYWORD2
+getFlow	KEYWORD2
+
+### UIRims ###
+
+showTempScreen	KEYWORD2
+showTimeFlowScreen	KEYWORD2
+switchScreen	KEYWORD2
+getTempScreenShown	KEYWORD2
+showEnd	KEYWORD2
+setTempSP	KEYWORD2
+setTempPV	KEYWORD2
+setTime	KEYWORD2
+setFlow	KEYWORD2
+readKeysADC	KEYWORD2
+askSetPoint	KEYWORD2
+askTime	KEYWORD2
+askMashWater	KEYWORD2
+showErrorPV	KEYWORD2
+
+### UIRimsIdent ###
+
+setTempScreenShown	KEYWORD2
+setIdentCV	KEYWORD2
+showIdentScreen	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+### UIRims ###
+
+KEYNONE	LITERAL1
+KEYUP	LITERAL1
+KEYDOWN	LITERAL1
+KEYLEFT	LITERAL1
+KEYRIGHT	LITERAL1
+KEYSELECT	LITERAL1
+
+### RIMS ###
+
+SIMPLEBATCH	LITERAL1
+DOUBLEBATCH	LITERAL2
