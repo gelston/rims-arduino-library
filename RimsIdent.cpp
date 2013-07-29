@@ -55,6 +55,7 @@ void RimsIdent::run()
 void RimsIdent::_initialize()
 {
 	unsigned long currentTime;
+	_timerElapsed = false;
 	// === PUMP SWITCHING ===
 	_ui->showPumpWarning();
 	_currentTime = millis();
