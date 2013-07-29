@@ -21,7 +21,8 @@ UIRims::UIRims(LiquidCrystal* lcd, byte pinKeysAnalog,
   _pinSpeaker(pinSpeaker),
   _lastRefreshSP(0), _lastRefreshPV(0), 
   _lastRefreshTime(0), _lastRefreshFlow(0),
-  _tempSP(0), _tempPV(0), _time(0), _flow(0)
+  _tempSP(0), _tempPV(0), _time(0), _flow(0),
+  _flowLowBound(-1),_flowUpBound(100)
 {
 	pinMode(pinLight,OUTPUT);
 	if(pinSpeaker != -1) pinMode(pinSpeaker,OUTPUT);
@@ -314,12 +315,24 @@ void UIRims::setFlow(float flow)
 	if(not _tempScreenShown)
 	{
 		_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
-		if(flow>=FLOWLOWBOUND and flow<=FLOWUPBOUND) \
+		if(flow>=_flowLowBound and flow<=_flowUpBound) \
 				_printStrLCD("\x01",15,1);
-		else if(flow<FLOWLOWBOUND) _printStrLCD("\x03",15,1);
+		else if(flow<_flowLowBound) _printStrLCD("\x03",15,1);
 		else _printStrLCD("\x02",15,1);
-		ring(not((flow >= FLOWLOWBOUND) and (flow <= FLOWUPBOUND)));
+		ring(not((flow >= _flowLowBound) and (flow <= _flowUpBound)));
 	}
+}
+
+/*! 
+ * \brief Set bounds for accepted flow rate 
+ * 
+ * \param lowBound : float. Lower bound of flow rate [L/min]
+ * \param upBound : float. Upper bound of flow rate [L/min]
+ * 
+ */
+void UIRims::setFlowBounds(float lowBound, float upBound)
+{
+	_flowLowBound = lowBound; _flowUpBound = upBound;
 }
 
 /*!

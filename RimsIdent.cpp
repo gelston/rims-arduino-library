@@ -116,9 +116,12 @@ void RimsIdent::_iterate()
 
 /*!
  * \brief Same as Rims::setInterruptFlow. Redefinied to change
- *        stopOnCriticalFlow default value to false.
+ *        stopOnCriticalFlow default value to false and default bounds
+ *        are setted to -1 to 100 so you can identify at any
+ *        flow.
  */
-void RimsIdent::setInterruptFlow(byte interruptFlow, float flowFactor, 
+void RimsIdent::setInterruptFlow(byte interruptFlow, float flowFactor,
+								 float lowBound, float upBound,
 					             boolean stopOnCriticalFlow)
 {
 	Rims::setInterruptFlow(interruptFlow,flowFactor,stopOnCriticalFlow);
