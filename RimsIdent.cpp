@@ -73,6 +73,7 @@ void RimsIdent::_initialize()
 	_ui->showHeaterWarning();
 	while(_ui->readKeysADC()==KEYNONE) continue;
 	_rimsInitialized = true;
+	stopHeating(false);
 	// === IDENTIFICATION TESTS ===
 	Serial.begin(9600);
 	Serial.println("time,cv,pv,flow");
@@ -91,27 +92,41 @@ void RimsIdent::_initialize()
 void RimsIdent::_iterate()
 {
 	_refreshTimer(false);
-	if(_currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
+	if(not _timerElapsed)
 	{
-		///  \todo : use std screen of UIRims
-		*(_processValPtr) = this->getTempPV();
-		_flow = this->getFlow();
-		Serial.print((double)_runningTime/1000.0,3);
-		Serial.print(",");
-		Serial.print(*(_controlValPtr),0);
-		Serial.print(",");
-		Serial.print(*(_processValPtr),15);
-		Serial.print(",");
-		Serial.println(_flow,2);
-		_ui->setIdentCV(*(_controlValPtr),SSRWINDOWSIZE);
-		_refreshDisplay();
-		_lastTimeSerial += IDENTSAMPLETIME;
+		if(_runningTime >= STEP3TIME) *(_controlValPtr) = STEP3VALUE;
+		else if(_runningTime >= STEP2TIME) *(_controlValPtr) = STEP2VALUE;
+		else if(_runningTime >= STEP1TIME) *(_controlValPtr) = STEP1VALUE;
+		if(_currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
+		{
+			///  \todo : use std screen of UIRims
+			*(_processValPtr) = this->getTempPV();
+			_flow = this->getFlow();
+			Serial.print((double)_runningTime/1000.0,3);	Serial.print(",");
+			Serial.print(*(_controlValPtr),0);				Serial.print(",");
+			Serial.print(*(_processValPtr),15);				Serial.print(",");
+			Serial.println(_flow,2);
+			_refreshDisplay();
+			_ui->setIdentCV(*(_controlValPtr),SSRWINDOWSIZE);
+			_lastTimeSerial += IDENTSAMPLETIME;
+		}
+		_refreshSSR();
 	}
-	if(_runningTime >= STEP3TIME) *(_controlValPtr) = STEP3VALUE;
-	else if(_runningTime >= STEP2TIME) *(_controlValPtr) = STEP2VALUE;
-	else if(_runningTime >= STEP1TIME) *(_controlValPtr) = STEP1VALUE;
-	_refreshSSR();
-	if(_runningTime >= _settedTime) _timerElapsed = true;
+	else 
+	{
+		stopHeating(true);
+		if(_currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
+		{
+			_refreshDisplay();
+			_lastTimeSerial += IDENTSAMPLETIME;
+		}
+		if(_ui->readKeysADC() == KEYSELECT)
+		{
+			_ui->ring(false);
+			_ui->lcdLight(true);
+			_rimsInitialized = false;
+		}
+	}
 }
 
 /*!
@@ -124,5 +139,6 @@ void RimsIdent::setInterruptFlow(byte interruptFlow, float flowFactor,
 								 float lowBound, float upBound,
 					             boolean stopOnCriticalFlow)
 {
-	Rims::setInterruptFlow(interruptFlow,flowFactor,stopOnCriticalFlow);
+	Rims::setInterruptFlow(interruptFlow,flowFactor,
+						   lowBound,upBound,stopOnCriticalFlow);
 }
