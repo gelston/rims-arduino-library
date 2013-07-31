@@ -197,25 +197,7 @@ void Rims::setPinLED(byte pinLED)
 void Rims::run()
 {
 	if(not _rimsInitialized) _initialize();
-	else
-	{
-		if(not _timerElapsed) _iterate();
-		else
-		{
-			if(STOPONELASPEDTIME)
-			{
-				_myPID.SetMode(MANUAL);
-				*(_controlValPtr) = 0;
-				_refreshSSR();
-				_rimsInitialized = false;
-				_ui->showEnd();
-			}
-			else
-			{
-				
-			}
-		}
-	}
+	else _iterate();
 }
 
 /*!
@@ -262,10 +244,11 @@ void Rims::_initialize()
 	_lastSetPointFilterOutput = *(_processValPtr);
 	_sumStoppedTime = true;
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
+	_buzzerState = false;
 	Serial.begin(9600);
 	Serial.println("time,sp,cv,pv,flow");
 	_myPID.SetTunings(_kps[_currentPID],_kis[_currentPID],_kds[_currentPID]);
-	_myPID.SetMode(AUTOMATIC);
+	stopHeating(false);
 	_rimsInitialized = true;
 	_currentTime = _windowStartTime = _timerStartTime = _rimsStartTime \
 				 = _lastScreenSwitchTime = millis();
@@ -287,16 +270,8 @@ void Rims::_iterate()
 		// === READ TEMPERATURE/FLOW ===
 		*(_processValPtr) = getTempPV();
 		_flow = this->getFlow();
-		// === SETPOINT FILTERING ===
-		*(_setPointPtr) = (1-_setPointFilterCsts[_currentPID]) * _rawSetPoint + \
-				_setPointFilterCsts[_currentPID] * _lastSetPointFilterOutput;
-		_lastSetPointFilterOutput = *(_setPointPtr);
-		// === PID COMPUTE ===
-		_myPID.Compute();
-		// === PID FILTERING ===
-		(*_controlValPtr) = (1-_PIDFilterCsts[_currentPID])*(*_controlValPtr) + \
-							  _PIDFilterCsts[_currentPID] * _lastPIDFilterOutput;
-		_lastPIDFilterOutput = (*_controlValPtr);
+		// === REFRESH PID ===
+		_refreshPID();
 		// === REFRESH DISPLAY ===
 		_refreshDisplay();
 		// === DATA LOG ===
@@ -316,15 +291,41 @@ void Rims::_iterate()
 	// === TIME REMAINING ===
 	_refreshTimer();
 	// === KEY CHECK ===
-	_currentTime = millis();
-	if((_ui->readKeysADC()!=KEYNONE and _currentTime-_lastScreenSwitchTime>=500)\
+	int keyPressed = _ui->readKeysADC();
+	if((keyPressed!=KEYNONE and _currentTime-_lastScreenSwitchTime>=500)\
 	    or _currentTime-_lastScreenSwitchTime >= SCREENSWITCHTIME)
 	{
 		_ui->switchScreen();
-		_refreshDisplay();
+		if(analogRead(_analogPinPV) >= 1021) _ui->showErrorPV("NC");
 		_lastScreenSwitchTime = _currentTime;
 	}
-	if(_runningTime >= _settedTime) _timerElapsed = true;
+	if(keyPressed == KEYSELECT and _timerElapsed)
+	{
+		stopHeating(true);
+		_ui->lcdLight(true);
+		_ui->ring(false);
+		_rimsInitialized = false;
+	}
+}
+
+/*!
+ * \brief Refresh PID value with set point filter and pid filter if setted.
+ *
+ * Must be called at each PID sample time.
+ * 
+ */
+void Rims::_refreshPID()
+{
+	// === SETPOINT FILTERING ===
+	*(_setPointPtr) = (1-_setPointFilterCsts[_currentPID]) * _rawSetPoint + \
+			_setPointFilterCsts[_currentPID] * _lastSetPointFilterOutput;
+	_lastSetPointFilterOutput = *(_setPointPtr);
+	// === PID COMPUTE ===
+	_myPID.Compute();
+	// === PID FILTERING ===
+	(*_controlValPtr) = (1-_PIDFilterCsts[_currentPID])*(*_controlValPtr) + \
+							_PIDFilterCsts[_currentPID] * _lastPIDFilterOutput;
+	_lastPIDFilterOutput = (*_controlValPtr);
 }
 
 /*!
@@ -354,6 +355,11 @@ void Rims::_refreshTimer(boolean verifyTemp)
 		_timerStartTime = _currentTime;
 		if(not _sumStoppedTime) _sumStoppedTime = true;
 	}
+	if(_runningTime >= _settedTime) 
+	{
+		_runningTime = _settedTime;
+		_timerElapsed = true;
+	}
 }
 
 /*!
@@ -363,6 +369,12 @@ void Rims::_refreshDisplay()
 {
 	if(analogRead(_analogPinPV) >= 1021) _ui->showErrorPV("NC");
 	else _ui->setTempPV(*(_processValPtr));
+	if(_timerElapsed)
+	{
+		_buzzerState = not _buzzerState;
+		_ui->ring(_buzzerState);
+		_ui->lcdLight(_buzzerState);
+	}
 	_ui->setTime((_settedTime-_runningTime)/1000);
 	_ui->setFlow(_flow);
 		
@@ -400,26 +412,23 @@ void Rims::_refreshSSR()
  */
 double Rims::getTempPV()
 {
-	double tempPV = 0;
-	int curTempADC = analogRead(_analogPinPV);
-	if(curTempADC >= 1021)
-	{
-		if(_myPID.GetMode()==AUTOMATIC) _myPID.SetMode(MANUAL);
-		*(_controlValPtr) = 0;
-	}
-	else
-	{
-		if(_myPID.GetMode()==MANUAL) _myPID.SetMode(AUTOMATIC);
-		double vin = ((double)curTempADC)/1024.0;
-		double resTherm = (_res1*vin)/(1.0-vin);
-		double logResTherm = log(resTherm);
-		double invKelvin = _steinhartCoefs[0]+\
-						_steinhartCoefs[1]*logResTherm+\
-						_steinhartCoefs[2]*pow(logResTherm,2)+\
-						_steinhartCoefs[3]*pow(logResTherm,3);
-		tempPV = (1/invKelvin)-273.15+_fineTuneTemp;
-	}
-	return tempPV;
+// 	double tempPV = 0;
+// 	int curTempADC = analogRead(_analogPinPV);
+// 	if(curTempADC >= 1021) stopHeating(true);
+// 	else
+// 	{
+// 		stopHeating(false);
+// 		double vin = ((double)curTempADC)/1024.0;
+// 		double resTherm = (_res1*vin)/(1.0-vin);
+// 		double logResTherm = log(resTherm);
+// 		double invKelvin = _steinhartCoefs[0]+\
+// 						_steinhartCoefs[1]*logResTherm+\
+// 						_steinhartCoefs[2]*pow(logResTherm,2)+\
+// 						_steinhartCoefs[3]*pow(logResTherm,3);
+// 		tempPV = (1/invKelvin)-273.15+_fineTuneTemp;
+// 	}
+// 	return tempPV;
+	return 68;
 }
 
 /*!
@@ -431,16 +440,19 @@ float Rims::getFlow()
 	if(_flowCurTime == 0) flow = 0.0;
 	else if(micros() - _flowCurTime >= 5e06) flow = 0.0;
 	else flow = (1e06 / (_flowFactor* (_flowCurTime - _flowLastTime)));
-	if(_stopOnCriticalFlow)
-	{
-		if(flow <= CRITICALFLOW)
-		{
-			if(_myPID.GetMode()==AUTOMATIC) _myPID.SetMode(MANUAL);
-			*(_controlValPtr) = 0;
-		}
-		else if(_myPID.GetMode()==MANUAL) _myPID.SetMode(AUTOMATIC);
-	}
+	if(_stopOnCriticalFlow) stopHeating(flow <= CRITICALFLOW);
 	return constrain(flow,0,99.99);
+}
+
+void Rims::stopHeating(boolean state)
+{
+	if(state == true)
+	{
+		if(_myPID.GetMode()==AUTOMATIC) _myPID.SetMode(MANUAL);
+		*(_controlValPtr) = 0;
+		_refreshSSR();
+	}
+	else if(_myPID.GetMode()==MANUAL) _myPID.SetMode(AUTOMATIC);
 }
 
 /*

@@ -56,7 +56,6 @@ public:
 	void showTempScreen();
 	void showTimeFlowScreen();
 	void switchScreen();
-	void showEnd();
 	
 	// === VARIABLE SETTER ===
 	void setTempSP(float tempCelcius);
@@ -67,8 +66,9 @@ public:
 	// === KEYS READER ===
 	byte readKeysADC(boolean waitNone = true);
 	
-	// === BUZZER RINGING ===
+	// === ALARM METHODS ===
 	void ring(boolean state = true);
+	void lcdLight(boolean state = true);
 	
 	// === SETUP DIALOGS ===
 	float askSetPoint(float defaultVal); // Celsius
