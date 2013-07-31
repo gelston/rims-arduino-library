@@ -163,9 +163,12 @@ void Rims::setSetPointFilter(double tauFilter,int mashWaterQty)
  *   				   \f[
  *  				   freq[Hz] = flowFactor * flow[L/min]
  *  				   \f]
- * \param stopOnCriticalFlow : boolean (default=true). If true, on getFlow() call,
- *                             flow is <= CRITICALFLOW, heater is turn off. Else
- *  						   flow mesurment doesn't influence heater action.						   
+ * \param lowBound : float. Lower bound used for accepted flow rate.
+ * \param upBound : float. Upper bound used for accepted flow rate
+ * \param stopOnCriticalFlow : boolean (default=true). If true and flow is
+ *                             <= CRITICALFLOW on getFlow() call, 
+ *                             heater is turn off. Else
+ *                             flow mesurment doesn't influence heater action.   
  *                             
  */
 void Rims::setInterruptFlow(byte interruptFlow, float flowFactor,
@@ -448,6 +451,11 @@ float Rims::getFlow()
 	return constrain(flow,0,99.99);
 }
 
+/*!
+ * \brief Stop heater no matter what PID output
+ * \param state : boolean. If true, heater is shut off. Else, heater is 
+ *                         turned on.
+ */
 void Rims::stopHeating(boolean state)
 {
 	if(state == true)
