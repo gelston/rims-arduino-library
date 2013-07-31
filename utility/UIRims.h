@@ -19,11 +19,6 @@
 /// \brief Software key debounce time [mSec]
 #define KEYDEBOUNCETIME 15
 
-/// \brief Lower bound for accepted flow rate [L/min]
-#define FLOWLOWBOUND 5.0
-/// \brief Upper bound for accepted flow rate [L/min]
-#define FLOWUPBOUND 7.0
-
 #include "Arduino.h"
 #include "LiquidCrystal.h"
 
@@ -62,6 +57,7 @@ public:
 	void setTempPV(float tempCelcius);
 	virtual void setTime(unsigned int timeSec);
 	void setFlow(float flow); //liter/min
+	void setFlowBounds(float lowBound, float upBound);
 	
 	// === KEYS READER ===
 	byte readKeysADC(boolean waitNone = true);
@@ -121,6 +117,9 @@ private:
 	float _tempPV;
 	unsigned int _time;
 	float _flow;
+	
+	float _flowLowBound;
+	float _flowUpBound;
 };
 
 
