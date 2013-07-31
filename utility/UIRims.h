@@ -63,16 +63,16 @@ public:
 	byte readKeysADC(boolean waitNone = true);
 	
 	// === ALARM METHODS ===
+	void timerRunningChar(boolean state);
 	void ring(boolean state = true);
 	void lcdLight(boolean state = true);
+	void showErrorPV(String mess);
 	
 	// === SETUP DIALOGS ===
 	float askSetPoint(float defaultVal); // Celsius
 	unsigned int askTime(unsigned int defaultVal); // seconds
 	byte askMashWater(int mashWaterValues[]);
 
-	// === ERROR HANDLING ===
-	void showErrorPV(String mess);
 	
 	
 protected:
