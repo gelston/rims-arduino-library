@@ -167,6 +167,15 @@ void UIRims::ring(boolean state)
 }
 
 /*!
+ * \brief Turn on/off the LCD backlighting
+ * \param state : boolean. If true, light on, else, light off.
+ */
+void UIRims::lcdLight(boolean state)
+{
+	digitalWrite(_pinLight,state);
+}
+
+/*!
  * \brief Pause the Arduino for the given timeInMilliSec
  * \param timeInMilliSec : unsigned long. Time that the Arduino
                            will be pause
@@ -533,35 +542,6 @@ byte UIRims::askMashWater(int mashWaterValues[])
 		}
 	}
 	return mashWaterIndex;
-}
-
-/*!
- * \brief Show the ending screen. 
- */
-void UIRims::showEnd()
-{
-	unsigned long refTime, currentTime;
-	_lcd->clear();
-	_printStrLCD("finished!",0,0);
-	_waitTime(500);
-	boolean lightState = true;
-	if(_pinSpeaker != -1) tone(_pinSpeaker,1000,500);
-	refTime = currentTime = millis();
-	while(this->readKeysADC() == KEYNONE)
-	{
-		currentTime = millis();
-		if(currentTime-refTime>=500)
-		{
-			refTime = currentTime;
-			lightState = not lightState;
-			if(_pinSpeaker != -1 and lightState) 
-			{
-				tone(_pinSpeaker,1000,500);
-			}
-			digitalWrite(_pinLight,lightState);
-		}
-	}
-	digitalWrite(_pinLight,HIGH);
 }
 
 /*!
