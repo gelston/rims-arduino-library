@@ -248,7 +248,7 @@ void Rims::_initialize()
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
 	_buzzerState = false;
 	Serial.begin(9600);
-	Serial.println("time,sp,cv,pv,flow");
+	Serial.println("time,sp,cv,pv,flow,timerRemaining");
 	_myPID.SetTunings(_kps[_currentPID],_kis[_currentPID],_kds[_currentPID]);
 	stopHeating(false);
 	_rimsInitialized = true;
@@ -277,15 +277,13 @@ void Rims::_iterate()
 		// === REFRESH DISPLAY ===
 		_refreshDisplay();
 		// === DATA LOG ===
-		Serial.print((double)(_currentTime-_rimsStartTime)/1000.0,3);
-		Serial.print(",");
-		Serial.print(_rawSetPoint);
-		Serial.print(",");
-		Serial.print(*(_controlValPtr),0);
-		Serial.print(",");
-		Serial.print(*(_processValPtr),15);
-		Serial.print(",");
-		Serial.println(_flow,2);
+		Serial.print(
+	    (double)(_currentTime-_rimsStartTime)/1000.0,3);	Serial.print(",");
+		Serial.print(_rawSetPoint);							Serial.print(",");
+		Serial.print(*(_controlValPtr),0);					Serial.print(",");
+		Serial.print(*(_processValPtr),15);					Serial.print(",");
+		Serial.print(_flow,2);								Serial.print(",");
+		Serial.println((_settedTime-_runningTime)/1000.0,0);
 		_lastTimePID += PIDSAMPLETIME;
 	}
 	// === SSR CONTROL ===
@@ -341,21 +339,24 @@ void Rims::_refreshPID()
 void Rims::_refreshTimer(boolean verifyTemp)
 {
 	_currentTime = millis();
-	if(abs(_rawSetPoint - *(_processValPtr)) <= MAXTEMPVAR or not verifyTemp)
+	if(not _timerElapsed)
 	{
-		if(_sumStoppedTime)
+		if(abs(_rawSetPoint - *(_processValPtr)) <= MAXTEMPVAR or not verifyTemp)
 		{
-			_sumStoppedTime = false;
-			_totalStoppedTime += (_timerStartTime - 
-										_timerStopTime);
+			if(_sumStoppedTime)
+			{
+				_sumStoppedTime = false;
+				_totalStoppedTime += (_timerStartTime - 
+											_timerStopTime);
+			}
+			_runningTime = _currentTime - _totalStoppedTime;
+			_timerStopTime = _currentTime;
 		}
-		_runningTime = _currentTime - _totalStoppedTime;
-		_timerStopTime = _currentTime;
-	}
-	else
-	{
-		_timerStartTime = _currentTime;
-		if(not _sumStoppedTime) _sumStoppedTime = true;
+		else
+		{
+			_timerStartTime = _currentTime;
+			if(not _sumStoppedTime) _sumStoppedTime = true;
+		}
 	}
 	if(_runningTime >= _settedTime) 
 	{
@@ -430,7 +431,7 @@ double Rims::getTempPV()
 // 		tempPV = (1/invKelvin)-273.15+_fineTuneTemp;
 // 	}
 // 	return tempPV;
-	return 68;
+	return 67;
 }
 
 /*!
