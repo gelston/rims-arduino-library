@@ -339,7 +339,6 @@ void UIRims::setTempPV(float tempCelcius)
  * it will be memorized for when it will be shown.
  *
  * \param timeSec : unsigned int.
- * \param blink : boolean. show blink cursor if true.
  */
 void UIRims::setTime(unsigned int timeSec)
 {
