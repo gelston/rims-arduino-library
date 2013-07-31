@@ -87,7 +87,7 @@ void UIRims::showTimeFlowScreen()
 	_lcd->noBlink();
 	_lcd->clear();
 	_printStrLCD("time:000m00s    ",0 ,0);
-	_printStrLCD(String("flow:00.0L/min \x03"),0,1);
+	_printStrLCD(String("flow:00.0L/min \x01"),0,1);
 	this->setTime(_time);
 	this->setFlow(_flow);
 }
@@ -609,7 +609,7 @@ void UIRims::showPumpWarning()
 {
 	_lcd->clear();
 	_printStrLCD("start pump! [OK]",0,0);
-	_printStrLCD(String("flow:00.0L/min \x03"),0,1);
+	_printStrLCD(String("flow:00.0L/min \x01"),0,1);
 	_waitTime(500);
 }
 
