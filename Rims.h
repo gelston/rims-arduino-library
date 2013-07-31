@@ -43,11 +43,15 @@
 
 ///\brief Max temperature variation from set 
 ///       point before stopping timer count down [celcius]
-#define MAXTEMPVAR 2.0 /// celsius
+#define MAXTEMPVAR 1.0 /// celsius
 ///\brief Time before tempScreen/timeFlowScreen 
 ///       is automatically shown[mSec]
 #define SCREENSWITCHTIME 10000 /// mSec
 
+/// \brief Default lower bound for accepted flow rate [L/min]
+#define DEFAULTFLOWLOWBOUND 3.0
+/// \brief Default Upper bound for accepted flow rate [L/min]
+#define DEFAULTFLOWUPBOUND 5.0
 ///\brief If _stopOnCriticalFlow is activited, heater will be turn off
 ///       if flow is <= than this value.
 #define CRITICALFLOW 1.0
@@ -77,6 +81,8 @@ public:
 	void setThermistor(float steinhartCoefs[],float res1, float fineTune = 0);
 	void setPinLED(byte pinLED);
 	void setInterruptFlow(byte interruptFlow, float flowFactor, 
+						  float lowBound = DEFAULTFLOWLOWBOUND, 
+						  float upBound = DEFAULTFLOWUPBOUND,
 					      boolean stopOnCriticalFlow = true);
 	
 	void setTuningPID(double Kp, double Ki, double Kd, double tauFilter,

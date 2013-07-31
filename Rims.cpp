@@ -169,11 +169,13 @@ void Rims::setSetPointFilter(double tauFilter,int mashWaterQty)
  *                             
  */
 void Rims::setInterruptFlow(byte interruptFlow, float flowFactor,
+							float lowBound,float upBound,
 							boolean stopOnCriticalFlow)
 {
 	Rims::_rimsPtr = this;
 	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
 	_flowFactor = flowFactor;
+	_ui->setFlowBounds(lowBound,upBound);
 	_stopOnCriticalFlow = stopOnCriticalFlow;
 }
 
