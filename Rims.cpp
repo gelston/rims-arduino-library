@@ -297,6 +297,7 @@ void Rims::_iterate()
 	{
 		_ui->switchScreen();
 		if(analogRead(_analogPinPV) >= 1021) _ui->showErrorPV("NC");
+		_ui->timerRunningChar((not _sumStoppedTime) and (not _timerElapsed));
 		_lastScreenSwitchTime = _currentTime;
 	}
 	if(keyPressed == KEYSELECT and _timerElapsed)
@@ -357,11 +358,11 @@ void Rims::_refreshTimer(boolean verifyTemp)
 			_timerStartTime = _currentTime;
 			if(not _sumStoppedTime) _sumStoppedTime = true;
 		}
-	}
-	if(_runningTime >= _settedTime) 
-	{
-		_runningTime = _settedTime;
-		_timerElapsed = true;
+		if(_runningTime >= _settedTime) 
+		{
+			_timerElapsed = true;
+			_runningTime = _settedTime;
+		}
 	}
 }
 
@@ -379,6 +380,7 @@ void Rims::_refreshDisplay()
 		_ui->lcdLight(_buzzerState);
 	}
 	_ui->setTime((_settedTime-_runningTime)/1000);
+	_ui->timerRunningChar((not _sumStoppedTime) and (not _timerElapsed));
 	_ui->setFlow(_flow);
 		
 }

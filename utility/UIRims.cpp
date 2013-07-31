@@ -70,6 +70,7 @@ UIRims::UIRims(LiquidCrystal* lcd, byte pinKeysAnalog,
 void UIRims::showTempScreen()
 {
 	_tempScreenShown = true;
+	_lcd->noBlink();
 	_lcd->clear();
 	_printStrLCD("SP:00.0\xdf""C(000\xdf""F)",0,0);
 	_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
@@ -83,6 +84,7 @@ void UIRims::showTempScreen()
 void UIRims::showTimeFlowScreen()
 {
 	_tempScreenShown = false;
+	_lcd->noBlink();
 	_lcd->clear();
 	_printStrLCD("time:000m00s    ",0 ,0);
 	_printStrLCD(String("flow:00.0L/min \x03"),0,1);
@@ -155,6 +157,29 @@ byte UIRims::_waitForKeyChange()
 	return currentKey;
 }
 
+
+/*!
+ * \brief Show blinking char next to remaining time
+ * \param state : boolean. If true, char is shown.
+ */
+void UIRims::timerRunningChar(boolean state)
+{
+	if(not _tempScreenShown)
+	{
+		_setCursorPosition(15,0);
+		if(state == true)
+		{
+			_printStrLCD("\x01",15,0);
+			_lcd->blink();
+		}
+		else
+		{
+			_printStrLCD("x",15,0);
+			_lcd->noBlink();
+		}
+	}
+}
+
 /*!
  * \brief Ring with given speaker setted with the Constructor
  * \param state : boolean. If true, start buzz, if false stop buzz.
@@ -174,6 +199,24 @@ void UIRims::ring(boolean state)
 void UIRims::lcdLight(boolean state)
 {
 	digitalWrite(_pinLight,state);
+}
+
+/*!
+ * \brief Show error mess (2 chars max) for the process value on _lcd
+ * \param mess : String. error message 2 chars max
+ */
+void UIRims::showErrorPV(String mess)
+{
+	ring(true);
+	if(_tempScreenShown)
+	{
+		if(mess.length() > 2)
+		{
+			mess = String(mess).substring(0,2);
+		}
+		_printStrLCD(String(" #")+mess,3,1);
+		_printStrLCD(String("#")+mess,10,1);
+	}
 }
 
 /*!
@@ -296,6 +339,7 @@ void UIRims::setTempPV(float tempCelcius)
  * it will be memorized for when it will be shown.
  *
  * \param timeSec : unsigned int.
+ * \param blink : boolean. show blink cursor if true.
  */
 void UIRims::setTime(unsigned int timeSec)
 {
@@ -536,6 +580,7 @@ byte UIRims::askMashWater(int mashWaterValues[])
 		}
 	}
 	_printStrLCD("\x7e",0,1);
+	_waitTime(500);
 	while(not mashWaterSelected)
 	{
 		keyPressed = _waitForKeyChange();
@@ -577,22 +622,4 @@ void UIRims::showHeaterWarning()
 	_printStrLCD("start heater!",0,0);
 	_printStrLCD("[OK]",0,1);
 	_waitTime(500);
-}
-
-/*!
- * \brief Show error mess (2 chars max) for the process value on _lcd
- * \param mess : String. error message 2 chars max
- */
-void UIRims::showErrorPV(String mess)
-{
-	ring(true);
-	if(_tempScreenShown)
-	{
-		if(mess.length() > 2)
-		{
-			mess = String(mess).substring(0,2);
-		}
-		_printStrLCD(String(" #")+mess,3,1);
-		_printStrLCD(String("#")+mess,10,1);
-	}
 }
