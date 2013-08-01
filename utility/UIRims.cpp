@@ -75,7 +75,7 @@ void UIRims::showTempScreen()
 	_printStrLCD("SP:00.0\xdf""C(000\xdf""F)",0,0);
 	_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
 	this->setTempSP(_tempSP);
-	this->setTempPV(_tempPV);
+	this->setTempPV(_tempPV, false);
 }
 
 /*!
@@ -188,7 +188,6 @@ void UIRims::ring(boolean state)
 {
 	if(_pinSpeaker != -1)
 	{
-		Serial.print("ring");Serial.println(state);
 		(state == true) ? tone(_pinSpeaker,ALARMFREQ) : noTone(_pinSpeaker);
 	}
 }
@@ -200,25 +199,6 @@ void UIRims::ring(boolean state)
 void UIRims::lcdLight(boolean state)
 {
 	digitalWrite(_pinLight,state);
-}
-
-/*!
- * \brief Show error mess (2 chars max) for the process value on _lcd
- * \param mess : String. error message 2 chars max
- */
-void UIRims::showErrorPV(String mess)
-{
-	tone(_pinSpeaker,ALARMFREQ,ALARMLENGTH);
-	Serial.println("buzz therm");
-	if(_tempScreenShown)
-	{
-		if(mess.length() > 2)
-		{
-			mess = String(mess).substring(0,2);
-		}
-		_printStrLCD(String(" #")+mess,3,1);
-		_printStrLCD(String("#")+mess,10,1);
-	}
 }
 
 /*!
@@ -319,16 +299,29 @@ void UIRims::setTempSP(float tempCelcius)
  * shown, it will be updated on the lcd _lcd else
  * it will be memorized for when it will be shown.
  *
- * \param tempCelcius : float.
+ * \param tempCelcius : float. If tempCelcius >= NCTHERM, thermistor is
+ *                             considered unconnected.
+ * \param buzz : boolean. Emit an alarm on speaker if thermistor is
+ *                        disconnected.
  */
-void UIRims::setTempPV(float tempCelcius)
+void UIRims::setTempPV(float tempCelcius, boolean buzz)
 {
 	_tempPV = tempCelcius;
+	boolean thermNC = (tempCelcius >= NCTHERM);
+	if(thermNC) tone(_pinSpeaker,ALARMFREQ,ALARMLENGTH);
 	if(_tempScreenShown)
 	{
 		float tempFahren = _celciusToFahrenheit(tempCelcius);
-		_printFloatLCD(tempCelcius,4,1,3,1);
-		_printFloatLCD(tempFahren,3,0,10,1);
+		if(not thermNC)
+		{
+			_printFloatLCD(tempCelcius,4,1,3,1);
+			_printFloatLCD(tempFahren,3,0,10,1);
+		}
+		else
+		{
+			_printStrLCD(" #NC",3,1);
+			_printStrLCD("#NC",10,1);
+		}
 	}
 }
 
@@ -367,7 +360,6 @@ void UIRims::setFlow(float flow, boolean buzz)
 {
 	_flow = flow;
 	boolean flowOk = (flow >= _flowLowBound) and (flow <= _flowUpBound);
-	if(not flowOk and buzz) Serial.println("buzz flow");
 	if(not flowOk and buzz) tone(_pinSpeaker,ALARMFREQ,ALARMLENGTH);
 	if(not _tempScreenShown)
 	{
@@ -569,7 +561,7 @@ byte UIRims::askMashWater(int mashWaterValues[])
 	boolean mashWaterSelected = false;
 	byte mashWaterIndex = 0, mashChoices = 0;
 	byte keyPressed = KEYNONE;
-	_printStrLCD("Mash water qty:",0,0);
+	_printStrLCD("Mash water qty: ",0,0);
 	//_printStrLCD("\x7e"" 00L 00L 00L 00L",0,1);
 	for(int i=0;i<=3;i++)
 	{

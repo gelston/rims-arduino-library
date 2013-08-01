@@ -299,7 +299,7 @@ void Rims::_iterate()
 	    or _currentTime-_lastScreenSwitchTime >= SCREENSWITCHTIME)
 	{
 		_ui->switchScreen();
-		if(analogRead(_analogPinPV) >= 1021) _ui->showErrorPV("NC");
+// 		if(analogRead(_analogPinPV) >= 1021) _ui->showErrorPV("NC");
 		_ui->timerRunningChar((not _sumStoppedTime) and (not _timerElapsed));
 		_lastScreenSwitchTime = _currentTime;
 	}
@@ -374,8 +374,7 @@ void Rims::_refreshTimer(boolean verifyTemp)
  */
 void Rims::_refreshDisplay()
 {
-	if(analogRead(_analogPinPV) >= 1021) _ui->showErrorPV("NC");
-	else _ui->setTempPV(*(_processValPtr));
+	_ui->setTempPV(*(_processValPtr));
 	if(_timerElapsed)
 	{
 		_buzzerState = not _buzzerState;
@@ -420,7 +419,7 @@ void Rims::_refreshSSR()
  */
 double Rims::getTempPV()
 {
-	double tempPV = 0;
+	double tempPV = NCTHERM;
 	int curTempADC = analogRead(_analogPinPV);
 	if(curTempADC >= 1021) stopHeating(true);
 	else
