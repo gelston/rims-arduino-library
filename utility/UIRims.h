@@ -16,6 +16,8 @@
 #define LCDCOLUMNS 16
 #define LCDROWS 2
 
+#define NCTHERM 404
+
 /// \brief Alarm on speaker frequency [Hz]
 #define ALARMFREQ 1000
 /// \brief Alarm duration used for uncorrect measurement [mSec]
@@ -59,7 +61,7 @@ public:
 	
 	// === VARIABLE SETTER ===
 	void setTempSP(float tempCelcius);
-	void setTempPV(float tempCelcius);
+	void setTempPV(float tempCelcius, boolean buzz = true);
 	virtual void setTime(unsigned int timeSec);
 	void setFlow(float flow, boolean buzz = true); //liter/min
 	void setFlowBounds(float lowBound, float upBound);
@@ -71,7 +73,6 @@ public:
 	void timerRunningChar(boolean state);
 	void ring(boolean state = true);
 	void lcdLight(boolean state = true);
-	void showErrorPV(String mess);
 	
 	// === SETUP DIALOGS ===
 	float askSetPoint(float defaultVal); // Celsius
