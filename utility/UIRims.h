@@ -16,6 +16,11 @@
 #define LCDCOLUMNS 16
 #define LCDROWS 2
 
+/// \brief Alarm on speaker frequency [Hz]
+#define ALARMFREQ 1000
+/// \brief Alarm duration used for uncorrect measurement [mSec]
+#define ALARMLENGTH 100
+
 /// \brief Software key debounce time [mSec]
 #define KEYDEBOUNCETIME 15
 
@@ -56,7 +61,7 @@ public:
 	void setTempSP(float tempCelcius);
 	void setTempPV(float tempCelcius);
 	virtual void setTime(unsigned int timeSec);
-	void setFlow(float flow); //liter/min
+	void setFlow(float flow, boolean buzz = true); //liter/min
 	void setFlowBounds(float lowBound, float upBound);
 	
 	// === KEYS READER ===

@@ -86,10 +86,10 @@ void UIRims::showTimeFlowScreen()
 	_tempScreenShown = false;
 	_lcd->noBlink();
 	_lcd->clear();
-	_printStrLCD("time:000m00s    ",0 ,0);
+	_printStrLCD("time:000m00s   x",0 ,0);
 	_printStrLCD(String("flow:00.0L/min \x01"),0,1);
 	this->setTime(_time);
-	this->setFlow(_flow);
+	this->setFlow(_flow,false);
 }
 
 /*!
@@ -188,7 +188,8 @@ void UIRims::ring(boolean state)
 {
 	if(_pinSpeaker != -1)
 	{
-		(state == true) ? tone(_pinSpeaker,1000) : noTone(_pinSpeaker);
+		Serial.print("ring");Serial.println(state);
+		(state == true) ? tone(_pinSpeaker,ALARMFREQ) : noTone(_pinSpeaker);
 	}
 }
 
@@ -207,7 +208,8 @@ void UIRims::lcdLight(boolean state)
  */
 void UIRims::showErrorPV(String mess)
 {
-	ring(true);
+	tone(_pinSpeaker,ALARMFREQ,ALARMLENGTH);
+	Serial.println("buzz therm");
 	if(_tempScreenShown)
 	{
 		if(mess.length() > 2)
@@ -327,7 +329,6 @@ void UIRims::setTempPV(float tempCelcius)
 		float tempFahren = _celciusToFahrenheit(tempCelcius);
 		_printFloatLCD(tempCelcius,4,1,3,1);
 		_printFloatLCD(tempFahren,3,0,10,1);
-		ring(false);
 	}
 }
 
@@ -360,18 +361,20 @@ void UIRims::setTime(unsigned int timeSec)
  * it will be memorized for when it will be shown.
  *
  * \param flow : float.
+ * \param buzz : boolean. Emit an alarm on speaker if flow is incorrect.
  */
-void UIRims::setFlow(float flow)
+void UIRims::setFlow(float flow, boolean buzz)
 {
 	_flow = flow;
+	boolean flowOk = (flow >= _flowLowBound) and (flow <= _flowUpBound);
+	if(not flowOk and buzz) Serial.println("buzz flow");
+	if(not flowOk and buzz) tone(_pinSpeaker,ALARMFREQ,ALARMLENGTH);
 	if(not _tempScreenShown)
 	{
 		_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
-		if(flow>=_flowLowBound and flow<=_flowUpBound) \
-				_printStrLCD("\x01",15,1);
+		if(flowOk) _printStrLCD("\x01",15,1);
 		else if(flow<_flowLowBound) _printStrLCD("\x03",15,1);
 		else _printStrLCD("\x02",15,1);
-		ring(not((flow >= _flowLowBound) and (flow <= _flowUpBound)));
 	}
 }
 
