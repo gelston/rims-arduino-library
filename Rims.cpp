@@ -299,7 +299,6 @@ void Rims::_iterate()
 	    or _currentTime-_lastScreenSwitchTime >= SCREENSWITCHTIME)
 	{
 		_ui->switchScreen();
-// 		if(analogRead(_analogPinPV) >= 1021) _ui->showErrorPV("NC");
 		_ui->timerRunningChar((not _sumStoppedTime) and (not _timerElapsed));
 		_lastScreenSwitchTime = _currentTime;
 	}
@@ -421,7 +420,7 @@ double Rims::getTempPV()
 {
 	double tempPV = NCTHERM;
 	int curTempADC = analogRead(_analogPinPV);
-	if(curTempADC >= 1021) stopHeating(true);
+	if(curTempADC >= 1021) stopHeating(true); // disconnected thermistor
 	else
 	{
 		stopHeating(false);
