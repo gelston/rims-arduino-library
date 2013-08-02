@@ -14,13 +14,13 @@
 #define IDENTLENGTH 1800000
 
 #define STEP1TIME 0
-#define STEP1VALUE 0.5*SSRWINDOWSIZE
+#define STEP1VALUE 0.5*SSRWINDOWSIZE	/// 50 %
 
 #define STEP2TIME 600000
-#define STEP2VALUE SSRWINDOWSIZE
+#define STEP2VALUE SSRWINDOWSIZE		/// 100 %
 
 #define STEP3TIME 1200000
-#define STEP3VALUE 0
+#define STEP3VALUE 0					/// 0 %
 
 #include "Arduino.h"
 #include "Rims.h"

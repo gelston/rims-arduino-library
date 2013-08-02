@@ -21,10 +21,22 @@ UIRimsIdent::UIRimsIdent(LiquidCrystal* lcd,
 }
 
 /*!
+ * \brief Show warning about Arduino Serial Monitor
+ */
+void UIRimsIdent::showSerialWarning()
+{
+	_lcd->clear();
+	_printStrLCD("open serial [OK]",0,0);
+	_printStrLCD("monitor",0,1);
+	_waitTime(500);
+}
+
+/*!
  * \brief Show system identification screen on _lcd
  */
 void UIRimsIdent::showIdentScreen()
 {
+	_lcd->clear();
 	_printStrLCD("000% 000m00s    ",0,0);
 	_printStrLCD("PV:00.0\xdf""C(000\xdf""F)",0,1);
 	_tempScreenShown = true;
