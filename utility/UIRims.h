@@ -114,11 +114,6 @@ private:
 	boolean _waitNone;
 	boolean _tempScreenShown;
 	
-	unsigned long _lastRefreshSP;
-	unsigned long _lastRefreshPV;
-	unsigned long _lastRefreshTime;
-	unsigned long _lastRefreshFlow;
-	
 	float _tempSP;
 	float _tempPV;
 	unsigned int _time;

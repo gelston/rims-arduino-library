@@ -21,6 +21,8 @@ public:
 	UIRimsIdent(LiquidCrystal* lcd, byte pinKeysAnalog,
 			    byte pinLight=13,int pinSpeaker=-1);
 
+	void showSerialWarning();
+	
 	void showIdentScreen();
 	
 	void setIdentCV(unsigned long controlValue, unsigned long ssrWindow);

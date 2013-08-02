@@ -19,8 +19,6 @@ UIRims::UIRims(LiquidCrystal* lcd, byte pinKeysAnalog,
 : _lcd(lcd), _pinKeysAnalog(pinKeysAnalog),_waitNone(true),
   _cursorCol(0), _cursorRow(0), _pinLight(pinLight), 
   _pinSpeaker(pinSpeaker),
-  _lastRefreshSP(0), _lastRefreshPV(0), 
-  _lastRefreshTime(0), _lastRefreshFlow(0),
   _tempSP(0), _tempPV(0), _time(0), _flow(0),
   _flowLowBound(-1),_flowUpBound(100)
 {

@@ -56,6 +56,9 @@ void RimsIdent::_initialize()
 {
 	unsigned long currentTime;
 	_timerElapsed = false;
+	// === OPEN SERIAL ===
+	_ui->showSerialWarning();
+	while(_ui->readKeysADC()==KEYNONE) continue;
 	// === PUMP SWITCHING ===
 	_ui->showPumpWarning();
 	_currentTime = millis();
@@ -117,6 +120,8 @@ void RimsIdent::_iterate()
 		stopHeating(true);
 		if(_currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
 		{
+			*(_processValPtr) = this->getTempPV();
+			_flow = this->getFlow();
 			_refreshDisplay();
 			_lastTimeSerial += IDENTSAMPLETIME;
 		}
