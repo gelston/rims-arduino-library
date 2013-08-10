@@ -552,15 +552,15 @@ unsigned int UIRims::askTime(unsigned int defaultVal)
  *                          less than 4 is needed, the rest should be
  *                          setted to -1. All values should be between
  *                          0 L and 99 L.
+ * \param defaultVal : byte. Cursor starting position index.
  * \return byte : 0 to 4. Index of the selected mash water quantity.
  */
-byte UIRims::askMashWater(int mashWaterValues[])
+byte UIRims::askMashWater(int mashWaterValues[], byte defaultVal)
 {
 	boolean mashWaterSelected = false;
-	byte mashWaterIndex = 0, mashChoices = 0;
+	byte mashWaterIndex = defaultVal, mashChoices = 0;
 	byte keyPressed = KEYNONE;
 	_printStrLCD("Mash water qty: ",0,0);
-	//_printStrLCD("\x7e"" 00L 00L 00L 00L",0,1);
 	for(int i=0;i<=3;i++)
 	{
 		if(mashWaterValues[i] != - 1)
@@ -571,7 +571,7 @@ byte UIRims::askMashWater(int mashWaterValues[])
 			mashChoices++;
 		}
 	}
-	_printStrLCD("\x7e",0,1);
+	_printStrLCD("\x7e",mashWaterIndex*4,1);
 	_waitTime(500);
 	while(not mashWaterSelected)
 	{

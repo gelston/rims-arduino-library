@@ -45,6 +45,9 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 	}
 	_myPID.SetSampleTime(SAMPLETIME);
 	_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
+	_settedTime = DEFAULTTIME;
+	_rawSetPoint = DEFAULTSP;
+	_currentPID = 0;
 	pinMode(ssrPin,OUTPUT);
 	pinMode(13,OUTPUT);
 }
@@ -106,6 +109,7 @@ void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 	else _PIDFilterCsts[_currentPID] = 0;
 	_lastPIDFilterOutput = 0;
 	_mashWaterValues[_currentPID] = mashWaterQty;
+	_currentPID = 0;
 	_pidQty++;
 }
 
@@ -149,6 +153,7 @@ void Rims::setSetPointFilter(double tauFilter,int mashWaterQty)
 					exp((-1.0)*SAMPLETIME/(tauFilter*1000.0));
 	}
 	else _setPointFilterCsts[_currentPID] = 0;
+	_currentPID = 0;
 	_lastSetPointFilterOutput = 0;
 }
 
@@ -219,12 +224,13 @@ void Rims::_initialize()
 {
 	_timerElapsed = false;
 	// === ASK SETPOINT ===
-	_rawSetPoint = _ui->askSetPoint(DEFAULTSP);
+	_rawSetPoint = _ui->askSetPoint(_rawSetPoint);
 	*(_setPointPtr) = 0;
 	// === ASK TIMER ===
-	_settedTime = (unsigned long)_ui->askTime(DEFAULTTIME)*1000;
+	_settedTime = _ui->askTime(_settedTime/1000)*1000;
 	// === ASK MASH WATER ===
-    _currentPID = (_pidQty != 1) ? _ui->askMashWater(_mashWaterValues) : 0;
+	if(_pidQty != 1) _currentPID = _ui->askMashWater(_mashWaterValues,
+													 _currentPID);
 	// === PUMP SWITCHING WARN ===
 	_ui->showPumpWarning();
 	_currentTime = millis();

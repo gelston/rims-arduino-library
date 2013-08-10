@@ -77,7 +77,7 @@ public:
 	// === SETUP DIALOGS ===
 	float askSetPoint(float defaultVal); // Celsius
 	unsigned int askTime(unsigned int defaultVal); // seconds
-	byte askMashWater(int mashWaterValues[]);
+	byte askMashWater(int mashWaterValues[],byte defaultVal);
 
 	
 	
