@@ -62,7 +62,7 @@ void RimsIdent::_initialize()
 	// === PUMP SWITCHING ===
 	_ui->showPumpWarning();
 	_currentTime = millis();
-	unsigned long lastFlowRefresh = _currentTime - PIDSAMPLETIME;
+	unsigned long lastFlowRefresh = _currentTime - IDENTSAMPLETIME;
 	while(_ui->readKeysADC()==KEYNONE)
 	{
 		_currentTime = millis();

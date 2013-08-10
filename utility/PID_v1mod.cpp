@@ -11,7 +11,7 @@
   #include "WProgram.h"
 #endif
 
-#include <PID_v1.h>
+#include <PID_v1mod.h>
 
 /*Constructor (...)*********************************************************
  *    The parameters specified here are those for for which we can't set up 
@@ -44,13 +44,19 @@ PID::PID(double* Input, double* Output, double* Setpoint,
  *   pid Output needs to be computed.  returns true when the output is computed,
  *   false when nothing has been done.
  **********************************************************************************/ 
+// WARNING WARNING WARNING
+// Changed by Francis Gagnon :
+// - Removed time check up
+// - Removed PID output saturation
+// Both is implemented outside this library.
+// WARNING WARNING WARNING
 bool PID::Compute()
 {
    if(!inAuto) return false;
-   unsigned long now = millis();
-   unsigned long timeChange = (now - lastTime);
-   if(timeChange>=SampleTime)
-   {
+//    unsigned long now = millis();
+//    unsigned long timeChange = (now - lastTime);
+//    if(timeChange>=SampleTime)
+//    {
       /*Compute all the working error variables*/
 	  double input = *myInput;
       double error = *mySetpoint - input;
@@ -62,18 +68,17 @@ bool PID::Compute()
       /*Compute PID Output*/
       double output = kp * error + ITerm- kd * dInput;
       
-	  if(output > outMax) output = outMax;
-      else if(output < outMin) output = outMin;
+// 	  if(output > outMax) output = outMax;
+//       else if(output < outMin) output = outMin;
 	  *myOutput = output;
 	  
       /*Remember some variables for next time*/
       lastInput = input;
-      lastTime += SampleTime;
+//       lastTime += SampleTime;
 	  return true;
-   }
-   else return false;
+//    }
+//    else return false;
 }
-
 
 /* SetTunings(...)*************************************************************
  * This function allows the controller's dynamic performance to be adjusted. 
@@ -122,6 +127,11 @@ void PID::SetSampleTime(int NewSampleTime)
  *  want to clamp it from 0-125.  who knows.  at any rate, that can all be done
  *  here.
  **************************************************************************/
+// WARNING WARNING WARNING
+// Changed by Francis Gagnon :
+// - Removed PID output saturation
+// Implemented outside this library.
+// WARNING WARNING WARNING
 void PID::SetOutputLimits(double Min, double Max)
 {
    if(Min >= Max) return;
@@ -130,8 +140,8 @@ void PID::SetOutputLimits(double Min, double Max)
  
    if(inAuto)
    {
-	   if(*myOutput > outMax) *myOutput = outMax;
-	   else if(*myOutput < outMin) *myOutput = outMin;
+//	   if(*myOutput > outMax) *myOutput = outMax;
+//	   else if(*myOutput < outMin) *myOutput = outMin;
 	 
 	   if(ITerm > outMax) ITerm= outMax;
 	   else if(ITerm < outMin) ITerm= outMin;

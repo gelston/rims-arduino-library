@@ -5,7 +5,7 @@
  
 #include "Arduino.h"
 #include "math.h"
-#include "utility/PID_v1.h"
+#include "utility/PID_v1mod.h"
 #include "Rims.h"
 
 
@@ -43,7 +43,7 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 		_kps[i] = 0; _kis[i] = 0; _kds[i] = 0;
 		_mashWaterValues[i] = -1;
 	}
-	_myPID.SetSampleTime(PIDSAMPLETIME);
+	_myPID.SetSampleTime(SAMPLETIME);
 	_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
 	pinMode(ssrPin,OUTPUT);
 	pinMode(13,OUTPUT);
@@ -100,7 +100,7 @@ void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 	_kps[_currentPID] = Kp; _kis[_currentPID] = Ki; _kds[_currentPID] = Kd;
 	if(tauFilter>0)
 	{
-		_PIDFilterCsts[_currentPID] = exp((-1.0)*PIDSAMPLETIME/   \
+		_PIDFilterCsts[_currentPID] = exp((-1.0)*SAMPLETIME/   \
 		                            (tauFilter*1000.0));
 	}
 	else _PIDFilterCsts[_currentPID] = 0;
@@ -146,7 +146,7 @@ void Rims::setSetPointFilter(double tauFilter,int mashWaterQty)
 	if(tauFilter>0)
 	{
 		_setPointFilterCsts[_currentPID] = \
-					exp((-1.0)*PIDSAMPLETIME/(tauFilter*1000.0));
+					exp((-1.0)*SAMPLETIME/(tauFilter*1000.0));
 	}
 	else _setPointFilterCsts[_currentPID] = 0;
 	_lastSetPointFilterOutput = 0;
@@ -228,11 +228,11 @@ void Rims::_initialize()
 	// === PUMP SWITCHING WARN ===
 	_ui->showPumpWarning();
 	_currentTime = millis();
-	unsigned long lastFlowRefresh = _currentTime - PIDSAMPLETIME;
+	unsigned long lastFlowRefresh = _currentTime - SAMPLETIME;
 	while(_ui->readKeysADC()==KEYNONE)
 	{
 		_currentTime = millis();
-		if(_currentTime - lastFlowRefresh >= PIDSAMPLETIME)
+		if(_currentTime - lastFlowRefresh >= SAMPLETIME)
 		{
 			_ui->setFlow(this->getFlow());
 			lastFlowRefresh = _currentTime;
@@ -247,6 +247,7 @@ void Rims::_initialize()
 	_ui->setTempPV(*(_processValPtr));
 	// first value = operating points = set point filter initial condition :
 	_lastSetPointFilterOutput = *(_processValPtr);
+	_lastPIDFilterOutput = 0;
 	_sumStoppedTime = true;
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
 	_buzzerState = false;
@@ -257,20 +258,20 @@ void Rims::_initialize()
 	_rimsInitialized = true;
 	_currentTime = _windowStartTime = _timerStartTime = _rimsStartTime \
 				 = _lastScreenSwitchTime = millis();
-	_lastTimePID = _currentTime - PIDSAMPLETIME;
+	_lastTimePID = _currentTime - SAMPLETIME;
 }
 
 /*!
  * \brief Main method called for temperature regulation at each iteration
  * 
- * At each PID calculation (at each PIDSAMPLETIME sec), datas is
+ * At each PID calculation (at each SAMPLETIME sec), datas is
  * sent over Serial communication for logging purpose.
  *
  */
 void Rims::_iterate()
 {
 	_currentTime = millis();
-	if(_currentTime-_lastTimePID>=PIDSAMPLETIME)
+	if(_currentTime-_lastTimePID>=SAMPLETIME)
 	{
 		// === READ TEMPERATURE/FLOW ===
 		*(_processValPtr) = getTempPV();
@@ -287,7 +288,7 @@ void Rims::_iterate()
 		Serial.print(*(_processValPtr),15);					Serial.print(",");
 		Serial.print(_flow,2);								Serial.print(",");
 		Serial.println((_settedTime-_runningTime)/1000.0,0);
-		_lastTimePID += PIDSAMPLETIME;
+		_lastTimePID += SAMPLETIME;
 	}
 	// === SSR CONTROL ===
 	_refreshSSR();
@@ -329,6 +330,8 @@ void Rims::_refreshPID()
 	(*_controlValPtr) = (1-_PIDFilterCsts[_currentPID])*(*_controlValPtr) + \
 							_PIDFilterCsts[_currentPID] * _lastPIDFilterOutput;
 	_lastPIDFilterOutput = (*_controlValPtr);
+	// === OUTPUT SATURATION ===
+	*(_controlValPtr) = constrain(*_controlValPtr,0,SSRWINDOWSIZE);
 }
 
 /*!
@@ -418,22 +421,23 @@ void Rims::_refreshSSR()
  */
 double Rims::getTempPV()
 {
-	double tempPV = NCTHERM;
-	int curTempADC = analogRead(_analogPinPV);
-	if(curTempADC >= 1021) stopHeating(true); // disconnected thermistor
-	else
-	{
-		stopHeating(false);
-		double vin = ((double)curTempADC)/1024.0;
-		double resTherm = (_res1*vin)/(1.0-vin);
-		double logResTherm = log(resTherm);
-		double invKelvin = _steinhartCoefs[0]+\
-						_steinhartCoefs[1]*logResTherm+\
-						_steinhartCoefs[2]*pow(logResTherm,2)+\
-						_steinhartCoefs[3]*pow(logResTherm,3);
-		tempPV = (1/invKelvin)-273.15+_fineTuneTemp;
-	}
-	return tempPV;
+// 	double tempPV = NCTHERM;
+// 	int curTempADC = analogRead(_analogPinPV);
+// 	if(curTempADC >= 1021) stopHeating(true); // disconnected thermistor
+// 	else
+// 	{
+// 		stopHeating(false);
+// 		double vin = ((double)curTempADC)/1024.0;
+// 		double resTherm = (_res1*vin)/(1.0-vin);
+// 		double logResTherm = log(resTherm);
+// 		double invKelvin = _steinhartCoefs[0]+\
+// 						_steinhartCoefs[1]*logResTherm+\
+// 						_steinhartCoefs[2]*pow(logResTherm,2)+\
+// 						_steinhartCoefs[3]*pow(logResTherm,3);
+// 		tempPV = (1/invKelvin)-273.15+_fineTuneTemp;
+// 	}
+// 	return tempPV;
+	return 19.90000000000;
 }
 
 /*!
