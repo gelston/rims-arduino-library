@@ -31,8 +31,8 @@
 
 ///\brief Default set point on UIRims [celcius]
 #define DEFAULTSP 68
-///\brief Default timer time on UIRims [sec]
-#define DEFAULTTIME 5400
+///\brief Default timer time on UIRims [mSec]
+#define DEFAULTTIME 5400000
 
 #define DEFAULTSTEINHART0 0.001
 #define DEFAULTSTEINHART1 0.0002
