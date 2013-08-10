@@ -421,23 +421,22 @@ void Rims::_refreshSSR()
  */
 double Rims::getTempPV()
 {
-// 	double tempPV = NCTHERM;
-// 	int curTempADC = analogRead(_analogPinPV);
-// 	if(curTempADC >= 1021) stopHeating(true); // disconnected thermistor
-// 	else
-// 	{
-// 		stopHeating(false);
-// 		double vin = ((double)curTempADC)/1024.0;
-// 		double resTherm = (_res1*vin)/(1.0-vin);
-// 		double logResTherm = log(resTherm);
-// 		double invKelvin = _steinhartCoefs[0]+\
-// 						_steinhartCoefs[1]*logResTherm+\
-// 						_steinhartCoefs[2]*pow(logResTherm,2)+\
-// 						_steinhartCoefs[3]*pow(logResTherm,3);
-// 		tempPV = (1/invKelvin)-273.15+_fineTuneTemp;
-// 	}
-// 	return tempPV;
-	return 19.90000000000;
+	double tempPV = NCTHERM;
+	int curTempADC = analogRead(_analogPinPV);
+	if(curTempADC >= 1021) stopHeating(true); // disconnected thermistor
+	else
+	{
+		stopHeating(false);
+		double vin = ((double)curTempADC)/1024.0;
+		double resTherm = (_res1*vin)/(1.0-vin);
+		double logResTherm = log(resTherm);
+		double invKelvin = _steinhartCoefs[0]+\
+						_steinhartCoefs[1]*logResTherm+\
+						_steinhartCoefs[2]*pow(logResTherm,2)+\
+						_steinhartCoefs[3]*pow(logResTherm,3);
+		tempPV = (1/invKelvin)-273.15+_fineTuneTemp;
+	}
+	return tempPV;
 }
 
 /*!
