@@ -25,7 +25,7 @@
 
 ///\brief Sample time for PID. Same time used
 ///       for LCD refresh rate and data log rate [mSec]
-#define PIDSAMPLETIME 1000
+#define SAMPLETIME 1000
 ///\brief solid state relay window size [mSec]
 #define SSRWINDOWSIZE 5000
 
@@ -58,7 +58,7 @@
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
-#include "utility/PID_v1.h"
+#include "utility/PID_v1mod.h"
 
 
 
