@@ -45,7 +45,7 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 	}
 	_myPID.SetSampleTime(SAMPLETIME);
 	_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
-	_settedTime = DEFAULTTIME;
+	_settedTime = (unsigned long)DEFAULTTIME*1000;
 	_rawSetPoint = DEFAULTSP;
 	_currentPID = 0;
 	pinMode(ssrPin,OUTPUT);
@@ -227,7 +227,7 @@ void Rims::_initialize()
 	_rawSetPoint = _ui->askSetPoint(_rawSetPoint);
 	*(_setPointPtr) = 0;
 	// === ASK TIMER ===
-	_settedTime = _ui->askTime(_settedTime/1000)*1000;
+	_settedTime = (unsigned long)_ui->askTime(_settedTime/1000)*1000;
 	// === ASK MASH WATER ===
 	if(_pidQty != 1) _currentPID = _ui->askMashWater(_mashWaterValues,
 													 _currentPID);
@@ -240,7 +240,7 @@ void Rims::_initialize()
 		_currentTime = millis();
 		if(_currentTime - lastFlowRefresh >= SAMPLETIME)
 		{
-			_ui->setFlow(this->getFlow());
+			_ui->setFlow(this->getFlow(),false);
 			lastFlowRefresh = _currentTime;
 		}
 	}
@@ -259,6 +259,7 @@ void Rims::_initialize()
 	_buzzerState = false;
 	Serial.begin(9600);
 	Serial.println("time,sp,cv,pv,flow,timerRemaining");
+	stopHeating(true);
 	_myPID.SetTunings(_kps[_currentPID],_kis[_currentPID],_kds[_currentPID]);
 	stopHeating(false);
 	_rimsInitialized = true;
@@ -471,7 +472,7 @@ void Rims::stopHeating(boolean state)
 		*(_controlValPtr) = 0;
 		_refreshSSR();
 	}
-	else if(_myPID.GetMode()==MANUAL) _myPID.SetMode(AUTOMATIC);
+	else _myPID.SetMode(AUTOMATIC);
 }
 
 /*

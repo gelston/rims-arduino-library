@@ -21,7 +21,7 @@
 /// \brief Alarm on speaker frequency [Hz]
 #define ALARMFREQ 1000
 /// \brief Alarm duration used for uncorrect measurement [mSec]
-#define ALARMLENGTH 100
+#define ALARMLENGTH 50
 
 /// \brief Software key debounce time [mSec]
 #define KEYDEBOUNCETIME 15
