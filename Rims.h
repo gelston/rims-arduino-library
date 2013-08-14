@@ -119,6 +119,8 @@ private:
 	// ===STATE DATAS===
 	boolean _rimsInitialized;
 	boolean _stopOnCriticalFlow;
+	boolean _criticalFlow;
+	boolean _ncTherm;
 	boolean _buzzerState;
 	
 	// ===MULTIPLE PIDs===
@@ -141,10 +143,8 @@ private:
 	double _kps[4];
 	double _kis[4];
 	double _kds[4];
-	
-	// ===PID FILTER===
-	double _PIDFilterCsts[4];
-	double _lastPIDFilterOutput;
+	double _tauFilter[4];
+
 	
 	// ===SET POINT FILTER===
 	double _setPointFilterCsts[4];

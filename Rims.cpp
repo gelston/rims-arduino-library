@@ -39,8 +39,8 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 	_fineTuneTemp = 0;
 	for(int i=0;i<=3;i++)
 	{
-		_PIDFilterCsts[i] = 0; _setPointFilterCsts[i] = 0;
-		_kps[i] = 0; _kis[i] = 0; _kds[i] = 0;
+		_setPointFilterCsts[i] = 0;
+		_kps[i] = 0; _kis[i] = 0; _kds[i] = 0; _tauFilter[i] = 0; 
 		_mashWaterValues[i] = -1;
 	}
 	_myPID.SetSampleTime(SAMPLETIME);
@@ -79,16 +79,22 @@ void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
  *
  * Algorithm is in parallel form i.e. :
  * \f[ 
- * G_{c}(s) = [K_{p}+\frac{K_{i}}{s}+K_{d}s]\times\frac{1}{Ts+1}
+ * G_{c}(s) = K_{p}+\frac{K_{i}}{s}+\frac{K_{d}s}{Ts+1}
  * \f]
- * Where \f$T=tauFilter[sec]\f$
+ * Where \f$T=tauFilter[sec]\f$. It can be set to the same value as a PID output filter.
+ * 
+ * In practice, a good value of derivative filter is :
+ * \f[ 
+ * T = \frac{K_{d}}{10}
+ * \f]
+ * 
  * For more information : 
  * http://playground.arduino.cc/Code/PIDLibrary
  *
  * \param Kp : float. Propotionnal gain
  * \param Ki : float. Integral gain.
  * \param Kd : float. Derivative gain.
- * \param tauFilter : float. PID output filter time constant in sec.
+ * \param tauFilter : float. Derivative filter time constant in sec.
  * \param mashWaterQty : int (default=-1). If multiple regulators is needed,
  *                       set this parameter to mash water volume in liter.
  *                       This mash water volume will be associated to this PID.
@@ -101,13 +107,7 @@ void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 	if(mashWaterQty != -1) _currentPID = _pidQty;
 	else _currentPID = 0;
 	_kps[_currentPID] = Kp; _kis[_currentPID] = Ki; _kds[_currentPID] = Kd;
-	if(tauFilter>0)
-	{
-		_PIDFilterCsts[_currentPID] = exp((-1.0)*SAMPLETIME/   \
-		                            (tauFilter*1000.0));
-	}
-	else _PIDFilterCsts[_currentPID] = 0;
-	_lastPIDFilterOutput = 0;
+    _tauFilter[_currentPID] = tauFilter;
 	_mashWaterValues[_currentPID] = mashWaterQty;
 	_currentPID = 0;
 	_pidQty++;
@@ -253,7 +253,6 @@ void Rims::_initialize()
 	_ui->setTempPV(*(_processValPtr));
 	// first value = operating points = set point filter initial condition :
 	_lastSetPointFilterOutput = *(_processValPtr);
-	_lastPIDFilterOutput = 0;
 	_sumStoppedTime = true;
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
 	_buzzerState = false;
@@ -261,6 +260,8 @@ void Rims::_initialize()
 	Serial.println("time,sp,cv,pv,flow,timerRemaining");
 	stopHeating(true);
 	_myPID.SetTunings(_kps[_currentPID],_kis[_currentPID],_kds[_currentPID]);
+	_myPID.SetDerivativeFilter(_tauFilter[_currentPID]);
+	*(_controlValPtr) = 0;
 	stopHeating(false);
 	_rimsInitialized = true;
 	_currentTime = _windowStartTime = _timerStartTime = _rimsStartTime \
@@ -283,6 +284,8 @@ void Rims::_iterate()
 		// === READ TEMPERATURE/FLOW ===
 		*(_processValPtr) = getTempPV();
 		_flow = this->getFlow();
+		// === CRITCAL STATES ===
+		stopHeating((_stopOnCriticalFlow and _criticalFlow) or _ncTherm);
 		// === REFRESH PID ===
 		_refreshPID();
 		// === REFRESH DISPLAY ===
@@ -333,12 +336,6 @@ void Rims::_refreshPID()
 	_lastSetPointFilterOutput = *(_setPointPtr);
 	// === PID COMPUTE ===
 	_myPID.Compute();
-	// === PID FILTERING ===
-	(*_controlValPtr) = (1-_PIDFilterCsts[_currentPID])*(*_controlValPtr) + \
-							_PIDFilterCsts[_currentPID] * _lastPIDFilterOutput;
-	_lastPIDFilterOutput = (*_controlValPtr);
-	// === OUTPUT SATURATION ===
-	*(_controlValPtr) = constrain(*_controlValPtr,0,SSRWINDOWSIZE);
 }
 
 /*!
@@ -429,11 +426,11 @@ void Rims::_refreshSSR()
 double Rims::getTempPV()
 {
 	double tempPV = NCTHERM;
+	_ncTherm = true;
 	int curTempADC = analogRead(_analogPinPV);
-	if(curTempADC >= 1021) stopHeating(true); // disconnected thermistor
-	else
+	if(curTempADC < 1021)  // connected thermistor
 	{
-		stopHeating(false);
+		_ncTherm = false;
 		double vin = ((double)curTempADC)/1024.0;
 		double resTherm = (_res1*vin)/(1.0-vin);
 		double logResTherm = log(resTherm);
@@ -455,7 +452,7 @@ float Rims::getFlow()
 	if(_flowCurTime == 0) flow = 0.0;
 	else if(micros() - _flowCurTime >= 5e06) flow = 0.0;
 	else flow = (1e06 / (_flowFactor* (_flowCurTime - _flowLastTime)));
-	if(_stopOnCriticalFlow) stopHeating(flow <= CRITICALFLOW);
+	_criticalFlow = (flow <= CRITICALFLOW);
 	return constrain(flow,0,99.99);
 }
 
@@ -468,7 +465,7 @@ void Rims::stopHeating(boolean state)
 {
 	if(state == true)
 	{
-		if(_myPID.GetMode()==AUTOMATIC) _myPID.SetMode(MANUAL);
+		_myPID.SetMode(MANUAL);
 		*(_controlValPtr) = 0;
 		_refreshSSR();
 	}
