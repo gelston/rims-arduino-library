@@ -28,9 +28,10 @@ PID::PID(double* Input, double* Output, double* Setpoint,
 	
 	PID::SetOutputLimits(0, 255);				//default output limit corresponds to 
 												//the arduino pwm limits
-
+	PID::SetDerivativeFilter(0);				//Francis Gagnon
     SampleTime = 100;							//default Controller Sample Time is 0.1 seconds
 
+    
     PID::SetControllerDirection(ControllerDirection);
     PID::SetTunings(Kp, Ki, Kd);
 
@@ -47,8 +48,9 @@ PID::PID(double* Input, double* Output, double* Setpoint,
 // WARNING WARNING WARNING
 // Changed by Francis Gagnon :
 // - Removed time check up
-// - Removed PID output saturation
-// Both is implemented outside this library.
+// - Added derivative filtering
+// - Integration clamping
+// Implemented outside this library.
 // WARNING WARNING WARNING
 bool PID::Compute()
 {
@@ -60,16 +62,23 @@ bool PID::Compute()
       /*Compute all the working error variables*/
 	  double input = *myInput;
       double error = *mySetpoint - input;
-      ITerm+= (ki * error);
-      if(ITerm > outMax) ITerm= outMax;
-      else if(ITerm < outMin) ITerm= outMin;
+	  
+	  /*Integrator clamping by Francis Gagnon*/
+	  double kiError = ki*error;
+	  double preClamped = ITerm + kiError;
+	  boolean clamp = (SIGN(preClamped) == SIGN(kiError)) and \
+			   (preClamped != constrain(preClamped,outMin,outMax));
+	  if(not clamp) ITerm = preClamped;
+	  
+	  /*Derivative filtering*/
       double dInput = (input - lastInput);
- 
+	  dInput = (1-filterCst)*dInput + filterCst * lastFilterOutput;
+	  lastFilterOutput = dInput;
       /*Compute PID Output*/
       double output = kp * error + ITerm- kd * dInput;
       
-// 	  if(output > outMax) output = outMax;
-//       else if(output < outMin) output = outMin;
+	  if(output > outMax) output = outMax;
+      else if(output < outMin) output = outMin;
 	  *myOutput = output;
 	  
       /*Remember some variables for next time*/
@@ -103,6 +112,20 @@ void PID::SetTunings(double Kp, double Ki, double Kd)
       kd = (0 - kd);
    }
 }
+
+/* SetDerivativeFilter(...)****************************************************
+ * Added by Francis Gagnon.
+ * Set time constant in second of the low pass derivative filter.
+ ******************************************************************************/ 
+void PID::SetDerivativeFilter(double tauFilter)
+{
+	if(tauFilter>0)
+	{
+		filterCst = exp((-1.0)*SampleTime/(tauFilter*1000.0));
+	}
+	else filterCst = 0;
+	lastFilterOutput = 0;
+}
   
 /* SetSampleTime(...) *********************************************************
  * sets the period, in Milliseconds, at which the calculation is performed	
@@ -127,11 +150,6 @@ void PID::SetSampleTime(int NewSampleTime)
  *  want to clamp it from 0-125.  who knows.  at any rate, that can all be done
  *  here.
  **************************************************************************/
-// WARNING WARNING WARNING
-// Changed by Francis Gagnon :
-// - Removed PID output saturation
-// Implemented outside this library.
-// WARNING WARNING WARNING
 void PID::SetOutputLimits(double Min, double Max)
 {
    if(Min >= Max) return;
@@ -140,8 +158,8 @@ void PID::SetOutputLimits(double Min, double Max)
  
    if(inAuto)
    {
-//	   if(*myOutput > outMax) *myOutput = outMax;
-//	   else if(*myOutput < outMin) *myOutput = outMin;
+	   if(*myOutput > outMax) *myOutput = outMax;
+	   else if(*myOutput < outMin) *myOutput = outMin;
 	 
 	   if(ITerm > outMax) ITerm= outMax;
 	   else if(ITerm < outMin) ITerm= outMin;
@@ -171,6 +189,7 @@ void PID::Initialize()
 {
    ITerm = *myOutput;
    lastInput = *myInput;
+   lastFilterOutput = *myOutput;  // Francis Gagnon
    if(ITerm > outMax) ITerm = outMax;
    else if(ITerm < outMin) ITerm = outMin;
 }

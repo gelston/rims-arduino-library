@@ -2,6 +2,8 @@
 #define PID_v1mod_h
 #define LIBRARY_VERSION	1.0.0
 
+#define SIGN(x) ((x>0)-(x<0))
+
 class PID
 {
 
@@ -28,13 +30,14 @@ class PID
     void SetOutputLimits(double, double); //clamps the output to a specific range. 0-255 by default, but
 										  //it's likely the user will want to change this depending on
 										  //the application
-	
 
 
   //available but not commonly used functions ********************************************************
     void SetTunings(double, double,       // * While most users will set the tunings once in the 
                     double);         	  //   constructor, this function gives the user the option
                                           //   of changing tunings during runtime for Adaptive control
+	void SetDerivativeFilter(double);     // * Added by Francis Gagnon. Add a first-order
+	                                      //   lowpass filter to derivative part of given time constant [sec].
 	void SetControllerDirection(int);	  // * Sets the Direction, or "Action" of the controller. DIRECT
 										  //   means the output will increase when error is positive. REVERSE
 										  //   means the opposite.  it's very unlikely that this will be needed
@@ -61,6 +64,7 @@ class PID
 	double kp;                  // * (P)roportional Tuning Parameter
     double ki;                  // * (I)ntegral Tuning Parameter
     double kd;                  // * (D)erivative Tuning Parameter
+    double filterCst;           // * (1/N) Derivative filter constant (Francis Gagnon)
 
 	int controllerDirection;
 
@@ -68,9 +72,10 @@ class PID
     double *myOutput;             //   This creates a hard link between the variables and the 
     double *mySetpoint;           //   PID, freeing the user from having to constantly tell us
                                   //   what these values are.  with pointers we'll just know.
-			  
+		
 	unsigned long lastTime;
 	double ITerm, lastInput;
+	double lastFilterOutput;      // Francis Gagnon
 
 	unsigned long SampleTime;
 	double outMin, outMax;
