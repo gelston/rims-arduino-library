@@ -1,7 +1,7 @@
 /**********************************************************************************************
- * Arduino PID Library - Version 1.0.1
+ * Arduino PIDmod Library - Version 1.0.1
  * by Brett Beauregard <br3ttb@gmail.com> brettbeauregard.com
- *
+ * and Francis Gagnon
  * This Library is licensed under a GPLv3 License
  **********************************************************************************************/
 
@@ -17,7 +17,7 @@
  *    The parameters specified here are those for for which we can't set up 
  *    reliable defaults, so we need to have the user set them.
  ***************************************************************************/
-PID::PID(double* Input, double* Output, double* Setpoint,
+PIDmod::PIDmod(double* Input, double* Output, double* Setpoint,
         double Kp, double Ki, double Kd, int ControllerDirection)
 {
 	
@@ -26,14 +26,14 @@ PID::PID(double* Input, double* Output, double* Setpoint,
     mySetpoint = Setpoint;
 	inAuto = false;
 	
-	PID::SetOutputLimits(0, 255);				//default output limit corresponds to 
+	PIDmod::SetOutputLimits(0, 255);				//default output limit corresponds to 
 												//the arduino pwm limits
-	PID::SetDerivativeFilter(0);				//Francis Gagnon
+	PIDmod::SetDerivativeFilter(0);				//Francis Gagnon
     SampleTime = 100;							//default Controller Sample Time is 0.1 seconds
 
     
-    PID::SetControllerDirection(ControllerDirection);
-    PID::SetTunings(Kp, Ki, Kd);
+    PIDmod::SetControllerDirection(ControllerDirection);
+    PIDmod::SetTunings(Kp, Ki, Kd);
 
     lastTime = millis()-SampleTime;				
 }
@@ -52,7 +52,7 @@ PID::PID(double* Input, double* Output, double* Setpoint,
 // - Integration clamping
 // Implemented outside this library.
 // WARNING WARNING WARNING
-bool PID::Compute()
+bool PIDmod::Compute()
 {
    if(!inAuto) return false;
 //    unsigned long now = millis();
@@ -94,7 +94,7 @@ bool PID::Compute()
  * it's called automatically from the constructor, but tunings can also
  * be adjusted on the fly during normal operation
  ******************************************************************************/ 
-void PID::SetTunings(double Kp, double Ki, double Kd)
+void PIDmod::SetTunings(double Kp, double Ki, double Kd)
 {
    if (Kp<0 || Ki<0 || Kd<0) return;
  
@@ -117,7 +117,7 @@ void PID::SetTunings(double Kp, double Ki, double Kd)
  * Added by Francis Gagnon.
  * Set time constant in second of the low pass derivative filter.
  ******************************************************************************/ 
-void PID::SetDerivativeFilter(double tauFilter)
+void PIDmod::SetDerivativeFilter(double tauFilter)
 {
 	if(tauFilter>0)
 	{
@@ -130,7 +130,7 @@ void PID::SetDerivativeFilter(double tauFilter)
 /* SetSampleTime(...) *********************************************************
  * sets the period, in Milliseconds, at which the calculation is performed	
  ******************************************************************************/
-void PID::SetSampleTime(int NewSampleTime)
+void PIDmod::SetSampleTime(int NewSampleTime)
 {
    if (NewSampleTime > 0)
    {
@@ -150,7 +150,7 @@ void PID::SetSampleTime(int NewSampleTime)
  *  want to clamp it from 0-125.  who knows.  at any rate, that can all be done
  *  here.
  **************************************************************************/
-void PID::SetOutputLimits(double Min, double Max)
+void PIDmod::SetOutputLimits(double Min, double Max)
 {
    if(Min >= Max) return;
    outMin = Min;
@@ -171,12 +171,12 @@ void PID::SetOutputLimits(double Min, double Max)
  * when the transition from manual to auto occurs, the controller is
  * automatically initialized
  ******************************************************************************/ 
-void PID::SetMode(int Mode)
+void PIDmod::SetMode(int Mode)
 {
     bool newAuto = (Mode == AUTOMATIC);
     if(newAuto == !inAuto)
     {  /*we just went from manual to auto*/
-        PID::Initialize();
+        PIDmod::Initialize();
     }
     inAuto = newAuto;
 }
@@ -185,7 +185,7 @@ void PID::SetMode(int Mode)
  *	does all the things that need to happen to ensure a bumpless transfer
  *  from manual to automatic mode.
  ******************************************************************************/ 
-void PID::Initialize()
+void PIDmod::Initialize()
 {
    ITerm = *myOutput;
    lastInput = *myInput;
@@ -200,7 +200,7 @@ void PID::Initialize()
  * know which one, because otherwise we may increase the output when we should
  * be decreasing.  This is called from the constructor.
  ******************************************************************************/
-void PID::SetControllerDirection(int Direction)
+void PIDmod::SetControllerDirection(int Direction)
 {
    if(inAuto && Direction !=controllerDirection)
    {
@@ -216,9 +216,9 @@ void PID::SetControllerDirection(int Direction)
  * functions query the internal state of the PID.  they're here for display 
  * purposes.  this are the functions the PID Front-end uses for example
  ******************************************************************************/
-double PID::GetKp(){ return  dispKp; }
-double PID::GetKi(){ return  dispKi;}
-double PID::GetKd(){ return  dispKd;}
-int PID::GetMode(){ return  inAuto ? AUTOMATIC : MANUAL;}
-int PID::GetDirection(){ return controllerDirection;}
+double PIDmod::GetKp(){ return  dispKp; }
+double PIDmod::GetKi(){ return  dispKi;}
+double PIDmod::GetKd(){ return  dispKd;}
+int PIDmod::GetMode(){ return  inAuto ? AUTOMATIC : MANUAL;}
+int PIDmod::GetDirection(){ return controllerDirection;}
 
