@@ -111,7 +111,7 @@ private:
 	
 	// ===GENERAL===
 	UIRims* _ui;
-	PID _myPID;
+	PIDmod _myPID;
 	byte _analogPinPV;
 	byte _pinCV;
 	byte _pinLED;

@@ -4,7 +4,7 @@
 
 #define SIGN(x) ((x>0)-(x<0))
 
-class PID
+class PIDmod
 {
 
 
@@ -17,7 +17,7 @@ class PID
   #define REVERSE  1
 
   //commonly used functions **************************************************************************
-    PID(double*, double*, double*,        // * constructor.  links the PID to the Input, Output, and 
+    PIDmod(double*, double*, double*,     // * constructor.  links the PID to the Input, Output, and 
         double, double, double, int);     //   Setpoint.  Initial tuning parameters are also set here
 	
     void SetMode(int Mode);               // * sets PID to either Manual (0) or Auto (non-0)
