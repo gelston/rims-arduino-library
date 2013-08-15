@@ -73,7 +73,9 @@ class PIDmod
     double *mySetpoint;           //   PID, freeing the user from having to constantly tell us
                                   //   what these values are.  with pointers we'll just know.
 		
-	unsigned long lastTime;
+	boolean clamp;                // Francis Gagnon
+	
+//	unsigned long lastTime;
 	double ITerm, lastInput;
 	double lastFilterOutput;      // Francis Gagnon
 
