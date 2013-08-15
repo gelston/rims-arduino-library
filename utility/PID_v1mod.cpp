@@ -35,7 +35,7 @@ PIDmod::PIDmod(double* Input, double* Output, double* Setpoint,
     PIDmod::SetControllerDirection(ControllerDirection);
     PIDmod::SetTunings(Kp, Ki, Kd);
 
-    lastTime = millis()-SampleTime;				
+//     lastTime = millis()-SampleTime;				
 }
  
  
@@ -62,23 +62,23 @@ bool PIDmod::Compute()
       /*Compute all the working error variables*/
 	  double input = *myInput;
       double error = *mySetpoint - input;
-	  
-	  /*Integrator clamping by Francis Gagnon*/
 	  double kiError = ki*error;
-	  double preClamped = ITerm + kiError;
-	  boolean clamp = (SIGN(preClamped) == SIGN(kiError)) and \
-			   (preClamped != constrain(preClamped,outMin,outMax));
-	  if(not clamp) ITerm = preClamped;
+	  if(not clamp) ITerm += kiError;
 	  
 	  /*Derivative filtering*/
       double dInput = (input - lastInput);
 	  dInput = (1-filterCst)*dInput + filterCst * lastFilterOutput;
 	  lastFilterOutput = dInput;
+	  
       /*Compute PID Output*/
       double output = kp * error + ITerm- kd * dInput;
-	  if(output > outMax) output = outMax;
-      else if(output < outMin) output = outMin;
-	  *myOutput = output;
+	  double outputSat = constrain(output,outMax,outMin);
+	 
+	  /*Integrator clamping by Francis Gagnon*/
+	  clamp = (SIGN(output) == SIGN(kiError)) and \
+			   (output != outputSat);
+	  
+	  *myOutput = outputSat;
 	  
       /*Remember some variables for next time*/
       lastInput = input;
