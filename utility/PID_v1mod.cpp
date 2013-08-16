@@ -72,8 +72,8 @@ bool PIDmod::Compute()
 	  
       /*Compute PID Output*/
       double output = kp * error + ITerm- kd * dInput;
-	  double outputSat = constrain(output,outMax,outMin);
-	 
+	  double outputSat = constrain(output,outMin,outMax);
+	  
 	  /*Integrator clamping by Francis Gagnon*/
 	  clamp = (SIGN(output) == SIGN(kiError)) and \
 			   (output != outputSat);
@@ -185,6 +185,7 @@ void PIDmod::SetMode(int Mode)
 void PIDmod::Initialize()
 {
    ITerm = *myOutput;
+   clamp = true;
    lastInput = *myInput;
    lastFilterOutput = 0;  // Francis Gagnon
    if(ITerm > outMax) ITerm = outMax;
