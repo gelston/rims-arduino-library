@@ -43,7 +43,7 @@
 
 ///\brief Max temperature variation from set 
 ///       point before stopping timer count down [celcius]
-#define MAXTEMPVAR 1.0 /// celsius
+#define MAXTEMPVAR 0.5 /// celsius
 ///\brief Time before tempScreen/timeFlowScreen 
 ///       is automatically shown[mSec]
 #define SCREENSWITCHTIME 10000 /// mSec

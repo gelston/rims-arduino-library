@@ -90,6 +90,14 @@ void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
  * 
  * For more information : 
  * http://playground.arduino.cc/Code/PIDLibrary
+ * 
+ * For anti-windup, integration static saturation was replaced by
+ * <b>integration clamping</b>. Basically, it stop integration at a smarter
+ * time than "if output limit is reached". 
+ * 
+ * @image html pid.png "Full PID block diagram"
+ *
+ * @image html clamping.png "Integration clamping diagram"  
  *
  * \param Kp : float. Propotionnal gain
  * \param Ki : float. Integral gain.
@@ -387,6 +395,7 @@ void Rims::_refreshDisplay()
 		_ui->ring(_buzzerState);
 		_ui->lcdLight(_buzzerState);
 	}
+	Serial.println(_settedTime-_runningTime);
 	_ui->setTime((_settedTime-_runningTime)/1000);
 	_ui->timerRunningChar((not _sumStoppedTime) and (not _timerElapsed));
 	_ui->setFlow(_flow);
