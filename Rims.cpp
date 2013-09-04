@@ -94,8 +94,8 @@ void Rims::setThermistor(float steinhartCoefs[], float res1, float fineTuneTemp)
  * For anti-windup, integration static saturation was replaced by
  * <b>integration clamping</b>. Basically, it stop integration at a smarter
  * time than "if limit is reached at the output of the integrator". More precisely, it
- * stop integration if <b>limit is reached at the ouput the PID</b> <i>AND</i>
- * if <b>the temperature error and and the PID output have the same
+ * stop integration <b>if limit is reached at the ouput of the PID</b> <i>AND</i>
+ * <b>if the temperature error and and the PID output have the same
  * sign.</b>
  * 
  * @image html pid.png "Full PID block diagram"
