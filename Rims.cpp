@@ -9,6 +9,24 @@
 #include "Rims.h"
 
 
+/*
+============================================================
+Global Variable
+============================================================
+*/
+
+///\brief Last time interrupt was called [µSec]
+volatile unsigned long g_flowLastTime = 0;
+///\brief Current time interrupt is called [µSec]
+volatile unsigned long g_flowCurTime = 0;
+///\brief ISR for flow sensor.
+void isrFlow(); /// ISR for flow sensor
+
+/*
+============================================================
+RIMS class definition
+============================================================
+*/
 /*!
  * \brief Constructor
  * \param uiRims : UIRims*. Pointer to UIRims instance
@@ -28,8 +46,7 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
   _pidQty(0), 
   _stopOnCriticalFlow(false), _rimsInitialized(false),
-  _pinLED(13),
-  _flowLastTime(0), _flowCurTime(0)
+  _pinLED(13),_pinHeaterVolt(-1), _noPower(false)
 {
 	_steinhartCoefs[0] = DEFAULTSTEINHART0;
 	_steinhartCoefs[1] = DEFAULTSTEINHART1;
@@ -191,8 +208,7 @@ void Rims::setInterruptFlow(byte interruptFlow, float flowFactor,
 							float lowBound,float upBound,
 							boolean stopOnCriticalFlow)
 {
-	Rims::_rimsPtr = this;
-	attachInterrupt(interruptFlow,Rims::_isrFlowSensor,RISING);
+	attachInterrupt(interruptFlow,isrFlow,RISING);
 	_flowFactor = flowFactor;
 	_ui->setFlowBounds(lowBound,upBound);
 	_stopOnCriticalFlow = stopOnCriticalFlow;
@@ -206,6 +222,29 @@ void Rims::setPinLED(byte pinLED)
 {
 	pinMode(pinLED,OUTPUT);
 	_pinLED = pinLED;
+}
+
+/*!
+ * \brief Set pin to detect if there is voltage applied on heater.
+ * 
+ * If no voltage is detect on the heater, a speaker alarm is trigerred.
+ * 
+ * \warning DO NOT APPLY 120V OR 240V DIRECTLY ON ARDUINO PINS.
+ * 
+ * It can be easily and cheaply made with a +5V DC power supply in
+ * parallel with the SSR and heater.
+ * 
+ * I use it to detect if my breaker is trigerred or if I shut it off
+ * manually with an external switch. If the PID is informed that the heater
+ * is shut off, it will run smoother when the heater will be re-powered.
+ * This feature is really not mandatory.
+ * 
+ * \param pinHeaterVolt : byte. 5V power supply pin.
+ */
+void Rims::setHeaterPowerDetect(byte pinHeaterVolt)
+{
+	pinMode(pinHeaterVolt,OUTPUT);
+	_pinHeaterVolt = pinHeaterVolt;
 }
 
 /*!
@@ -243,7 +282,7 @@ void Rims::_initialize()
 	if(_pidQty != 1) _currentPID = _ui->askMashWater(_mashWaterValues,
 													 _currentPID);
 	// === PUMP SWITCHING WARN ===
-	_ui->showPumpWarning();
+	_ui->showPumpWarning(this->getFlow());
 	_currentTime = millis();
 	unsigned long lastFlowRefresh = _currentTime - SAMPLETIME;
 	while(_ui->readKeysADC()==KEYNONE)
@@ -256,8 +295,14 @@ void Rims::_initialize()
 		}
 	}
 	// === HEATER SWITCHING WARN ===
-	_ui->showHeaterWarning();
-	while(_ui->readKeysADC()==KEYNONE) continue;
+	_ui->showHeaterWarning(this->getHeaterVoltage());
+	while(_ui->readKeysADC()==KEYNONE)
+	{
+		if(_pinHeaterVolt != -1)
+		{
+			_ui->setHeaterVoltState(this->getHeaterVoltage());
+		}
+	}
 	_ui->showTempScreen();
 	*(_processValPtr) = this->getTempPV();
 	_ui->setTempSP(_rawSetPoint);
@@ -296,7 +341,8 @@ void Rims::_iterate()
 		*(_processValPtr) = getTempPV();
 		_flow = this->getFlow();
 		// === CRITCAL STATES ===
-		stopHeating((_stopOnCriticalFlow and _criticalFlow) or _ncTherm);
+		stopHeating((_stopOnCriticalFlow and _criticalFlow) \
+		            or _ncTherm or _noPower);
 		// === REFRESH PID ===
 		_refreshPID();
 		// === REFRESH DISPLAY ===
@@ -321,7 +367,7 @@ void Rims::_iterate()
 	    or _currentTime-_lastScreenSwitchTime >= SCREENSWITCHTIME)
 	{
 		_ui->switchScreen();
-		_ui->timerRunningChar((not _sumStoppedTime) and (not _timerElapsed));
+		_ui->timerRunningChar(not(_sumStoppedTime or _timerElapsed));
 		_lastScreenSwitchTime = _currentTime;
 	}
 	if(keyPressed == KEYSELECT and _timerElapsed)
@@ -460,11 +506,22 @@ double Rims::getTempPV()
 float Rims::getFlow()
 {
 	float flow;
-	if(_flowCurTime == 0) flow = 0.0;
-	else if(micros() - _flowCurTime >= 5e06) flow = 0.0;
-	else flow = (1e06 / (_flowFactor* (_flowCurTime - _flowLastTime)));
+	if(g_flowCurTime == 0) flow = 0.0;
+	else if(micros() - g_flowCurTime >= 5e06) flow = 0.0;
+	else flow = (1e06 / (_flowFactor* (g_flowCurTime - g_flowLastTime)));
 	_criticalFlow = (flow <= CRITICALFLOW);
 	return constrain(flow,0,99.99);
+}
+
+/*!
+ * \brief Check if heater is powered or not.
+ */
+boolean Rims::getHeaterVoltage()
+{
+	boolean res = true;
+	if(_pinHeaterVolt != -1) res = digitalRead(_pinHeaterVolt);
+	_noPower = !res;
+	return res;
 }
 
 /*!
@@ -485,14 +542,18 @@ void Rims::stopHeating(boolean state)
 
 /*
 ============================================================
-static members definition for flow sensor
+ISR Definition
 ============================================================
 */
-
-Rims* Rims::_rimsPtr = 0;
-
-void Rims::_isrFlowSensor()
+/*!
+ * \brief ISR for flow sensor.
+ *
+ * ISR is used as a software capture mode. Time values are store in 
+ * g_flowLastTime and g_flowCurTime.
+ * 
+ */
+void isrFlow()
 {
-	Rims::_rimsPtr->_flowLastTime = Rims::_rimsPtr->_flowCurTime;
-	Rims::_rimsPtr->_flowCurTime = micros();
+	g_flowLastTime = g_flowCurTime;
+	g_flowCurTime = micros();
 }

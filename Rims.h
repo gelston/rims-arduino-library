@@ -43,7 +43,7 @@
 
 ///\brief Max temperature variation from set 
 ///       point before stopping timer count down [celcius]
-#define MAXTEMPVAR 0.5 /// celsius
+#define MAXTEMPVAR 1.0 /// celsius
 ///\brief Time before tempScreen/timeFlowScreen 
 ///       is automatically shown[mSec]
 #define SCREENSWITCHTIME 10000 /// mSec
@@ -84,6 +84,7 @@ public:
 						  float lowBound = DEFAULTFLOWLOWBOUND, 
 						  float upBound = DEFAULTFLOWUPBOUND,
 					      boolean stopOnCriticalFlow = true);
+	void setHeaterPowerDetect(byte pinHeaterVolt);
 	
 	void setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 	                  int mashWaterQty = -1);
@@ -94,6 +95,7 @@ public:
 	
 	double getTempPV();
 	float getFlow();
+	boolean getHeaterVoltage();
 	
 	void stopHeating(boolean state);
 	
@@ -115,12 +117,14 @@ private:
 	byte _analogPinPV;
 	byte _pinCV;
 	byte _pinLED;
+	byte _pinHeaterVolt;
 	
 	// ===STATE DATAS===
 	boolean _rimsInitialized;
 	boolean _stopOnCriticalFlow;
 	boolean _criticalFlow;
 	boolean _ncTherm;
+	boolean _noPower;
 	boolean _buzzerState;
 	
 	// ===MULTIPLE PIDs===
@@ -165,13 +169,8 @@ private:
 	boolean _timerElapsed;
 	
 	// ===FLOW SENSOR===
-	static Rims* _rimsPtr;
-	static void _isrFlowSensor(); /// ISR for hall-effect flow sensor
 	float _flowFactor; /// freq[Hz] = flowFactor * flow[L/min]
 	float _flow;
-	volatile unsigned long _flowLastTime;	///µSec
-	volatile unsigned long _flowCurTime;	///µSec
 	
 };
-
 #endif

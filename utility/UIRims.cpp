@@ -15,7 +15,7 @@
  * \param pinSpeaker : byte. Pin used for buzzer alarm
  */
 UIRims::UIRims(LiquidCrystal* lcd, byte pinKeysAnalog,
-			   byte pinLight,int pinSpeaker)
+			   byte pinLight,char pinSpeaker)
 : _lcd(lcd), _pinKeysAnalog(pinKeysAnalog),_waitNone(true),
   _cursorCol(0), _cursorRow(0), _pinLight(pinLight), 
   _pinSpeaker(pinSpeaker),
@@ -597,21 +597,32 @@ byte UIRims::askMashWater(int mashWaterValues[], byte defaultVal)
 /*!
  * \brief Show the pump switching warning.
  */
-void UIRims::showPumpWarning()
+void UIRims::showPumpWarning(float flow)
 {
 	_lcd->clear();
-	_printStrLCD("start pump! [OK]",0,0);
-	_printStrLCD(String("flow:00.0L/min \x01"),0,1);
+	_printStrLCD("start pump  [OK]",0,0);
+	_printStrLCD("flow:00.0L/min",0,1);
+	setFlow(flow,false);
 	_waitTime(500);
 }
 
 /*!
  * \brief Show the heater switching warning.
  */
-void UIRims::showHeaterWarning()
+void UIRims::showHeaterWarning(float state)
 {
 	_lcd->clear();
-	_printStrLCD("start heater!",0,0);
-	_printStrLCD("[OK]",0,1);
+	_printStrLCD("start heater[OK]",0,0);
+	_printStrLCD("state:off",0,1);
+	setHeaterVoltState(state);
 	_waitTime(500);
+}
+
+/*!
+ * \brief Set voltage detection on heater under the heater warning.
+ * \param state : boolean. If true, show on, else, off.
+ */
+void UIRims::setHeaterVoltState(boolean state)
+{
+	state ? _printStrLCD("on ",6,1): _printStrLCD("off",6,1);
 }
