@@ -50,11 +50,12 @@ class UIRims
 public:
 	
 	UIRims(LiquidCrystal* lcd, byte pinKeysAnalog,
-           byte pinLight=13,int pinSpeaker=-1);
+           byte pinLight=13,char pinSpeaker=-1);
 	
 	// === STD DIALOGS METHOD ===
-	void showPumpWarning();
-	void showHeaterWarning();
+	void showPumpWarning(float flow = 0.0);
+	void showHeaterWarning(float state = false);
+	void setHeaterVoltState(boolean state);
 	void showTempScreen();
 	void showTimeFlowScreen();
 	void switchScreen();
@@ -109,7 +110,7 @@ private:
 	byte _cursorRow;
 	byte _pinKeysAnalog;
 	byte _pinLight;
-	int _pinSpeaker;
+	char _pinSpeaker;
 	
 	boolean _waitNone;
 	boolean _tempScreenShown;
