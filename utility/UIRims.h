@@ -18,9 +18,15 @@
 
 #define NCTHERM 404
 
-/// \brief Alarm on speaker frequency [Hz]
-#define ALARMFREQ 1000
-/// \brief Alarm duration used for uncorrect measurement [mSec]
+/// \brief Alarm frequency for no power alarm [Hz]
+#define POWERFREQ 500
+/// \brief Alarm frequency for ring method [Hz]
+#define RINGFREQ 1000
+/// \brief Alarm frequency for flow alarm [Hz]
+#define FLOWFREQ 1500
+/// \brief Alarm frequency for no not connected thermistor alarm [Hz]
+#define NCTHERMFREQ 2000
+/// \brief Alarm duration (except ring method) [mSec]
 #define ALARMLENGTH 50
 
 /// \brief Software key debounce time [mSec]
@@ -55,7 +61,6 @@ public:
 	// === STD DIALOGS METHOD ===
 	void showPumpWarning(float flow = 0.0);
 	void showHeaterWarning(float state = false);
-	void setHeaterVoltState(boolean state);
 	void showTempScreen();
 	void showTimeFlowScreen();
 	void switchScreen();
@@ -66,6 +71,7 @@ public:
 	virtual void setTime(unsigned int timeSec);
 	void setFlow(float flow, boolean buzz = true); //liter/min
 	void setFlowBounds(float lowBound, float upBound);
+	void setHeaterVoltState(boolean state, boolean buzz = true);
 	
 	// === KEYS READER ===
 	byte readKeysADC(boolean waitNone = true);

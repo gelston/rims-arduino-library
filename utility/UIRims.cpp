@@ -186,7 +186,7 @@ void UIRims::ring(boolean state)
 {
 	if(_pinSpeaker != -1)
 	{
-		(state == true) ? tone(_pinSpeaker,ALARMFREQ) : noTone(_pinSpeaker);
+		(state == true) ? tone(_pinSpeaker,RINGFREQ) : noTone(_pinSpeaker);
 	}
 }
 
@@ -306,7 +306,7 @@ void UIRims::setTempPV(float tempCelcius, boolean buzz)
 {
 	_tempPV = tempCelcius;
 	boolean thermNC = (tempCelcius >= NCTHERM);
-	if(thermNC) tone(_pinSpeaker,ALARMFREQ,ALARMLENGTH);
+	if(thermNC) tone(_pinSpeaker,NCTHERMFREQ,ALARMLENGTH);
 	if(_tempScreenShown)
 	{
 		float tempFahren = _celciusToFahrenheit(tempCelcius);
@@ -358,7 +358,7 @@ void UIRims::setFlow(float flow, boolean buzz)
 {
 	_flow = flow;
 	boolean flowOk = (flow >= _flowLowBound) and (flow <= _flowUpBound);
-	if(not flowOk and buzz) tone(_pinSpeaker,ALARMFREQ,ALARMLENGTH);
+	if(not flowOk and buzz) tone(_pinSpeaker,FLOWFREQ,ALARMLENGTH);
 	if(not _tempScreenShown)
 	{
 		_printFloatLCD(constrain(flow,0,99.9),4,1,5,1);
@@ -614,15 +614,18 @@ void UIRims::showHeaterWarning(float state)
 	_lcd->clear();
 	_printStrLCD("start heater[OK]",0,0);
 	_printStrLCD("state:off",0,1);
-	setHeaterVoltState(state);
+	setHeaterVoltState(state,false);
 	_waitTime(500);
 }
 
 /*!
  * \brief Set voltage detection on heater under the heater warning.
  * \param state : boolean. If true, show on, else, off.
+ * \param buzz : boolean. If true, speaker alarm is trigerred if no voltage.
+ *               If false, state is shown on LCD.
  */
-void UIRims::setHeaterVoltState(boolean state)
+void UIRims::setHeaterVoltState(boolean state, boolean buzz)
 {
-	state ? _printStrLCD("on ",6,1): _printStrLCD("off",6,1);
+	if(not buzz) state ? _printStrLCD("on ",6,1): _printStrLCD("off",6,1);
+	else if(!state) tone(_pinSpeaker,POWERFREQ,ALARMLENGTH);
 }
