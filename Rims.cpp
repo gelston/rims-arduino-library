@@ -232,7 +232,10 @@ void Rims::setPinLED(byte pinLED)
  * \warning DO NOT APPLY 120V OR 240V DIRECTLY ON ARDUINO PINS.
  * 
  * It can be easily and cheaply made with a +5V DC power supply in
- * parallel with the SSR and heater.
+ * parallel with the SSR and heater. It is recommended to
+ * add a 10Kohm or so resistor in series with the power supply.
+ * 
+ * @image html power_circuit.png "Voltage detection circuit"  
  * 
  * I use it to detect if my breaker is trigerred or if I shut it off
  * manually with an external switch. If the PID is informed that the heater
@@ -241,9 +244,9 @@ void Rims::setPinLED(byte pinLED)
  * 
  * \param pinHeaterVolt : byte. 5V power supply pin.
  */
-void Rims::setHeaterPowerDetect(byte pinHeaterVolt)
+void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 {
-	pinMode(pinHeaterVolt,OUTPUT);
+	pinMode(pinHeaterVolt,INPUT);
 	_pinHeaterVolt = pinHeaterVolt;
 }
 
@@ -300,7 +303,7 @@ void Rims::_initialize()
 	{
 		if(_pinHeaterVolt != -1)
 		{
-			_ui->setHeaterVoltState(this->getHeaterVoltage());
+			_ui->setHeaterVoltState(this->getHeaterVoltage(),false);
 		}
 	}
 	_ui->showTempScreen();
@@ -447,6 +450,7 @@ void Rims::_refreshDisplay()
 	_ui->setTime((_settedTime-_runningTime)/1000);
 	_ui->timerRunningChar((not _sumStoppedTime) and (not _timerElapsed));
 	_ui->setFlow(_flow);
+	_ui->setHeaterVoltState(!_noPower);
 		
 }
 
@@ -471,6 +475,7 @@ void Rims::_refreshSSR()
 		digitalWrite(_pinCV,LOW);
 		digitalWrite(_pinLED,LOW);
 	}
+	_noPower = !this->getHeaterVoltage();
 }
 
 /*!
@@ -520,7 +525,6 @@ boolean Rims::getHeaterVoltage()
 {
 	boolean res = true;
 	if(_pinHeaterVolt != -1) res = digitalRead(_pinHeaterVolt);
-	_noPower = !res;
 	return res;
 }
 

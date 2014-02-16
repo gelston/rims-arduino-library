@@ -84,7 +84,7 @@ public:
 						  float lowBound = DEFAULTFLOWLOWBOUND, 
 						  float upBound = DEFAULTFLOWUPBOUND,
 					      boolean stopOnCriticalFlow = true);
-	void setHeaterPowerDetect(byte pinHeaterVolt);
+	void setHeaterPowerDetect(char pinHeaterVolt);
 	
 	void setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 	                  int mashWaterQty = -1);
@@ -117,7 +117,7 @@ private:
 	byte _analogPinPV;
 	byte _pinCV;
 	byte _pinLED;
-	byte _pinHeaterVolt;
+	char _pinHeaterVolt;
 	
 	// ===STATE DATAS===
 	boolean _rimsInitialized;
