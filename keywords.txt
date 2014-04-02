@@ -20,7 +20,6 @@ UIRimsIdent	KEYWORD1
 
 setThermistor	KEYWORD2
 setTuningPID	KEYWORD2
-setSetPointFilter	KEYWORD2
 setPinLED	KEYWORD2
 setHeaterPowerDetect	KEYWORD2
 setInterruptFlow	KEYWORD2

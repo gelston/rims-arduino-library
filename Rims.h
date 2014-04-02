@@ -23,6 +23,17 @@
 #ifndef Rims_h
 #define Rims_h
 
+
+// ============================================================
+// === COMMENT/UNCOMMENT TO INCLUDE/EXCLUDE THOSE FEATURES ====
+// ============================================================
+///\brief Include W25Q80BV (1 MByte) SPI Flash
+#define WITH_W25QFLASH
+// ============================================================
+// ============================================================
+// ============================================================
+
+
 ///\brief Sample time for PID. Same time used
 ///       for LCD refresh rate and data log rate [mSec]
 #define SAMPLETIME 1000
@@ -54,12 +65,15 @@
 #define DEFAULTFLOWUPBOUND 5.0
 ///\brief If _stopOnCriticalFlow is activited, heater will be turn off
 ///       if flow is <= than this value.
-#define CRITICALFLOW 1.0
+#define CRITICALFLOW 5.0
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
 #include "utility/PID_v1mod.h"
 
+#ifdef WITH_W25QFLASH
+	#include "utility/w25qflash.h"
+#endif
 
 
 /*!
@@ -88,8 +102,6 @@ public:
 	
 	void setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 	                  int mashWaterQty = -1);
-	void setSetPointFilter(double tauFilter,
-						   int mashWaterQty = -1);
 	
 	void run();
 	
@@ -104,7 +116,6 @@ protected:
 	virtual void _initialize();
 	virtual void _iterate();
 	
-	void _refreshPID();
 	void _refreshTimer(boolean verifyTemp = true);
 	void _refreshDisplay();
 	void _refreshSSR();
@@ -138,7 +149,6 @@ private:
 	float _fineTuneTemp;
 	
 	// ===PID I/O===
-	double _rawSetPoint;
 	double* _setPointPtr;
 	double* _processValPtr;
 	double* _controlValPtr; /// [0,SSRWINDOWSIZE]
@@ -148,11 +158,6 @@ private:
 	double _kis[4];
 	double _kds[4];
 	double _tauFilter[4];
-
-	
-	// ===SET POINT FILTER===
-	double _setPointFilterCsts[4];
-	double _lastSetPointFilterOutput;
 	
 	// ===TIMER===
 	unsigned long _currentTime;             ///mSec
