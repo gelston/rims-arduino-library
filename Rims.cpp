@@ -56,14 +56,13 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
 	_fineTuneTemp = 0;
 	for(int i=0;i<=3;i++)
 	{
-		_setPointFilterCsts[i] = 0;
 		_kps[i] = 0; _kis[i] = 0; _kds[i] = 0; _tauFilter[i] = 0; 
 		_mashWaterValues[i] = -1;
 	}
 	_myPID.SetSampleTime(SAMPLETIME);
 	_myPID.SetOutputLimits(0,SSRWINDOWSIZE);
 	_settedTime = (unsigned long)DEFAULTTIME*1000;
-	_rawSetPoint = DEFAULTSP;
+	*(_setPointPtr) = DEFAULTSP;
 	_currentPID = 0;
 	pinMode(ssrPin,OUTPUT);
 	pinMode(13,OUTPUT);
@@ -140,51 +139,6 @@ void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 	_currentPID = 0;
 	_pidQty++;
 }
-
-/*!
- * \brief Set Set Point filter. 
- *
- * A set point filter allow you to cancel overshoot (for integretor plant).
- * Normally : 
- * \f[
- * tauFilter=\frac{K_{c}}{K_{i}}
- * \f]
- *
- * With this value, overshoot will be totally canceled. If you found that
- * that with this time constant, your RIMS is too slow, my advice would be to try
- * from 0.1 to 1 times this value. You will be able to find a good comprimise
- * between overshoot and rapidity.
- *
- * \param tauFilter : float. set point filter time constant in sec.
- * \param mashWaterQty : int (default=-1). If multiple regulators is needed,
- *                       set this parameter to mash water volume in liter.
- *                       This mash water volume will be associated to this
- *                       set point filter. Rims::setTunningPID must
- *                       be called with current mashWaterQty value before
- *                       calling this method.
- *                       Total of 4 regulators is allowed (with different
- *                       mash water volume).
- */
-void Rims::setSetPointFilter(double tauFilter,int mashWaterQty)
-{
-	_currentPID = 0;
-	if(mashWaterQty != -1)
-	{
-		for(int i=0;i<=3;i++)
-		{
-			if(_mashWaterValues[i] == mashWaterQty) _currentPID = i;
-		}
-	}
-	if(tauFilter>0)
-	{
-		_setPointFilterCsts[_currentPID] = \
-					exp((-1.0)*SAMPLETIME/(tauFilter*1000.0));
-	}
-	else _setPointFilterCsts[_currentPID] = 0;
-	_currentPID = 0;
-	_lastSetPointFilterOutput = 0;
-}
-
 
 /*!
  * \brief Set interrupt function for flow sensor.
@@ -277,8 +231,7 @@ void Rims::_initialize()
 {
 	_timerElapsed = false;
 	// === ASK SETPOINT ===
-	_rawSetPoint = _ui->askSetPoint(_rawSetPoint);
-	*(_setPointPtr) = 0;
+	*(_setPointPtr) = _ui->askSetPoint(*(_setPointPtr));
 	// === ASK TIMER ===
 	_settedTime = (unsigned long)_ui->askTime(_settedTime/1000)*1000;
 	// === ASK MASH WATER ===
@@ -308,10 +261,8 @@ void Rims::_initialize()
 	}
 	_ui->showTempScreen();
 	*(_processValPtr) = this->getTempPV();
-	_ui->setTempSP(_rawSetPoint);
+	_ui->setTempSP(*(_setPointPtr));
 	_ui->setTempPV(*(_processValPtr));
-	// first value = operating points = set point filter initial condition :
-	_lastSetPointFilterOutput = *(_processValPtr);
 	_sumStoppedTime = true;
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
 	_buzzerState = false;
@@ -347,13 +298,13 @@ void Rims::_iterate()
 		stopHeating((_stopOnCriticalFlow and _criticalFlow) \
 		            or _ncTherm or _noPower);
 		// === REFRESH PID ===
-		_refreshPID();
+		_myPID.Compute();
 		// === REFRESH DISPLAY ===
 		_refreshDisplay();
 		// === DATA LOG ===
 		Serial.print(
 	    (double)(_currentTime-_rimsStartTime)/1000.0,3);	Serial.print(",");
-		Serial.print(_rawSetPoint);							Serial.print(",");
+		Serial.print(*(_setPointPtr));						Serial.print(",");
 		Serial.print(*(_controlValPtr),0);					Serial.print(",");
 		Serial.print(*(_processValPtr),15);					Serial.print(",");
 		Serial.print(_flow,2);								Serial.print(",");
@@ -383,22 +334,6 @@ void Rims::_iterate()
 }
 
 /*!
- * \brief Refresh PID value with set point filter and pid filter if setted.
- *
- * Must be called at each PID sample time.
- * 
- */
-void Rims::_refreshPID()
-{
-	// === SETPOINT FILTERING ===
-	*(_setPointPtr) = (1-_setPointFilterCsts[_currentPID]) * _rawSetPoint + \
-			_setPointFilterCsts[_currentPID] * _lastSetPointFilterOutput;
-	_lastSetPointFilterOutput = *(_setPointPtr);
-	// === PID COMPUTE ===
-	_myPID.Compute();
-}
-
-/*!
  * \brief Refresh timer value.
  *
  * If error on temperature >= MAXTEMPVAR, timer will not count down.
@@ -411,7 +346,7 @@ void Rims::_refreshTimer(boolean verifyTemp)
 	_currentTime = millis();
 	if(not _timerElapsed)
 	{
-		if(abs(_rawSetPoint - *(_processValPtr)) <= MAXTEMPVAR or not verifyTemp)
+		if(abs(*(_setPointPtr)-*(_processValPtr)) <= MAXTEMPVAR or not verifyTemp)
 		{
 			if(_sumStoppedTime)
 			{
