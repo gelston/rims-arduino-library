@@ -23,6 +23,7 @@ setTuningPID	KEYWORD2
 setPinLED	KEYWORD2
 setHeaterPowerDetect	KEYWORD2
 setInterruptFlow	KEYWORD2
+setMemCSPin	KEYWORD2
 run	KEYWORD2
 analogInToCelcius	KEYWORD2
 getFlow	KEYWORD2
@@ -53,6 +54,10 @@ showIdentScreen	KEYWORD2
 #######################################
 # Constants (LITERAL1)
 #######################################
+
+### Rims ###
+
+WITH_W25QFLASH	LITERAL1
 
 ### UIRims ###
 

@@ -24,15 +24,10 @@
 #define Rims_h
 
 
-// ============================================================
-// === COMMENT/UNCOMMENT TO INCLUDE/EXCLUDE THOSE FEATURES ====
-// ============================================================
-///\brief Include W25Q80BV (1 MByte) SPI Flash
-#define WITH_W25QFLASH
-// ============================================================
-// ============================================================
-// ============================================================
-
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+///\brief uncomment/comment to include/exclude flash memory     !!!!!
+#define WITH_W25QFLASH                                          !!!!!
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ///\brief Sample time for PID. Same time used
 ///       for LCD refresh rate and data log rate [mSec]
@@ -71,6 +66,7 @@
 #include "utility/UIRims.h"
 #include "utility/PID_v1mod.h"
 
+
 #ifdef WITH_W25QFLASH
 	#include "utility/w25qflash.h"
 #endif
@@ -103,6 +99,10 @@ public:
 	void setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 	                  int mashWaterQty = -1);
 	
+#ifdef WITH_W25QFLASH
+	void setMemCSPin(byte csPin);
+#endif
+	
 	void run();
 	
 	double getTempPV();
@@ -129,6 +129,9 @@ private:
 	byte _pinCV;
 	byte _pinLED;
 	char _pinHeaterVolt;
+#ifdef WITH_W25QFLASH
+	W25QFlash _myMem;
+#endif
 	
 	// ===STATE DATAS===
 	boolean _rimsInitialized;
@@ -137,6 +140,7 @@ private:
 	boolean _ncTherm;
 	boolean _noPower;
 	boolean _buzzerState;
+	boolean _memInitialized;
 	
 	// ===MULTIPLE PIDs===
 	byte _pidQty;
