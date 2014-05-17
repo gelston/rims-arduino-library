@@ -8,7 +8,6 @@
 #include "utility/PID_v1mod.h"
 #include "Rims.h"
 
-
 /*
 ============================================================
 Global Variable
@@ -46,6 +45,7 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
   _pidQty(0), 
   _stopOnCriticalFlow(false), _rimsInitialized(false),
+  _memInitialized(false),
   _pinLED(13),_pinHeaterVolt(-1), _noPower(false)
 {
 	_steinhartCoefs[0] = DEFAULTSTEINHART0;
@@ -203,6 +203,14 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 	pinMode(pinHeaterVolt,INPUT);
 	_pinHeaterVolt = pinHeaterVolt;
 }
+
+#ifdef WITH_W25QFLASH
+	void Rims::setMemCSPin(byte csPin)
+	{ 
+		_myMem.setCSPin(csPin); 
+		_memInitialized = _myMem.verifyMem();
+	}
+#endif
 
 /*!
  * \brief Start and run Rims instance. 
