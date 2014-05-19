@@ -68,6 +68,8 @@
 #define ADDRSESSIONTABLE	0x001000 // 2nd sector
 ///\brief Flash mem starting address for brew all brew datas
 #define ADDRBREWDATA		0x001100 // 2nd sector, 2nd page
+///\brief Total bytes used per data point (at each second)
+#define BYTESPERDATA		18
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
@@ -126,8 +128,11 @@ protected:
 	void _refreshDisplay();
 	void _refreshSSR();
 #ifdef WITH_W25QFLASH
-	byte          _countSessions();
-	unsigned long _countSessionData();
+	byte          _memCountSessions();
+	unsigned long _memCountSessionData();
+	void          _memAddBrewData(unsigned long time, unsigned int cv,
+							     float pv, float flow,
+							      unsigned long timerRemaining);
 #endif
 	
 private:
@@ -193,8 +198,8 @@ private:
 	
 #ifdef WITH_W25QFLASH
 	// ===FLASH MEM===
-	unsigned long _startingAddr;
-	unsigned long _currentAddr;
+	unsigned long _memNextAddr;
+	unsigned long _memDataQty;
 #endif
 	
 };
