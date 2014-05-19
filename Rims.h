@@ -130,6 +130,7 @@ protected:
 #ifdef WITH_W25QFLASH
 	byte          _memCountSessions();
 	unsigned long _memCountSessionData();
+	void          _memInit();
 	void          _memAddBrewData(unsigned long time, unsigned int cv,
 							     float pv, float flow,
 							      unsigned long timerRemaining);
