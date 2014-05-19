@@ -205,23 +205,22 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 }
 
 #ifdef WITH_W25QFLASH
-
 	void Rims::setMemCSPin(byte csPin)
 	{ 
 		_myMem.setCSPin(csPin); 
 		_memInitialized = _myMem.verifyMem();
 	}
 	
-	byte Rims::_countSessions()
+	byte Rims::_memCountSessions()
 	{
 		byte i, readBuffer[256];
 		//first page : table of brew sessions starting addresses
 		_myMem.read(ADDRSESSIONTABLE,readBuffer,256);
-		for(i=2; i<256; i+=3) if(readBuffer[i] = 0xFF) break; // null value
-		return (i-2)/3;
+		for(i=3; i<256; i+=4) if(readBuffer[i] == 0xFF) break; // null value
+		return (i-3)/4;
 	}
 	
-	unsigned long Rims::_countSessionData()
+	unsigned long Rims::_memCountSessionData()
 	{
 		boolean freeBitFound = false;
 		byte i,offset,page,readBuffer[256];
@@ -238,10 +237,26 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 			}
 			if(freeBitFound) break;
 		}
-		for(i=0;i<8;i++) if((readBuffer[offset]>>1) & 0x01) break;
+		for(i=0;i<8;i++) if((readBuffer[offset]>>i) & 0x01) break;
 		return 8*((page*256)+offset)+i;
 	}
 	
+	void Rims::_memAddBrewData(unsigned long time, unsigned int cv,
+							  float pv, float flow,
+							  unsigned long timerRemaining)
+	{
+		byte writeBuffer[BYTESPERDATA], dataCountMkr;
+		memcpy(writeBuffer,&time,4);
+		memcpy(writeBuffer+4,&cv,2);
+		memcpy(writeBuffer+6,&pv,4);
+		memcpy(writeBuffer+10,&flow,4);
+		memcpy(writeBuffer+14,&timerRemaining,4);
+		_myMem.program(_memNextAddr,writeBuffer,BYTESPERDATA);
+		dataCountMkr = 0xFF << ((_memDataQty % 8)+1);
+		_myMem.program(ADDRDATACOUNT+_memDataQty/8,&dataCountMkr,1);
+		_memDataQty ++;
+		_memNextAddr += BYTESPERDATA;
+	}
 #endif
 
 /*!
@@ -270,17 +285,26 @@ void Rims::run()
 void Rims::_initialize()
 {
 #ifdef WITH_W25QFLASH
-	byte brewSes = _countSessions();
-	byte readBuffer[3];
+	byte brewSesQty = _memCountSessions();
+	unsigned long lastSesDataQty = _memCountSessionData();
+	byte buffer[4];
 	unsigned long lastStartingAddr;
-	Serial.print("brewSes:");Serial.println(brewSes);
-	if(brewSes == 0) _startingAddr = ADDRBREWDATA;
+	Serial.print("brewSesQty:");Serial.println(brewSesQty);
+	if(brewSesQty == 0) _memNextAddr = ADDRBREWDATA;
 	else
 	{
-		_myMem.read(3*brewSes,readBuffer,3);
-		memcpy(&lastStartingAddr,readBuffer,3);
-		_startingAddr = lastStartingAddr; // + dataCount;
+		_myMem.read(ADDRSESSIONTABLE+(4*(brewSesQty-1)),buffer,4);
+		memcpy(&lastStartingAddr,buffer,4);
+		_memNextAddr = lastStartingAddr+(BYTESPERDATA*lastSesDataQty);
 	}
+	Serial.print("countData:");Serial.println(lastSesDataQty);
+	memcpy(buffer,&_memNextAddr,4);
+	_myMem.program(ADDRSESSIONTABLE+(brewSesQty*4),buffer,4);
+	_myMem.erase(ADDRDATACOUNT,W25Q_ERASE_SECTOR);
+	_memDataQty = 0;
+	
+	_memAddBrewData(0,5000,20.0,9.5,3600);
+	_memAddBrewData(1,5000,20.1,9.5,3600);
 #endif
 	_timerElapsed = false;
 	// === ASK SETPOINT ===

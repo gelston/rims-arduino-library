@@ -76,7 +76,7 @@ void W25QFlash::program(unsigned long addr, byte buffer[], unsigned long n)
 	for(i=0;i<n;i++)
 	{
 		SPI.transfer(buffer[i]);
-		if(not( (i+1) & 0xFF ))
+		if(not( (i+1) & 0xFF )) // the next one is in new page
 		{
 			if(i+1>=n) break;
 			_deselect();
