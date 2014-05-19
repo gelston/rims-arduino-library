@@ -49,9 +49,9 @@ void W25QFlash::erase(unsigned long addr, byte command)
 	waitFree();
 	setWriteEnable();
 	_select();
-	_sendCmdAddr(command,addr);
+	if(command != W25Q_ERASE_CHIP) _sendCmdAddr(command,addr);
+	else SPI.transfer(command);
 	_deselect();
-	
 }
 
 

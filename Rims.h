@@ -25,8 +25,8 @@
 
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-///\brief uncomment/comment to include/exclude flash memory     !!!!!
-#define WITH_W25QFLASH                                          !!!!!
+///\brief uncomment/comment to include/exclude flash memory
+#define WITH_W25QFLASH                                          
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ///\brief Sample time for PID. Same time used
@@ -61,6 +61,13 @@
 ///\brief If _stopOnCriticalFlow is activited, heater will be turn off
 ///       if flow is <= than this value.
 #define CRITICALFLOW 5.0
+
+///\brief Flash mem address for counting data in current brew session
+#define ADDRDATACOUNT		0x000000 // 1st sector
+///\brief Flash mem address for table of starting addr. of brew sessions
+#define ADDRSESSIONTABLE	0x001000 // 2nd sector
+///\brief Flash mem starting address for brew all brew datas
+#define ADDRBREWDATA		0x001100 // 2nd sector, 2nd page
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
@@ -98,7 +105,6 @@ public:
 	
 	void setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 	                  int mashWaterQty = -1);
-	
 #ifdef WITH_W25QFLASH
 	void setMemCSPin(byte csPin);
 #endif
@@ -119,6 +125,10 @@ protected:
 	void _refreshTimer(boolean verifyTemp = true);
 	void _refreshDisplay();
 	void _refreshSSR();
+#ifdef WITH_W25QFLASH
+	byte          _countSessions();
+	unsigned long _countSessionData();
+#endif
 	
 private:
 	
@@ -180,6 +190,12 @@ private:
 	// ===FLOW SENSOR===
 	float _flowFactor; /// freq[Hz] = flowFactor * flow[L/min]
 	float _flow;
+	
+#ifdef WITH_W25QFLASH
+	// ===FLASH MEM===
+	unsigned long _startingAddr;
+	unsigned long _currentAddr;
+#endif
 	
 };
 #endif

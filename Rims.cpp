@@ -205,11 +205,43 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 }
 
 #ifdef WITH_W25QFLASH
+
 	void Rims::setMemCSPin(byte csPin)
 	{ 
 		_myMem.setCSPin(csPin); 
 		_memInitialized = _myMem.verifyMem();
 	}
+	
+	byte Rims::_countSessions()
+	{
+		byte i, readBuffer[256];
+		//first page : table of brew sessions starting addresses
+		_myMem.read(ADDRSESSIONTABLE,readBuffer,256);
+		for(i=2; i<256; i+=3) if(readBuffer[i] = 0xFF) break; // null value
+		return (i-2)/3;
+	}
+	
+	unsigned long Rims::_countSessionData()
+	{
+		boolean freeBitFound = false;
+		byte i,offset,page,readBuffer[256];
+		for(page=0;page<16;page++) // 16 pages per sector
+		{
+			_myMem.read(ADDRDATACOUNT+(page*256),readBuffer,256);
+			for(offset=0;offset<256;offset++)
+			{
+				if(readBuffer[offset] & 0xFF)
+				{
+					freeBitFound = true;
+					break;
+				}
+			}
+			if(freeBitFound) break;
+		}
+		for(i=0;i<8;i++) if((readBuffer[offset]>>1) & 0x01) break;
+		return 8*((page*256)+offset)+i;
+	}
+	
 #endif
 
 /*!
@@ -237,6 +269,19 @@ void Rims::run()
  */
 void Rims::_initialize()
 {
+#ifdef WITH_W25QFLASH
+	byte brewSes = _countSessions();
+	byte readBuffer[3];
+	unsigned long lastStartingAddr;
+	Serial.print("brewSes:");Serial.println(brewSes);
+	if(brewSes == 0) _startingAddr = ADDRBREWDATA;
+	else
+	{
+		_myMem.read(3*brewSes,readBuffer,3);
+		memcpy(&lastStartingAddr,readBuffer,3);
+		_startingAddr = lastStartingAddr; // + dataCount;
+	}
+#endif
 	_timerElapsed = false;
 	// === ASK SETPOINT ===
 	*(_setPointPtr) = _ui->askSetPoint(*(_setPointPtr));
