@@ -241,6 +241,32 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 		return 8*((page*256)+offset)+i;
 	}
 	
+	void Rims::_memInit()
+	{
+		byte brewSesQty = _memCountSessions();
+		unsigned long lastSesDataQty = _memCountSessionData();
+		byte buffer[4];
+		unsigned long lastStartingAddr;
+		Serial.print("brewSesQty:");Serial.println(brewSesQty);
+		if(brewSesQty == 0) _memNextAddr = ADDRBREWDATA;
+		else
+		{
+			_myMem.read(ADDRSESSIONTABLE+(4*(brewSesQty-1)),buffer,4);
+			memcpy(&lastStartingAddr,buffer,4);
+			_memNextAddr = lastStartingAddr+\
+			               (BYTESPERDATA*lastSesDataQty) + 4;
+		}
+		Serial.print("countData:");Serial.println(lastSesDataQty);
+		memcpy(buffer,&_memNextAddr,4);
+		_myMem.program(ADDRSESSIONTABLE+((brewSesQty*4)%256),buffer,4);
+		_myMem.erase(ADDRDATACOUNT,W25Q_ERASE_SECTOR);
+		_memDataQty = 0;
+		float setPoint = *_setPointPtr;
+		memcpy(buffer,&setPoint,4);
+		_myMem.program(_memNextAddr,buffer,4);
+		_memNextAddr += 4;
+	}
+	
 	void Rims::_memAddBrewData(unsigned long time, unsigned int cv,
 							  float pv, float flow,
 							  unsigned long timerRemaining)
@@ -284,28 +310,7 @@ void Rims::run()
  */
 void Rims::_initialize()
 {
-#ifdef WITH_W25QFLASH
-	byte brewSesQty = _memCountSessions();
-	unsigned long lastSesDataQty = _memCountSessionData();
-	byte buffer[4];
-	unsigned long lastStartingAddr;
-	Serial.print("brewSesQty:");Serial.println(brewSesQty);
-	if(brewSesQty == 0) _memNextAddr = ADDRBREWDATA;
-	else
-	{
-		_myMem.read(ADDRSESSIONTABLE+(4*(brewSesQty-1)),buffer,4);
-		memcpy(&lastStartingAddr,buffer,4);
-		_memNextAddr = lastStartingAddr+(BYTESPERDATA*lastSesDataQty);
-	}
-	Serial.print("countData:");Serial.println(lastSesDataQty);
-	memcpy(buffer,&_memNextAddr,4);
-	_myMem.program(ADDRSESSIONTABLE+(brewSesQty*4),buffer,4);
-	_myMem.erase(ADDRDATACOUNT,W25Q_ERASE_SECTOR);
-	_memDataQty = 0;
-	
-	_memAddBrewData(0,5000,20.0,9.5,3600);
-	_memAddBrewData(1,5000,20.1,9.5,3600);
-#endif
+	Serial.begin(9600);
 	_timerElapsed = false;
 	// === ASK SETPOINT ===
 	*(_setPointPtr) = _ui->askSetPoint(*(_setPointPtr));
@@ -336,6 +341,12 @@ void Rims::_initialize()
 			_ui->setHeaterVoltState(this->getHeaterVoltage(),false);
 		}
 	}
+#ifdef WITH_W25QFLASH
+	// === MEM INIT ===
+	_memInit();
+#else
+	Serial.println("time,sp,cv,pv,flow,timerRemaining");
+#endif
 	_ui->showTempScreen();
 	*(_processValPtr) = this->getTempPV();
 	_ui->setTempSP(*(_setPointPtr));
@@ -343,8 +354,6 @@ void Rims::_initialize()
 	_sumStoppedTime = true;
 	_runningTime = _totalStoppedTime = _timerStopTime = 0;
 	_buzzerState = false;
-	Serial.begin(9600);
-	Serial.println("time,sp,cv,pv,flow,timerRemaining");
 	stopHeating(true);
 	_myPID.SetTunings(_kps[_currentPID],_kis[_currentPID],_kds[_currentPID]);
 	_myPID.SetDerivativeFilter(_tauFilter[_currentPID]);
@@ -379,6 +388,13 @@ void Rims::_iterate()
 		// === REFRESH DISPLAY ===
 		_refreshDisplay();
 		// === DATA LOG ===
+#ifdef WITH_W25QFLASH
+		_memAddBrewData((_currentTime-_rimsStartTime)/1000.0,
+						*(_controlValPtr),
+						*(_processValPtr),
+						_flow,
+						(_settedTime-_runningTime)/1000.0);
+#else
 		Serial.print(
 	    (double)(_currentTime-_rimsStartTime)/1000.0,3);	Serial.print(",");
 		Serial.print(*(_setPointPtr));						Serial.print(",");
@@ -386,6 +402,7 @@ void Rims::_iterate()
 		Serial.print(*(_processValPtr),15);					Serial.print(",");
 		Serial.print(_flow,2);								Serial.print(",");
 		Serial.println((_settedTime-_runningTime)/1000.0,0);
+#endif
 		_lastTimePID += SAMPLETIME;
 	}
 	// === SSR CONTROL ===
