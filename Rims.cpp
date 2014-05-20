@@ -205,21 +205,84 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 }
 
 #ifdef WITH_W25QFLASH
+	/*!
+	 * \brief Set pin for flash memory chip select.
+	 * 
+	 * Code was built on Windbond W25Q80BV SPI flash memory.
+	 * MOSI, MISO and CLK are fixed pins on all Arduino. 
+	 * For ex, it's 11, 12, 13 for MOSI, MISO and CLK respectivly
+	 * on Arduino UNO. For more information : 
+	 * http://arduino.cc/en/Reference/SPI.
+	 * 
+	 * \warning WINBOND W25Q80BV WORKS IN 3.3V AND MOST ARDUINO
+	 * WORKS IN 5V. IF IT'S YOUR CASE, DO NOT DIRECTLY CONNECT 
+	 * ARDUINO MOSI, MISO, CLK AND CS ON THE MEMORY PINS.
+	 * 
+	 * If you have to convert 5 V signal to 3.3V signal,
+	 * here's a simple and cheap circuit that works well.
+	 * 
+	 * @image html mem_circuit.png "Voltage convert flash memory"
+	 * 
+	 * \param csPin : byte. pin used for flash memory chip select.
+	 */
 	void Rims::setMemCSPin(byte csPin)
 	{ 
 		_myMem.setCSPin(csPin); 
 		_memInitialized = _myMem.verifyMem();
 	}
 	
+	/*!
+	 * \brief Count how many brew sessions were saved in flash mem.
+	 * 
+	 * Max is 64 brew sessions, rollback if more. When new brew session 
+	 * is started, the starting address of the datablock is saved in 
+	 * the brew sessions table, starting at ADDRSESSIONTABLE or 0x001000.
+	 * For exemple, if 2 brew session were done of 2 seconds each
+	 * (so 4+18+18=40 bytes each), the memory map of the brew 
+	 * sessions table would be :
+	 * 
+	 * Address  | Data       | Size 
+	 * -------- | -----------| -------
+	 * 0x001000 | 0x00001100 | 4 bytes
+	 * 0x001004 | 0x00001128 | 4 bytes      
+	 * 0x001008 | 0xFFFFFFFF | 4 bytes
+	 * 0x000003 | 0xFFFFFFFF | 4 bytes
+	 * ...      | ...        | ...
+	 * 0x0010FB | 0xFFFFFFFF | 4 bytes
+	 * 
+	 */
 	byte Rims::_memCountSessions()
 	{
 		byte i, readBuffer[256];
-		//first page : table of brew sessions starting addresses
 		_myMem.read(ADDRSESSIONTABLE,readBuffer,256);
-		for(i=3; i<256; i+=4) if(readBuffer[i] == 0xFF) break; // null value
+		for(i=3; i<256; i+=4) if(readBuffer[i] == 0xFF) break;// null value
 		return (i-3)/4;
 	}
 	
+	/*!
+	 * \brief Count how many data point were taken.
+	 * 
+	 * When brew data is added in the memory, a sector is filled with "0"
+	 * to remember how many data were taken. This sector is the first,
+	 * at the beginning of the memory (ADDRDATACOUNT or 0x000000).
+	 * If 12 brew data were taken since de beginning (or 12 seconds were
+	 * ellapsed), the memory map would be like this :
+	 * 
+	 * Address  | Data           
+	 * -------- | -----------
+	 * 0x000000 | b00000000
+	 * 0x000001 | b11110000         
+	 * 0x000002 | b11111111
+	 * 0x000003 | b11111111
+	 * ...      | ...
+	 * 0x000FFF | b11111111
+	 * 
+	 * I used this method because of a limitation of the flash memory.
+	 * I could not use normal counting because freshly erased bits 
+	 * can be cleared (set to "0") but cannot be set to "1" without 
+	 * full sector erase.
+	 * 
+	 */
 	unsigned long Rims::_memCountSessionData()
 	{
 		boolean freeBitFound = false;
@@ -241,6 +304,13 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 		return 8*((page*256)+offset)+i;
 	}
 	
+	/*!
+	 * \brief Initialize flash memory
+	 * 
+	 * Verify where to store the new datas and saved temperature
+	 * setpoint at the beginning of the datablock.
+	 * 
+	 */
 	void Rims::_memInit()
 	{
 		byte brewSesQty = _memCountSessions();
@@ -267,6 +337,31 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 		_memNextAddr += 4;
 	}
 	
+	/*!
+	 * \brief Add data point to the flash memory.
+	 * 
+	 * Five values is added at _memNextAddr, 18 bytes in total.
+	 * Temperature setpoint (float : 4 bytes) is saved only
+	 * once, at the beginning of the brew sessions in _memInit().
+	 * For exemple, for the first data (starting at ADDRBREWDATA
+	 * or 0x001100) of the first brew session, the memory map would be :
+	 * 
+	 * Address  | Data           | Size
+	 * -------- | -------------- | -----
+	 * 0x001100 | sp             | 4 bytes 
+	 * 0x001104 | time           | 4 bytes
+	 * 0x091108 | cv             | 2 bytes
+	 * 0x09110A | pv             | 4 bytes
+	 * 0x09110E | flow           | 4 bytes
+	 * 0x091102 | timerRemaining | 4 bytes
+	 * 
+	 * \param time : unsigned long. time in sec of data point
+	 * \param cv : unsigned int. SSR control value
+	 * \param pv : float. temperature in deg Celcius
+	 * \param flow : float. flow in L/min
+	 * \param timerRemaining : unsigned long. remaining time on timer
+	 *                         in seconds.
+	 */
 	void Rims::_memAddBrewData(unsigned long time, unsigned int cv,
 							  float pv, float flow,
 							  unsigned long timerRemaining)
