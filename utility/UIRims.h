@@ -63,6 +63,7 @@ public:
 	void showHeaterWarning(float state = false);
 	void showTempScreen();
 	void showTimeFlowScreen();
+	void showMemAccessScreen();
 	void switchScreen();
 	
 	// === VARIABLE SETTER ===

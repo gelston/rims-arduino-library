@@ -231,6 +231,119 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 		_memInitialized = _myMem.verifyMem();
 	}
 	
+	
+	void Rims::checkMemAccessMode()
+	{
+		byte selectedMenu = 0;
+		// if KEYSELECT is pressed, entering in memory dump mode
+		if(_ui->readKeysADC(false) == KEYSELECT)
+		{
+			_ui->showMemAccessScreen();
+			do
+			{
+				Serial.println("MEMORY ACCESS MODE");
+				Serial.println("<1> dump brew session data");
+				Serial.println("<2> clear all memory");
+				Serial.println("<3> exit");
+				while(not Serial.available());
+				selectedMenu = Serial.parseInt();
+				Serial.read(); // flush remaining '\n'
+				Serial.write('>');Serial.println(selectedMenu);
+				switch(selectedMenu)
+				{
+				case 1:
+					_memDumpBrewData();
+					break;
+				case 2:
+					_memClearAll();
+					break;
+				case 3:
+					Serial.println("EXIT");
+					break;
+				}
+				Serial.flush(); Serial.read(); // flush remaining '\n'
+			}
+			while(selectedMenu != 3);
+		}
+	}
+	
+	/*!
+	 * \brief Dump brew session data on USB serial port.
+	 */
+	void Rims::_memDumpBrewData()
+	{
+		byte brewSession, brewSessionQty, readBuffer[BYTESPERDATA];
+		unsigned long startingAddr, nextStartingAddr, curAddr;
+		unsigned long sessionDataQty;
+		float time, sp, pv, flow, timerRemaining;
+		unsigned int cv;
+		Serial.println("DUMP");
+		Serial.print("Currently ");
+		brewSessionQty = _memCountSessions();
+		Serial.print(brewSessionQty);
+		Serial.println(" brew sessions. Which one, starting at 1 ?");
+		while(not Serial.available());
+		brewSession = Serial.parseInt();
+		Serial.write('>');Serial.println(brewSession);
+		if(brewSession >= 1)
+		{
+			Serial.println("time,sp,cv,pv,flow,timerRemaining");
+			_myMem.read(ADDRSESSIONTABLE + 4*(brewSession-1),
+						readBuffer,4);
+			memcpy(&startingAddr,readBuffer,4);
+			if(brewSession < brewSessionQty)
+			{
+				_myMem.read(ADDRSESSIONTABLE + 4*(brewSession),
+							readBuffer,4);
+				memcpy(&nextStartingAddr,readBuffer,4);
+			}
+			else
+			{
+				sessionDataQty = _memCountSessionData();
+				nextStartingAddr = startingAddr+ 4 + BYTESPERDATA*(sessionDataQty);
+			}
+			_myMem.read(startingAddr,readBuffer,4);
+			memcpy(&sp,readBuffer,4); // set point at the beginning
+			for(curAddr = startingAddr + 4;
+				curAddr < nextStartingAddr;
+				curAddr += BYTESPERDATA)
+			{
+				_myMem.read(curAddr,readBuffer,BYTESPERDATA);
+				memcpy(&time,readBuffer,4);
+				memcpy(&cv,readBuffer+4,2);
+				memcpy(&pv,readBuffer+6,4);
+				memcpy(&flow,readBuffer+10,4);
+				memcpy(&timerRemaining,readBuffer+14,4);
+				Serial.print(time,3);	Serial.write(',');
+				Serial.print(sp,1);		Serial.write(',');
+				Serial.print(cv);		Serial.write(',');
+				Serial.print(pv,15);	Serial.write(',');
+				Serial.print(flow,2);	Serial.write(',');
+				Serial.println(timerRemaining,0);
+			}
+		}		
+	}
+	
+	/*!
+	 * \brief Clear all memory via USB serial port.
+	 */
+	void Rims::_memClearAll()
+	{
+		char inputChar;
+		Serial.println("CLEAR");
+		Serial.println("Are you sure ? (y/n)");
+		while(not Serial.available());
+		inputChar = Serial.read();
+		Serial.write('>');Serial.println(inputChar);
+		if(inputChar == 'Y' or inputChar == 'y')
+		{
+			Serial.println("Clearing all memory...");
+			_myMem.erase(0x000000,W25Q_ERASE_CHIP);
+			_myMem.waitFree();
+			Serial.println("Finished!");
+		}
+	}
+	
 	/*!
 	 * \brief Count how many brew sessions were saved in flash mem.
 	 * 
@@ -317,7 +430,6 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 		unsigned long lastSesDataQty = _memCountSessionData();
 		byte buffer[4];
 		unsigned long lastStartingAddr;
-		Serial.print("brewSesQty:");Serial.println(brewSesQty);
 		if(brewSesQty == 0) _memNextAddr = ADDRBREWDATA;
 		else
 		{
@@ -326,7 +438,6 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 			_memNextAddr = lastStartingAddr+\
 			               (BYTESPERDATA*lastSesDataQty) + 4;
 		}
-		Serial.print("countData:");Serial.println(lastSesDataQty);
 		memcpy(buffer,&_memNextAddr,4);
 		_myMem.program(ADDRSESSIONTABLE+((brewSesQty*4)%256),buffer,4);
 		_myMem.erase(ADDRDATACOUNT,W25Q_ERASE_SECTOR);
@@ -355,16 +466,16 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 	 * 0x09110E | flow           | 4 bytes
 	 * 0x091102 | timerRemaining | 4 bytes
 	 * 
-	 * \param time : unsigned long. time in sec of data point
-	 * \param cv : unsigned int. SSR control value
+	 * \param time : float. time in sec of data point
+	 * \param cv : unsigned int. SSR control value (mSec at ON state)
 	 * \param pv : float. temperature in deg Celcius
 	 * \param flow : float. flow in L/min
-	 * \param timerRemaining : unsigned long. remaining time on timer
+	 * \param timerRemaining : float. remaining time on timer
 	 *                         in seconds.
 	 */
-	void Rims::_memAddBrewData(unsigned long time, unsigned int cv,
-							  float pv, float flow,
-							  unsigned long timerRemaining)
+	void Rims::_memAddBrewData(float time, unsigned int cv,
+							   float pv, float flow,
+							   float timerRemaining)
 	{
 		byte writeBuffer[BYTESPERDATA], dataCountMkr;
 		memcpy(writeBuffer,&time,4);
@@ -405,7 +516,6 @@ void Rims::run()
  */
 void Rims::_initialize()
 {
-	Serial.begin(9600);
 	_timerElapsed = false;
 	// === ASK SETPOINT ===
 	*(_setPointPtr) = _ui->askSetPoint(*(_setPointPtr));
@@ -491,11 +601,11 @@ void Rims::_iterate()
 						(_settedTime-_runningTime)/1000.0);
 #else
 		Serial.print(
-	    (double)(_currentTime-_rimsStartTime)/1000.0,3);	Serial.print(",");
-		Serial.print(*(_setPointPtr));						Serial.print(",");
-		Serial.print(*(_controlValPtr),0);					Serial.print(",");
-		Serial.print(*(_processValPtr),15);					Serial.print(",");
-		Serial.print(_flow,2);								Serial.print(",");
+	    (double)(_currentTime-_rimsStartTime)/1000.0,3);	Serial.write(',');
+		Serial.print(*(_setPointPtr),1);					Serial.write(',');
+		Serial.print(*(_controlValPtr),0);					Serial.write(',');
+		Serial.print(*(_processValPtr),15);					Serial.write(',');
+		Serial.print(_flow,2);								Serial.write(',');
 		Serial.println((_settedTime-_runningTime)/1000.0,0);
 #endif
 		_lastTimePID += SAMPLETIME;
