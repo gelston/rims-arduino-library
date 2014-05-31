@@ -109,6 +109,7 @@ public:
 	                  int mashWaterQty = -1);
 #ifdef WITH_W25QFLASH
 	void setMemCSPin(byte csPin);
+	void checkMemAccessMode();
 #endif
 	
 	void run();
@@ -131,9 +132,11 @@ protected:
 	byte          _memCountSessions();
 	unsigned long _memCountSessionData();
 	void          _memInit();
-	void          _memAddBrewData(unsigned long time, unsigned int cv,
-							     float pv, float flow,
-							      unsigned long timerRemaining);
+	void          _memAddBrewData(float time, unsigned int cv,
+								  float pv, float flow,
+								  float timerRemaining);
+	void          _memDumpBrewData();
+	void          _memClearAll();
 #endif
 	
 private:

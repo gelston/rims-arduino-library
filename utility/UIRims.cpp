@@ -619,6 +619,16 @@ void UIRims::showHeaterWarning(float state)
 }
 
 /*!
+ * \brief Show the memory access mode screen.
+ */
+void UIRims::showMemAccessScreen()
+{
+	_lcd->clear();
+	_printStrLCD("USB memory",0,0);
+	_printStrLCD("access mode",0,1);
+}
+
+/*!
  * \brief Set voltage detection on heater under the heater warning.
  * \param state : boolean. If true, show on, else, off.
  * \param buzz : boolean. If true, speaker alarm is trigerred if no voltage.

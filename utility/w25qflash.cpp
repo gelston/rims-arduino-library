@@ -69,22 +69,17 @@ void W25QFlash::read(unsigned long addr, byte buffer[], unsigned long n)
 void W25QFlash::program(unsigned long addr, byte buffer[], unsigned long n)
 {
 	unsigned long i;
-	waitFree();
-	setWriteEnable();
-	_select();
-	_sendCmdAddr(W25Q_PROG_PAGE,addr);
 	for(i=0;i<n;i++)
 	{
-		SPI.transfer(buffer[i]);
-		if(not( (i+1) & 0xFF )) // the next one is in new page
+		if(not( i & 0xFF )) // new page
 		{
-			if(i+1>=n) break;
 			_deselect();
 			waitFree();
 			setWriteEnable();
 			_select();
-			_sendCmdAddr(W25Q_PROG_PAGE,addr+i+1);
+			_sendCmdAddr(W25Q_PROG_PAGE,addr+i);
 		}
+		SPI.transfer(buffer[i]);
 	}
 	_deselect();
 }
