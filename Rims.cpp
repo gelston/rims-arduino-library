@@ -285,22 +285,23 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 		while(not Serial.available());
 		brewSession = Serial.parseInt();
 		Serial.write('>');Serial.println(brewSession);
-		if(brewSession >= 1)
+		if(brewSession >= 1 and brewSession <= brewSessionQty)
 		{
 			Serial.println("time,sp,cv,pv,flow,timerRemaining");
 			_myMem.read(ADDRSESSIONTABLE + 4*(brewSession-1),
 						readBuffer,4);
 			memcpy(&startingAddr,readBuffer,4);
-			if(brewSession < brewSessionQty)
+			if(brewSession == brewSessionQty) // last session
+			{
+				sessionDataQty = _memCountSessionData();
+				nextStartingAddr = startingAddr+ 4 + \
+				                   BYTESPERDATA*(sessionDataQty);
+			}
+			else
 			{
 				_myMem.read(ADDRSESSIONTABLE + 4*(brewSession),
 							readBuffer,4);
 				memcpy(&nextStartingAddr,readBuffer,4);
-			}
-			else
-			{
-				sessionDataQty = _memCountSessionData();
-				nextStartingAddr = startingAddr+ 4 + BYTESPERDATA*(sessionDataQty);
 			}
 			_myMem.read(startingAddr,readBuffer,4);
 			memcpy(&sp,readBuffer,4); // set point at the beginning
@@ -317,7 +318,7 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 				Serial.print(time,3);	Serial.write(',');
 				Serial.print(sp,1);		Serial.write(',');
 				Serial.print(cv);		Serial.write(',');
-				Serial.print(pv,15);	Serial.write(',');
+				Serial.print(pv,3);		Serial.write(',');
 				Serial.print(flow,2);	Serial.write(',');
 				Serial.println(timerRemaining,0);
 			}
@@ -549,9 +550,8 @@ void Rims::_initialize()
 #ifdef WITH_W25QFLASH
 	// === MEM INIT ===
 	_memInit();
-#else
-	Serial.println("time,sp,cv,pv,flow,timerRemaining");
 #endif
+	Serial.println("time,sp,cv,pv,flow,timerRemaining");
 	_ui->showTempScreen();
 	*(_processValPtr) = this->getTempPV();
 	_ui->setTempSP(*(_setPointPtr));
@@ -599,15 +599,14 @@ void Rims::_iterate()
 						*(_processValPtr),
 						_flow,
 						(_settedTime-_runningTime)/1000.0);
-#else
+#endif
 		Serial.print(
 	    (double)(_currentTime-_rimsStartTime)/1000.0,3);	Serial.write(',');
 		Serial.print(*(_setPointPtr),1);					Serial.write(',');
 		Serial.print(*(_controlValPtr),0);					Serial.write(',');
-		Serial.print(*(_processValPtr),15);					Serial.write(',');
+		Serial.print(*(_processValPtr),3);					Serial.write(',');
 		Serial.print(_flow,2);								Serial.write(',');
 		Serial.println((_settedTime-_runningTime)/1000.0,0);
-#endif
 		_lastTimePID += SAMPLETIME;
 	}
 	// === SSR CONTROL ===
