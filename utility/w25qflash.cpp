@@ -69,9 +69,13 @@ void W25QFlash::read(unsigned long addr, byte buffer[], unsigned long n)
 void W25QFlash::program(unsigned long addr, byte buffer[], unsigned long n)
 {
 	unsigned long i;
+	waitFree();
+	setWriteEnable();
+	_select();
+	_sendCmdAddr(W25Q_PROG_PAGE,addr);
 	for(i=0;i<n;i++)
 	{
-		if(not( i & 0xFF )) // new page
+		if(not( (addr+i) & 0xFF )) // new page
 		{
 			_deselect();
 			waitFree();
