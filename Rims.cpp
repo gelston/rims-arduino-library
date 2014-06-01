@@ -231,7 +231,17 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 		_memInitialized = _myMem.verifyMem();
 	}
 	
-	
+	/*!
+	 * \brief Check if enterring in USB memory access mode.
+	 * 
+	 * Must be called at the end of the setup() function of
+	 * the main sketch. If KEYSELECT is pressed, entering
+	 * in USB memory access mode. In this mode, you can
+	 * dump brew session data on the serial port and erase
+	 * the entire memory. A basic menu interface is 
+	 * implemanted via serial communication.
+	 * 
+	 */
 	void Rims::checkMemAccessMode()
 	{
 		byte selectedMenu = 0;
@@ -272,7 +282,8 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 	 */
 	void Rims::_memDumpBrewData()
 	{
-		byte brewSession, brewSessionQty, readBuffer[BYTESPERDATA];
+		byte readBuffer[BYTESPERDATA];
+		unsigned int brewSession, brewSessionQty;
 		unsigned long startingAddr, nextStartingAddr, curAddr;
 		unsigned long sessionDataQty;
 		float time, sp, pv, flow, timerRemaining;
@@ -348,29 +359,44 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 	/*!
 	 * \brief Count how many brew sessions were saved in flash mem.
 	 * 
-	 * Max is 64 brew sessions, rollback if more. When new brew session 
+	 * Max is 1024 brew sessions. When new brew session 
 	 * is started, the starting address of the datablock is saved in 
-	 * the brew sessions table, starting at ADDRSESSIONTABLE or 0x001000.
+	 * the brew sessions table, starting at ADDRSESSIONTABLE or 0x000000.
 	 * For exemple, if 2 brew session were done of 2 seconds each
 	 * (so 4+18+18=40 bytes each), the memory map of the brew 
 	 * sessions table would be :
 	 * 
 	 * Address  | Data       | Size 
 	 * -------- | -----------| -------
-	 * 0x001000 | 0x00001100 | 4 bytes
-	 * 0x001004 | 0x00001128 | 4 bytes      
-	 * 0x001008 | 0xFFFFFFFF | 4 bytes
-	 * 0x000003 | 0xFFFFFFFF | 4 bytes
+	 * 0x000000 | 0x00001100 | 4 bytes
+	 * 0x000004 | 0x00001128 | 4 bytes      
+	 * 0x000008 | 0xFFFFFFFF | 4 bytes
+	 * 0x00000C | 0xFFFFFFFF | 4 bytes
 	 * ...      | ...        | ...
-	 * 0x0010FB | 0xFFFFFFFF | 4 bytes
+	 * 0x000FFF | 0xFFFFFFFF | 4 bytes
 	 * 
 	 */
-	byte Rims::_memCountSessions()
+	unsigned int Rims::_memCountSessions()
 	{
-		byte i, readBuffer[256];
-		_myMem.read(ADDRSESSIONTABLE,readBuffer,256);
-		for(i=3; i<256; i+=4) if(readBuffer[i] == 0xFF) break;// null value
-		return (i-3)/4;
+		bool nullAddrFound = false;
+		byte page, offset, readBuffer[256];
+		for(page=0;page<16;page++)  // 16 pages per sector
+		{
+			_myMem.read(ADDRSESSIONTABLE+(256*page),readBuffer,256);
+			offset = 0;
+			do
+			{
+				if(readBuffer[offset] == 0xFF) 
+				{
+					nullAddrFound = true;
+					break;
+				}
+				offset++;
+			}
+			while(offset > 0);
+			if(nullAddrFound) break;
+		}
+		return (page*64)+(offset/4);
 	}
 	
 	/*!
@@ -378,18 +404,18 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 	 * 
 	 * When brew data is added in the memory, a sector is filled with "0"
 	 * to remember how many data were taken. This sector is the first,
-	 * at the beginning of the memory (ADDRDATACOUNT or 0x000000).
+	 * at the beginning of the memory (ADDRDATACOUNT or 0x001000).
 	 * If 12 brew data were taken since de beginning (or 12 seconds were
 	 * ellapsed), the memory map would be like this :
 	 * 
 	 * Address  | Data           
 	 * -------- | -----------
-	 * 0x000000 | b00000000
-	 * 0x000001 | b11110000         
-	 * 0x000002 | b11111111
-	 * 0x000003 | b11111111
+	 * 0x001000 | b00000000
+	 * 0x001001 | b11110000         
+	 * 0x001002 | b11111111
+	 * 0x001003 | b11111111
 	 * ...      | ...
-	 * 0x000FFF | b11111111
+	 * 0x001FFF | b11111111
 	 * 
 	 * I used this method because of a limitation of the flash memory.
 	 * I could not use normal counting because freshly erased bits 
@@ -400,18 +426,20 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 	unsigned long Rims::_memCountSessionData()
 	{
 		boolean freeBitFound = false;
-		byte i,offset,page,readBuffer[256];
+		byte i,page,offset,readBuffer[256];
 		for(page=0;page<16;page++) // 16 pages per sector
 		{
 			_myMem.read(ADDRDATACOUNT+(page*256),readBuffer,256);
-			for(offset=0;offset<256;offset++)
+			do
 			{
 				if(readBuffer[offset] & 0xFF)
 				{
 					freeBitFound = true;
 					break;
 				}
+				offset++;
 			}
+			while(offset>0);
 			if(freeBitFound) break;
 		}
 		for(i=0;i<8;i++) if((readBuffer[offset]>>i) & 0x01) break;
@@ -427,7 +455,7 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 	 */
 	void Rims::_memInit()
 	{
-		byte brewSesQty = _memCountSessions();
+		unsigned int brewSesQty = _memCountSessions();
 		unsigned long lastSesDataQty = _memCountSessionData();
 		byte buffer[4];
 		unsigned long lastStartingAddr;
@@ -440,7 +468,7 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 			               (BYTESPERDATA*lastSesDataQty) + 4;
 		}
 		memcpy(buffer,&_memNextAddr,4);
-		_myMem.program(ADDRSESSIONTABLE+((brewSesQty*4)%256),buffer,4);
+		_myMem.program(ADDRSESSIONTABLE+((brewSesQty*4)%1024),buffer,4);
 		_myMem.erase(ADDRDATACOUNT,W25Q_ERASE_SECTOR);
 		_memDataQty = 0;
 		float setPoint = *_setPointPtr;

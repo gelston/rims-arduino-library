@@ -24,6 +24,7 @@ setPinLED	KEYWORD2
 setHeaterPowerDetect	KEYWORD2
 setInterruptFlow	KEYWORD2
 setMemCSPin	KEYWORD2
+checkMemAccessMode	KEYWORD2
 run	KEYWORD2
 analogInToCelcius	KEYWORD2
 getFlow	KEYWORD2
