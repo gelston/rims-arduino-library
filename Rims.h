@@ -62,14 +62,16 @@
 ///       if flow is <= than this value.
 #define CRITICALFLOW 5.0
 
-///\brief Flash mem address for counting data in current brew session
-#define ADDRDATACOUNT		0x000000 // 1st sector
 ///\brief Flash mem address for table of starting addr. of brew sessions
-#define ADDRSESSIONTABLE	0x001000 // 2nd sector
-///\brief Flash mem starting address for brew all brew datas
-#define ADDRBREWDATA		0x001100 // 2nd sector, 2nd page
+#define ADDRSESSIONTABLE	0x000000 // 1st sector
+///\brief Flash mem address for counting data in current brew session
+#define ADDRDATACOUNT		0x001000 // 2nd sector
+///\brief Flash mem starting address for all brew datas
+#define ADDRBREWDATA		0x002000 // 3rd sector
 ///\brief Total bytes used per data point (at each second)
 #define BYTESPERDATA		18
+///\brief Memory size in bytes (Winbond W25QW25Q80BV : 1 MByte)
+#define MEMSIZEBYTES		(1*1024*1024)
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
@@ -129,7 +131,7 @@ protected:
 	void _refreshDisplay();
 	void _refreshSSR();
 #ifdef WITH_W25QFLASH
-	byte          _memCountSessions();
+	unsigned int  _memCountSessions();
 	unsigned long _memCountSessionData();
 	void          _memInit();
 	void          _memAddBrewData(float time, unsigned int cv,
