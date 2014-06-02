@@ -78,7 +78,6 @@ void RimsIdent::_initialize()
 	_rimsInitialized = true;
 	stopHeating(false);
 	// === IDENTIFICATION TESTS ===
-	Serial.begin(9600);
 	Serial.println("time,cv,pv,flow");
 	_ui->showIdentScreen();
 	_settedTime = IDENTLENGTH; // 15 minutes

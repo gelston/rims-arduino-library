@@ -241,7 +241,14 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 	 * the entire memory. A basic menu interface is 
 	 * implemanted via serial communication.
 	 * 
-	 */
+	 * The menu is :
+	 * 
+	 * -# dump brew session data
+	 * -# calculate free space
+	 * -# clear all memory
+	 * -# exit
+	 * 
+	 */ 
 	void Rims::checkMemAccessMode()
 	{
 		byte selectedMenu = 0;
@@ -253,8 +260,9 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 			{
 				Serial.println("MEMORY ACCESS MODE");
 				Serial.println("<1> dump brew session data");
-				Serial.println("<2> clear all memory");
-				Serial.println("<3> exit");
+				Serial.println("<2> calculate free space");
+				Serial.println("<3> clear all memory");
+				Serial.println("<4> exit");
 				while(not Serial.available());
 				selectedMenu = Serial.parseInt();
 				Serial.read(); // flush remaining '\n'
@@ -265,15 +273,18 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 					_memDumpBrewData();
 					break;
 				case 2:
-					_memClearAll();
+					_memFreeSpace();
 					break;
 				case 3:
+					_memClearAll();
+					break;
+				case 4:
 					Serial.println("EXIT");
 					break;
 				}
 				Serial.flush(); Serial.read(); // flush remaining '\n'
 			}
-			while(selectedMenu != 3);
+			while(selectedMenu != 4);
 		}
 	}
 	
@@ -334,6 +345,30 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 				Serial.println(timerRemaining,0);
 			}
 		}		
+	}
+	
+	/*!
+	 * \brief Show free memory on flash mem via USB serial port.
+	 */
+	void Rims::_memFreeSpace()
+	{
+		byte readBuffer[4];
+		unsigned int brewSesQty = _memCountSessions();
+		unsigned long freeBytes, lastSessionAddr, freePoints;
+		Serial.println("FREE MEM");
+		if(brewSesQty)
+		{
+			_myMem.read(ADDRSESSIONTABLE+4*(brewSesQty-1),
+						readBuffer,4);
+			memcpy(&lastSessionAddr,readBuffer,4);
+		}
+		else lastSessionAddr = ADDRBREWDATA - 4;
+		freeBytes = MEMSIZEBYTES - \
+		   (lastSessionAddr + 4 + BYTESPERDATA*_memCountSessionData());
+		freePoints = freeBytes / BYTESPERDATA;
+		Serial.print("Currently ");
+		Serial.print(freeBytes); Serial.print(" free bytes or about ");
+		Serial.print(freePoints); Serial.println(" data points");
 	}
 	
 	/*!

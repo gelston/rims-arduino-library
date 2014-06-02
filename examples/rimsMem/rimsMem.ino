@@ -1,3 +1,14 @@
+/*
+ * Rims flash mem basic exemple. Based on Winbond W25Q80BV (1 Mbytes) 
+ * SPI flash mem.
+ * 
+ * UNCOMMENT LINE :
+ * #define WITH_W25QFLASH
+ * IN "Rims.h" TO MAKE IT COMPILE  
+ * 
+ */
+
+#include "SPI.h"
 
 #include "LiquidCrystal.h"
 #include "Rims.h"
@@ -15,6 +26,11 @@ void setup() {
   };
   myRims.setThermistor(steinhartCoefs,10000.0);
   myRims.setTuningPID(2000,5,-150000,80,  20); //(Kc,Ki,Kd,Tf,Vol)
+  
+  myRims.setMemCSPin(A5);      // mem chip select pin (CS or SS)
+
+  myRims.checkMemAccessMode(); // enter in USB mem acces if 
+                               // KEYSELECT is held at startup
 }
 void loop() {
   myRims.run();
