@@ -26,7 +26,7 @@
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ///\brief uncomment/comment to include/exclude flash memory
-#define WITH_W25QFLASH                                          
+// #define WITH_W25QFLASH                                          
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ///\brief Sample time for PID. Same time used
@@ -71,7 +71,7 @@
 ///\brief Total bytes used per data point (at each second)
 #define BYTESPERDATA		18
 ///\brief Memory size in bytes (Winbond W25QW25Q80BV : 1 MByte)
-#define MEMSIZEBYTES		(1*1024*1024)
+#define MEMSIZEBYTES		1048576
 
 #include "Arduino.h"
 #include "utility/UIRims.h"
@@ -138,6 +138,7 @@ protected:
 								  float pv, float flow,
 								  float timerRemaining);
 	void          _memDumpBrewData();
+	void          _memFreeSpace();
 	void          _memClearAll();
 #endif
 	
