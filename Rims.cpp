@@ -261,36 +261,41 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 		// if KEYSELECT is pressed, entering in memory dump mode
 		if(_ui->readKeysADC(false) == KEYSELECT)
 		{
-			_ui->showMemAccessScreen();
-			do
+			if(_memInitialized)
 			{
-				Serial.println("MEMORY ACCESS MODE");
-				Serial.println("<1> dump brew session data");
-				Serial.println("<2> calculate free space");
-				Serial.println("<3> clear all memory");
-				Serial.println("<4> exit");
-				while(not Serial.available());
-				selectedMenu = Serial.parseInt();
-				Serial.read(); // flush remaining '\n'
-				Serial.write('>');Serial.println(selectedMenu);
-				switch(selectedMenu)
+				_ui->showMemAccessScreen();
+				do
 				{
-				case 1:
-					_memDumpBrewData();
-					break;
-				case 2:
-					_memFreeSpace();
-					break;
-				case 3:
-					_memClearAll();
-					break;
-				case 4:
-					Serial.println("EXIT");
-					break;
+					Serial.println("MEMORY ACCESS MODE");
+					Serial.println("<1> dump brew session data");
+					Serial.println("<2> calculate free space");
+					Serial.println("<3> clear all memory");
+					Serial.println("<4> exit");
+					while(not Serial.available());
+					selectedMenu = Serial.parseInt();
+					Serial.read(); // flush remaining '\n'
+					Serial.write('>');Serial.println(selectedMenu);
+					switch(selectedMenu)
+					{
+					case 1:
+						_memDumpBrewData();
+						break;
+					case 2:
+						_memFreeSpace();
+						break;
+					case 3:
+						_memClearAll();
+						break;
+					case 4:
+						Serial.println("EXIT");
+						break;
+					}
+					// flush remaining '\n' :
+					Serial.flush(); Serial.read(); 
 				}
-				Serial.flush(); Serial.read(); // flush remaining '\n'
+				while(selectedMenu != 4);
 			}
-			while(selectedMenu != 4);
+			else Serial.println("MEM NOT FOUND!");
 		}
 	}
 	
