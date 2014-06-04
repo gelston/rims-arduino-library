@@ -26,7 +26,7 @@
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ///\brief uncomment/comment to include/exclude flash memory
-// #define WITH_W25QFLASH                                          
+ #define WITH_W25QFLASH                                          
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ///\brief Sample time for PID. Same time used

@@ -142,6 +142,12 @@ void Rims::setTuningPID(double Kp, double Ki, double Kd, double tauFilter,
 
 /*!
  * \brief Set interrupt function for flow sensor.
+ * 
+ * It is recommended to call pinMode(pinUsedForInterrupt,INPUT_PULLUP) 
+ * in the setup() function of the main sketch. For exemple, on 
+ * an Arduino UNO, if interrupt #1 is used for the flow sensor,
+ * you should call in setup() : pinMode(3,INPUT_PULLUP);
+ * 
  * \param interruptFlow : byte. Interrupt pin number connected to the
  *                        flow sensor. For more info :
  *                        http://arduino.cc/en/Reference/attachInterrupt
