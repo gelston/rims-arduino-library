@@ -60,7 +60,7 @@
 #define DEFAULTFLOWUPBOUND 5.0
 ///\brief If _stopOnCriticalFlow is activited, heater will be turn off
 ///       if flow is <= than this value.
-#define CRITICALFLOW 5.0
+#define CRITICALFLOW 1.0
 
 ///\brief Flash mem address for table of starting addr. of brew sessions
 #define ADDRSESSIONTABLE	0x000000 // 1st sector
