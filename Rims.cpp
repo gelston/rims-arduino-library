@@ -449,8 +449,8 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 	 * \brief Count how many data point were taken.
 	 * 
 	 * When brew data is added in the memory, a sector is filled with "0"
-	 * to remember how many data were taken. This sector is the first,
-	 * at the beginning of the memory (ADDRDATACOUNT or 0x001000).
+	 * to remember how many data were taken. This sector is at the address
+   * ADDRDATACOUNT or 0x001000 (second sector).
 	 * If 12 brew data were taken since de beginning (or 12 seconds were
 	 * ellapsed), the memory map would be like this :
 	 * 
