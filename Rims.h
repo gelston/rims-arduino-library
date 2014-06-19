@@ -162,7 +162,7 @@ private:
 	boolean _ncTherm;
 	boolean _noPower;
 	boolean _buzzerState;
-	boolean _memInitialized;
+	boolean _memConnected;
 	
 	// ===MULTIPLE PIDs===
 	byte _pidQty;

@@ -45,7 +45,7 @@ Rims::Rims(UIRims* uiRims, byte analogPinTherm, byte ssrPin,
   _myPID(currentTemp, ssrControl, settedTemp, 0, 0, 0, DIRECT),
   _pidQty(0), 
   _stopOnCriticalFlow(false), _rimsInitialized(false),
-  _memInitialized(false),
+  _memConnected(false),
   _pinLED(13),_pinHeaterVolt(-1), _noPower(false)
 {
 	_steinhartCoefs[0] = DEFAULTSTEINHART0;
@@ -234,7 +234,7 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 	void Rims::setMemCSPin(byte csPin)
 	{ 
 		_myMem.setCSPin(csPin); 
-		_memInitialized = _myMem.verifyMem();
+		_memConnected = _myMem.verifyMem();
 	}
 	
 	/*!
@@ -261,7 +261,7 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 		// if KEYSELECT is pressed, entering in memory dump mode
 		if(_ui->readKeysADC(false) == KEYSELECT)
 		{
-			if(_memInitialized)
+			if(_memConnected)
 			{
 				_ui->showMemAccessScreen();
 				do
@@ -623,7 +623,7 @@ void Rims::_initialize()
 	}
 #ifdef WITH_W25QFLASH
 	// === MEM INIT ===
-	_memInit();
+	if(_memConnected) _memInit();
 #endif
 	Serial.println("time,sp,cv,pv,flow,timerRemaining");
 	_ui->showTempScreen();
@@ -668,11 +668,14 @@ void Rims::_iterate()
 		_refreshDisplay();
 		// === DATA LOG ===
 #ifdef WITH_W25QFLASH
-		_memAddBrewData((_currentTime-_rimsStartTime)/1000.0,
-						*(_controlValPtr),
-						*(_processValPtr),
-						_flow,
-						(_settedTime-_runningTime)/1000.0);
+		if(_memConnected)
+		{
+			_memAddBrewData((_currentTime-_rimsStartTime)/1000.0,
+							*(_controlValPtr),
+							*(_processValPtr),
+							_flow,
+							(_settedTime-_runningTime)/1000.0);
+		}
 #endif
 		Serial.print(
 	    (double)(_currentTime-_rimsStartTime)/1000.0,3);	Serial.write(',');
