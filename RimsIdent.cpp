@@ -56,6 +56,7 @@ void RimsIdent::_initialize()
 {
 	unsigned long currentTime;
 	_timerElapsed = false;
+	(*_setPointPtr) = 0.0;
 	// === OPEN SERIAL ===
 	_ui->showSerialWarning();
 	while(_ui->readKeysADC()==KEYNONE) continue;
@@ -68,7 +69,7 @@ void RimsIdent::_initialize()
 		_currentTime = millis();
 		if(_currentTime - lastFlowRefresh >= IDENTSAMPLETIME)
 		{
-			_ui->setFlow(this->getFlow());
+			_ui->setFlow(this->getFlow(),false);
 			lastFlowRefresh = _currentTime;
 		}
 	}
@@ -77,8 +78,12 @@ void RimsIdent::_initialize()
 	while(_ui->readKeysADC()==KEYNONE) continue;
 	_rimsInitialized = true;
 	stopHeating(false);
+#ifdef WITH_W25QFLASH
+	// === MEM INIT ===
+	if(_memConnected) _memInit(*_setPointPtr);
+#endif
 	// === IDENTIFICATION TESTS ===
-	Serial.println("time,cv,pv,flow");
+	Serial.println(g_csvHeader);
 	_ui->showIdentScreen();
 	_settedTime = IDENTLENGTH; // 15 minutes
 	_sumStoppedTime = false;
@@ -101,13 +106,24 @@ void RimsIdent::_iterate()
 		else if(_runningTime >= STEP1TIME) *(_controlValPtr) = STEP1VALUE;
 		if(_currentTime - _lastTimeSerial >= IDENTSAMPLETIME)
 		{
-			///  \todo : use std screen of UIRims
 			*(_processValPtr) = this->getTempPV();
 			_flow = this->getFlow();
+#ifdef WITH_W25QFLASH
+			if(_memConnected)
+			{
+				_memAddBrewData((_currentTime-_rimsStartTime)/1000.0,
+								*(_controlValPtr),
+									*(_processValPtr),
+								_flow,
+								(_settedTime-_runningTime)/1000.0);
+			}
+#endif
 			Serial.print((double)_runningTime/1000.0,3);	Serial.print(",");
+			Serial.print(*(_setPointPtr),1);				Serial.print(",");
 			Serial.print(*(_controlValPtr),0);				Serial.print(",");
-			Serial.print(*(_processValPtr),15);				Serial.print(",");
-			Serial.println(_flow,2);
+			Serial.print(*(_processValPtr),3);				Serial.print(",");
+			Serial.print(_flow,2);							Serial.print(",");
+			Serial.println((_settedTime-_runningTime)/1000.0,0);
 			_refreshDisplay();
 			_ui->setIdentCV(*(_controlValPtr),SSRWINDOWSIZE);
 			_lastTimeSerial += IDENTSAMPLETIME;
