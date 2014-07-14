@@ -20,6 +20,8 @@ volatile unsigned long g_flowLastTime = 0;
 volatile unsigned long g_flowCurTime = 0;
 ///\brief ISR for flow sensor.
 void isrFlow(); /// ISR for flow sensor
+///\brief Header for csv printing on serial monitor
+const char g_csvHeader[] = "time,sp,cv,pv,flow,timerRemaining";
 
 /*
 ============================================================
@@ -320,7 +322,7 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 		Serial.write('>');Serial.println(brewSession);
 		if(brewSession >= 1 and brewSession <= brewSessionQty)
 		{
-			Serial.println("time,sp,cv,pv,flow,timerRemaining");
+			Serial.println(g_csvHeader);
 			_myMem.read(ADDRSESSIONTABLE + 4*(brewSession-1),
 						readBuffer,4);
 			memcpy(&startingAddr,readBuffer,4);
@@ -498,8 +500,11 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 	 * Verify where to store the new datas and saved temperature
 	 * setpoint at the beginning of the datablock.
 	 * 
+	 * \param sp : float. Temperature setpoint stored at the beginning
+	 *                    of the datablock.
+	 * 
 	 */
-	void Rims::_memInit()
+	void Rims::_memInit(float sp)
 	{
 		unsigned int brewSesQty = _memCountSessions();
 		unsigned long lastSesDataQty = _memCountSessionData();
@@ -517,8 +522,7 @@ void Rims::setHeaterPowerDetect(char pinHeaterVolt)
 		_myMem.program(ADDRSESSIONTABLE+((brewSesQty*4)%1024),buffer,4);
 		_myMem.erase(ADDRDATACOUNT,W25Q_ERASE_SECTOR);
 		_memDataQty = 0;
-		float setPoint = *_setPointPtr;
-		memcpy(buffer,&setPoint,4);
+		memcpy(buffer,&sp,4);
 		_myMem.program(_memNextAddr,buffer,4);
 		_memNextAddr += 4;
 	}
@@ -623,9 +627,9 @@ void Rims::_initialize()
 	}
 #ifdef WITH_W25QFLASH
 	// === MEM INIT ===
-	if(_memConnected) _memInit();
+	if(_memConnected) _memInit(*_setPointPtr);
 #endif
-	Serial.println("time,sp,cv,pv,flow,timerRemaining");
+	Serial.println(g_csvHeader);
 	_ui->showTempScreen();
 	*(_processValPtr) = this->getTempPV();
 	_ui->setTempSP(*(_setPointPtr));

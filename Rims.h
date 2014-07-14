@@ -26,7 +26,7 @@
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ///\brief uncomment/comment to include/exclude flash memory
-// #define WITH_W25QFLASH                                          
+#define WITH_W25QFLASH                                          
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ///\brief Sample time for PID. Same time used
@@ -60,7 +60,7 @@
 #define DEFAULTFLOWUPBOUND 5.0
 ///\brief If _stopOnCriticalFlow is activited, heater will be turn off
 ///       if flow is <= than this value.
-#define CRITICALFLOW 1.0
+#define CRITICALFLOW 5.0
 
 ///\brief Flash mem address for table of starting addr. of brew sessions
 #define ADDRSESSIONTABLE	0x000000 // 1st sector
@@ -82,6 +82,8 @@
 	#include "utility/w25qflash.h"
 #endif
 
+
+extern const char g_csvHeader[];
 
 /*!
  * \brief Recirculation infusion mash system (RIMS) library for Arduino
@@ -133,7 +135,7 @@ protected:
 #ifdef WITH_W25QFLASH
 	unsigned int  _memCountSessions();
 	unsigned long _memCountSessionData();
-	void          _memInit();
+	void          _memInit(float sp);
 	void          _memAddBrewData(float time, unsigned int cv,
 								  float pv, float flow,
 								  float timerRemaining);
