@@ -33,7 +33,9 @@
  * It sends differents values to the SSR (0%->50%->100%->0%) and monitors
  * the resulting temperature on the
  * <a href=http://arduino.cc/en/reference/serial>serial monitor</a>.
- * Open the monitor before stating identification. It last 30 min.
+ * Open the monitor before stating identification. 
+ * If flash memory is correctly connected, the data will
+ * be stored in the flash mem too. It last 30 min.
  *
  * \author Francis Gagnon
  */
