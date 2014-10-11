@@ -1,3 +1,4 @@
+#include "SPI.h"
 #include "RimsIdent.h"
 #include "LiquidCrystal.h"
 

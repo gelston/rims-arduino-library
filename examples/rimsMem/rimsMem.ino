@@ -9,7 +9,6 @@
  */
 
 #include "SPI.h"
-
 #include "LiquidCrystal.h"
 #include "Rims.h"
 
